@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Studio32 · Crea tu agente</title>
+<style>
+  :root{ --bg:#090908; --panel:#15140f; --cream:#f6f0e5; --muted:#9b958a; --gold:#c9a86a; --line:#2c2a22; }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--cream);font-family:-apple-system,"Segoe UI",Inter,system-ui,sans-serif;}
+  .wrap{max-width:640px;margin:0 auto;padding:32px 20px 80px;}
+  h1{font-size:22px;margin:0 0 4px;font-weight:600;}
+  .sub{color:var(--muted);font-size:14px;margin:0 0 24px;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 18px 6px;margin-bottom:16px;}
+  .card h2{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--gold);margin:0 0 14px;font-weight:600;}
+  label{display:block;font-size:13px;color:var(--muted);margin:0 0 5px;}
+  .field{margin-bottom:14px;}
+  input,select,textarea{width:100%;background:#0f0e0a;color:var(--cream);border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:14px;outline:none;font-family:inherit;}
+  input:focus,select:focus,textarea:focus{border-color:var(--gold);}
+  textarea{min-height:64px;resize:vertical;}
+  .row{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;align-items:center;margin-bottom:8px;}
+  .row input{margin:0;}
+  .row button,.addbtn{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:8px 10px;cursor:pointer;font-size:13px;}
+  .addbtn{margin:2px 0 12px;}
+  .hint{font-size:12px;color:var(--muted);margin:-8px 0 12px;}
+  .actions{position:sticky;bottom:0;background:linear-gradient(transparent,var(--bg) 30%);padding:18px 0 4px;}
+  .primary{width:100%;background:var(--gold);color:var(--bg);border:none;border-radius:999px;padding:14px;font-size:16px;font-weight:600;cursor:pointer;}
+  .primary:disabled{opacity:.5;}
+  .ok{background:#16241a;border:1px solid #2e5a3c;color:#cdeBcd;border-radius:12px;padding:16px;margin-top:14px;display:none;}
+  .ok a{color:var(--gold);font-weight:600;}
+  .err{color:#e7a3a3;font-size:13px;margin-top:8px;display:none;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media(max-width:520px){.row{grid-template-columns:1fr 1fr;}.grid2{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Crea tu agente</h1>
+  <p class="sub">Studio32 · Digital Systems — rellena lo básico y pruébalo al momento.</p>
+
+  <div class="card">
+    <h2>1 · Tu negocio</h2>
+    <div class="field">
+      <label>Tipo de negocio</label>
+      <select id="vertical"></select>
+      <div class="hint">Cargamos una plantilla lista para tu sector; solo retocas lo tuyo.</div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>Nombre del negocio</label><input id="nombre" placeholder="Ej: Clínica Sonrisa" /></div>
+      <div class="field"><label>Ciudad</label><input id="ciudad" placeholder="Ej: Valencia" /></div>
+    </div>
+    <div class="field">
+      <label>Email para recibir avisos (reservas, leads)</label>
+      <input id="email" type="email" placeholder="tu@email.com" />
+      <div class="hint">Aquí te llegará cada reserva. En la demo lo verás llegar a tu móvil.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>2 · Servicios</h2>
+    <div id="servicios"></div>
+    <button type="button" class="addbtn" id="addServicio">+ Añadir servicio</button>
+    <div class="hint">Precio en € (déjalo vacío si no aplica, p. ej. restaurante). Duración en minutos.</div>
+  </div>
+
+  <div class="card">
+    <h2>3 · Profesionales / recursos</h2>
+    <div class="field">
+      <input id="profesionales" placeholder="Ej: Dr. García, Higienista" />
+      <div class="hint">Separados por comas. Para restaurante puede ser solo "Sala".</div>
+    </div>
+  </div>
+
+  <div class="card" id="cardCapacidad" hidden>
+    <h2>3b · Mesas y grupos</h2>
+    <div class="grid2">
+      <div class="field"><label>Mesas reservables a la vez</label><input id="capMesas" placeholder="Ej: 10" /></div>
+      <div class="field"><label>Máximo de personas por reserva</label><input id="capMax" placeholder="Ej: 8" /></div>
+    </div>
+    <div class="hint">No hace falta que sea el total del local: es cuántas mesas puede dar el agente por franja. Por encima del máximo de personas, el agente toma los datos y avisa al equipo.</div>
+  </div>
+
+  <div class="card">
+    <h2>4 · Tono (opcional)</h2>
+    <div class="field"><textarea id="tono" placeholder="Cómo quieres que hable el agente. Si lo dejas vacío, usamos el tono recomendado para tu sector."></textarea></div>
+  </div>
+
+  <div class="actions">
+    <button class="primary" id="crear">Crear y probar mi agente</button>
+    <div class="err" id="err"></div>
+    <div class="ok" id="ok"></div>
+  </div>
+</div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  const verticalSel = $('vertical'), serviciosBox = $('servicios');
+
+  function filaServicio(s = {}) {
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.innerHTML =
+      '<input class="s-nombre" placeholder="Servicio" value="' + (s.nombre || '') + '">' +
+      '<input class="s-precio" placeholder="€" value="' + (s.precio_eur ?? '') + '">' +
+      '<input class="s-dur" placeholder="min" value="' + (s.duracion_min ?? '') + '">' +
+      '<button type="button" class="s-del">✕</button>';
+    row.querySelector('.s-del').onclick = () => row.remove();
+    return row;
+  }
+  function pintarServicios(lista) {
+    serviciosBox.innerHTML = '';
+    (lista || []).forEach(s => serviciosBox.appendChild(filaServicio(s)));
+    if (!lista || !lista.length) serviciosBox.appendChild(filaServicio());
+  }
+  $('addServicio').onclick = () => serviciosBox.appendChild(filaServicio());
+
+  async function cargarVerticales() {
+    const r = await fetch('/onboarding/api/verticales');
+    const { verticales } = await r.json();
+    const etiquetas = { clinica_dental: 'Clínica dental', restaurante: 'Restaurante', barberia: 'Barbería / peluquería' };
+    verticalSel.innerHTML = verticales.map(v => `<option value="${v}">${etiquetas[v] || v}</option>`).join('');
+    await cargarPlantilla();
+  }
+  async function cargarPlantilla() {
+    const r = await fetch('/onboarding/api/plantilla/' + verticalSel.value);
+    const tpl = await r.json();
+    pintarServicios((tpl.services || {}).servicios);
+    $('profesionales').value = (tpl.business.profesionales || []).join(', ');
+    const cap = tpl.business.capacidad;
+    $('cardCapacidad').hidden = !cap;
+    if (cap) { $('capMesas').value = cap.mesas ?? ''; $('capMax').value = cap.max_comensales_por_reserva ?? ''; }
+    $('tono').placeholder = (tpl.tone || '').trim() || 'Tono del agente…';
+  }
+  verticalSel.onchange = cargarPlantilla;
+
+  $('crear').onclick = async () => {
+    $('err').style.display = 'none'; $('ok').style.display = 'none';
+    const servicios = [...serviciosBox.querySelectorAll('.row')].map(row => {
+      const nombre = row.querySelector('.s-nombre').value.trim();
+      const precioRaw = row.querySelector('.s-precio').value.trim();
+      const dur = parseInt(row.querySelector('.s-dur').value, 10);
+      if (!nombre || !dur) return null;
+      return { nombre, precio_eur: precioRaw === '' ? null : Number(precioRaw), duracion_min: dur };
+    }).filter(Boolean);
+
+    const data = {
+      vertical: verticalSel.value,
+      nombre: $('nombre').value.trim(),
+      ciudad: $('ciudad').value.trim(),
+      email_avisos: $('email').value.trim(),
+      profesionales: $('profesionales').value.split(',').map(s => s.trim()).filter(Boolean),
+      servicios,
+      tono: $('tono').value.trim()
+    };
+    if (!$('cardCapacidad').hidden) {
+      const mesas = parseInt($('capMesas').value, 10), maxCom = parseInt($('capMax').value, 10);
+      if (mesas > 0) data.capacidad = { mesas, max_comensales_por_reserva: maxCom > 0 ? maxCom : 8 };
+    }
+    if (!data.nombre) return mostrarError('Pon el nombre del negocio.');
+    if (!data.email_avisos) return mostrarError('Pon el email para recibir avisos.');
+
+    $('crear').disabled = true; $('crear').textContent = 'Creando…';
+    try {
+      const r = await fetch('/onboarding/api/crear', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+      });
+      const res = await r.json();
+      if (!r.ok) throw new Error(res.error || 'Error');
+      $('ok').style.display = 'block';
+      $('ok').innerHTML = '¡Listo! Tu agente <b>' + res.tenantId + '</b> está creado (borrador).<br>' +
+        '<a href="' + res.preview_url + '" target="_blank">Abrir y probarlo →</a>';
+    } catch (e) {
+      mostrarError(e.message);
+    } finally {
+      $('crear').disabled = false; $('crear').textContent = 'Crear y probar mi agente';
+    }
+  };
+  function mostrarError(m) { $('err').textContent = m; $('err').style.display = 'block'; }
+
+  cargarVerticales();
+</script>
+</body>
+</html>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Studio32 · Panel interno</title>
+<style>
+  :root{--bg:#090908;--panel:#15140f;--cream:#f6f0e5;--muted:#9b958a;--gold:#c9a86a;--line:#2c2a22;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--cream);font-family:-apple-system,"Segoe UI",Inter,system-ui,sans-serif;}
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 20px 80px;}
+  h1{font-size:20px;margin:0 0 2px;}
+  .sub{color:var(--muted);font-size:13px;margin:0 0 20px;}
+  .bar{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;}
+  .bar input{background:var(--panel);color:var(--cream);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:13px;}
+  .bar a,.bar button{background:transparent;border:1px solid var(--line);color:var(--cream);border-radius:8px;padding:8px 12px;text-decoration:none;font-size:13px;cursor:pointer;}
+  .kpis{display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap;}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 18px;}
+  .kpi b{font-size:22px;display:block;}
+  .kpi span{font-size:12px;color:var(--muted);}
+  table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;}
+  th,td{text-align:left;padding:11px 12px;font-size:13px;border-bottom:1px solid var(--line);}
+  th{color:var(--gold);text-transform:uppercase;font-size:11px;letter-spacing:.5px;}
+  tr:last-child td{border-bottom:none;}
+  .pill{font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);}
+  .pill.activo{color:#bfe3c2;border-color:#2e5a3c;}
+  .pill.borrador{color:#e3d3a0;border-color:#5a4d2e;}
+  td a{color:var(--gold);text-decoration:none;margin-right:8px;font-size:12px;}
+  .err{color:#e7a3a3;font-size:13px;margin:10px 0;}
+  dialog{background:var(--panel);color:var(--cream);border:1px solid var(--line);border-radius:14px;max-width:560px;width:92%;padding:20px;}
+  dialog h3{margin:0 0 12px;font-size:16px;}
+  dialog label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px;}
+  dialog input,dialog textarea,dialog select{width:100%;background:#0f0e0a;color:var(--cream);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px;font-family:inherit;}
+  dialog textarea{min-height:80px;resize:vertical;}
+  .dlg-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;}
+  .primary{background:var(--gold);color:var(--bg);border:none;border-radius:8px;padding:9px 16px;font-weight:600;cursor:pointer;}
+  .ghost{background:transparent;border:1px solid var(--line);color:var(--cream);border-radius:8px;padding:9px 16px;cursor:pointer;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Panel interno · Studio32</h1>
+  <p class="sub">Agentes desplegados, su uso y configuración. Uso interno.</p>
+
+  <div class="bar">
+    <input id="token" type="password" placeholder="Token del panel (si aplica)" />
+    <button id="recargar">Cargar</button>
+    <a href="/onboarding" target="_blank">+ Nuevo agente</a>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+  <div class="err" id="err"></div>
+  <table id="tabla" style="display:none">
+    <thead><tr>
+      <th>Agente</th><th>Sector</th><th>Estado</th><th>Reservas</th><th>Leads</th>
+      <th>Mensajes</th><th>Último uso</th><th>Calendar</th><th></th>
+    </tr></thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<dialog id="dlg">
+  <h3 id="dlg-title">Agente</h3>
+  <label>Email de avisos</label><input id="d-email" />
+  <label>Estado</label>
+  <select id="d-estado"><option value="activo">activo</option><option value="borrador">borrador</option></select>
+  <label>Tono</label><textarea id="d-tono"></textarea>
+  <div class="dlg-actions">
+    <button class="ghost" id="d-cerrar">Cerrar</button>
+    <button class="primary" id="d-guardar">Guardar</button>
+  </div>
+</dialog>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const tk = () => $('token').value.trim();
+  const headers = () => ({ 'Content-Type': 'application/json', 'X-Panel-Token': tk() });
+
+  async function cargar() {
+    $('err').textContent = '';
+    try {
+      const r = await fetch('/panel/api/agentes', { headers: headers() });
+      if (!r.ok) throw new Error(r.status === 401 ? 'Token no válido' : 'Error ' + r.status);
+      const { total, agentes } = await r.json();
+      pintarKpis(total, agentes);
+      pintarTabla(agentes);
+    } catch (e) { $('err').textContent = e.message; }
+  }
+  function pintarKpis(total, ag) {
+    const reservas = ag.reduce((s, a) => s + a.reservas, 0);
+    const mensajes = ag.reduce((s, a) => s + a.mensajes, 0);
+    const leads = ag.reduce((s, a) => s + a.leads, 0);
+    $('kpis').innerHTML =
+      kpi(total, 'agentes') + kpi(reservas, 'reservas activas') + kpi(leads, 'leads') + kpi(mensajes, 'mensajes');
+  }
+  const kpi = (n, t) => `<div class="kpi"><b>${n}</b><span>${t}</span></div>`;
+
+  function pintarTabla(ag) {
+    const tb = $('tabla').querySelector('tbody');
+    tb.innerHTML = ag.map(a => {
+      const cal = a.calendar ? '✓' : '–';
+      const uso = a.ultimo_uso ? new Date(a.ultimo_uso).toLocaleString('es-ES') : '—';
+      const ownerLink = a.owner_token ? `<a href="/demo/?tenant=${a.id}&owner=${a.owner_token}" target="_blank">dueño</a>` : '';
+      return `<tr>
+        <td>${a.nombre}</td><td>${a.vertical}</td>
+        <td><span class="pill ${a.estado}">${a.estado}</span></td>
+        <td>${a.reservas}</td><td>${a.leads}</td><td>${a.mensajes}</td>
+        <td>${uso}</td><td>${cal}</td>
+        <td><a href="/demo/?tenant=${a.id}" target="_blank">probar</a>${ownerLink}<a href="#" data-id="${a.id}" class="edit">editar</a></td>
+      </tr>`;
+    }).join('');
+    $('tabla').style.display = ag.length ? 'table' : 'none';
+    tb.querySelectorAll('.edit').forEach(el => el.onclick = e => { e.preventDefault(); abrirEdit(el.dataset.id); });
+  }
+
+  let editId = null;
+  async function abrirEdit(id) {
+    editId = id;
+    const r = await fetch('/panel/api/agente/' + id, { headers: headers() });
+    const d = await r.json();
+    $('dlg-title').textContent = d.business.nombre || id;
+    $('d-email').value = (d.handoff && d.handoff.email) || '';
+    $('d-estado').value = d.business._estado || 'activo';
+    $('d-tono').value = d.tone || '';
+    $('dlg').showModal();
+  }
+  $('d-cerrar').onclick = () => $('dlg').close();
+  $('d-guardar').onclick = async () => {
+    await fetch('/panel/api/agente/' + editId, {
+      method: 'POST', headers: headers(),
+      body: JSON.stringify({ email_avisos: $('d-email').value, estado: $('d-estado').value, tono: $('d-tono').value })
+    });
+    $('dlg').close(); cargar();
+  };
+
+  $('recargar').onclick = cargar;
+  cargar();
+</script>
+</body>
+</html>

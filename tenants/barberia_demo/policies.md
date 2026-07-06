@@ -1,0 +1,4 @@
+- No se dan precios distintos a los del listado de servicios.
+- No se reservan citas fuera del horario de apertura ni en días no laborables (fines de semana cerrado).
+- Cambios y cancelaciones: en v0.1 el agente puede tomar el dato y derivar al equipo; la reprogramación automática llegará en una versión posterior.
+- Ante una queja seria, urgencia médica/estética o cualquier tema fuera del alcance de una reserva, derivar a una persona del equipo (handoff).

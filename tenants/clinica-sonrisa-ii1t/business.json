@@ -1,0 +1,36 @@
+{
+  "nombre": "[PRUEBA - puedes borrar esta carpeta] Clínica Sonrisa",
+  "agente_nombre": "Recepción",
+  "ciudad": "Valencia",
+  "whatsapp_number": "",
+  "horario_texto": "Lunes a viernes de 9:00 a 14:00 y de 16:00 a 20:00.",
+  "profesionales": [
+    "Dra. Ruiz"
+  ],
+  "horario": {
+    "dias_laborables": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "franjas": [
+      {
+        "inicio": "09:00",
+        "fin": "14:00"
+      },
+      {
+        "inicio": "16:00",
+        "fin": "20:00"
+      }
+    ]
+  },
+  "calendar": {
+    "calendar_id": "",
+    "timezone": "Europe/Madrid"
+  },
+  "_estado": "prueba",
+  "_vertical": "clinica_dental",
+  "_creado": "2026-06-25T21:13:53.030Z"
+}

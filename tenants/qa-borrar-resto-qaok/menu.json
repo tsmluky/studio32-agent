@@ -1,0 +1,45 @@
+{
+  "_nota": "[DEMO — sustituir por la carta real del restaurante en el onboarding]. 'alergenos' por plato; dejar [] si no aplica. 'precio_eur' null = no se dice precio por chat.",
+  "menu_del_dia": {
+    "precio_eur": null,
+    "descripcion": "[DEMO — ej.: Entrante + principal + postre, de martes a viernes al mediodía]"
+  },
+  "secciones": [
+    {
+      "nombre": "Entrantes",
+      "platos": [
+        {
+          "nombre": "[DEMO — Ensalada de la casa]",
+          "precio_eur": null,
+          "descripcion": "",
+          "alergenos": []
+        }
+      ]
+    },
+    {
+      "nombre": "Principales",
+      "platos": [
+        {
+          "nombre": "[DEMO — Arroz del día]",
+          "precio_eur": null,
+          "descripcion": "",
+          "alergenos": []
+        }
+      ]
+    },
+    {
+      "nombre": "Postres",
+      "platos": [
+        {
+          "nombre": "[DEMO — Tarta casera]",
+          "precio_eur": null,
+          "descripcion": "",
+          "alergenos": [
+            "gluten",
+            "lactosa"
+          ]
+        }
+      ]
+    }
+  ]
+}

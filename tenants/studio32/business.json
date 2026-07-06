@@ -1,0 +1,40 @@
+{
+  "nombre": "Studio32 · Digital Systems",
+  "agente_nombre": "Estudio",
+  "ciudad": "Valencia",
+  "whatsapp_number": "",
+  "horario_texto": "Lunes a viernes de 10:00 a 14:00 y de 16:00 a 19:00.",
+  "profesionales": [
+    "Equipo Studio32"
+  ],
+  "horario": {
+    "dias_laborables": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "franjas": [
+      {
+        "inicio": "10:00",
+        "fin": "14:00"
+      },
+      {
+        "inicio": "16:00",
+        "fin": "19:00"
+      }
+    ]
+  },
+  "calendar": {
+    "calendar_id": "9ecbc490063d339f0237a987bd0fce15d028a9af77cba17dd401baa4a48f88dd@group.calendar.google.com",
+    "timezone": "Europe/Madrid",
+    "_nota": "Calendario de Studio32 (Pancho/Juanma). Al conectarlo, las auditorías agendadas caen aquí."
+  },
+  "owner": {
+    "nombre": "",
+    "token": "689ee3bcb15164394684c5cb4b7d6950a22e9048e6984cce",
+    "whatsapp": ""
+  },
+  "web": "www.studio32.es"
+}

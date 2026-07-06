@@ -1,0 +1,4 @@
+- ¿Cómo es la primera visita? Una valoración inicial para conocer tu caso y explicarte opciones.
+- ¿Trabajáis con seguros? [DEMO — indicar seguros aceptados o "consultar"].
+- ¿Hace falta cita? Sí, trabajamos con cita para atenderte sin esperas.
+- ¿Tenéis aparcamiento cerca? [DEMO — completar].

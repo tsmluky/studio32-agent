@@ -1,0 +1,112 @@
+{
+  "_nota": "[DEMO — carta ficticia para la demo comercial; sustituir por la carta real del cliente]",
+  "menu_del_dia": {
+    "precio_eur": 16.5,
+    "descripcion": "Entrante + principal + postre o café. De martes a viernes, solo comidas."
+  },
+  "secciones": [
+    {
+      "nombre": "Entrantes",
+      "platos": [
+        {
+          "nombre": "Esgarraet con mojama",
+          "precio_eur": 9.5,
+          "descripcion": "Pimiento asado, bacalao y AOVE",
+          "alergenos": [
+            "pescado"
+          ]
+        },
+        {
+          "nombre": "Croquetas de puchero (6 uds)",
+          "precio_eur": 8,
+          "descripcion": "De caldo de puchero valenciano",
+          "alergenos": [
+            "gluten",
+            "lactosa",
+            "huevo"
+          ]
+        },
+        {
+          "nombre": "Clóchinas al vapor (temporada)",
+          "precio_eur": 12,
+          "descripcion": "Solo de mayo a agosto",
+          "alergenos": [
+            "moluscos"
+          ]
+        }
+      ]
+    },
+    {
+      "nombre": "Arroces (mín. 2 personas, precio por persona)",
+      "platos": [
+        {
+          "nombre": "Paella valenciana",
+          "precio_eur": 15.5,
+          "descripcion": "Pollo, conejo, garrofó y judía verde. Por encargo al reservar.",
+          "alergenos": []
+        },
+        {
+          "nombre": "Arroz del senyoret",
+          "precio_eur": 17,
+          "descripcion": "Marisco pelado",
+          "alergenos": [
+            "crustaceos",
+            "moluscos"
+          ]
+        },
+        {
+          "nombre": "Arroz negro",
+          "precio_eur": 16,
+          "descripcion": "Sepia y alioli",
+          "alergenos": [
+            "moluscos",
+            "huevo"
+          ]
+        }
+      ]
+    },
+    {
+      "nombre": "Principales",
+      "platos": [
+        {
+          "nombre": "All i pebre de anguila",
+          "precio_eur": 14.5,
+          "descripcion": "Receta de la Albufera",
+          "alergenos": [
+            "pescado"
+          ]
+        },
+        {
+          "nombre": "Carrillera de ternera al vino tinto",
+          "precio_eur": 16.5,
+          "descripcion": "Con parmentier",
+          "alergenos": [
+            "lactosa",
+            "sulfitos"
+          ]
+        }
+      ]
+    },
+    {
+      "nombre": "Postres",
+      "platos": [
+        {
+          "nombre": "Torrija de horchata",
+          "precio_eur": 6.5,
+          "descripcion": "Con helado de chufa",
+          "alergenos": [
+            "gluten",
+            "lactosa",
+            "huevo"
+          ]
+        },
+        {
+          "nombre": "Fruta de temporada",
+          "precio_eur": 4.5,
+          "descripcion": "",
+          "alergenos": []
+        }
+      ]
+    }
+  ]
+}

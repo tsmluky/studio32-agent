@@ -1,0 +1,42 @@
+{
+  "nombre": "[PRUEBA - borrar] QA Test Negocio",
+  "agente_nombre": "Recepción",
+  "ciudad": "",
+  "whatsapp_number": "",
+  "horario_texto": "Lunes a viernes de 9:00 a 13:00 y de 16:00 a 20:00.",
+  "profesionales": [
+    "Profesional 1",
+    "Profesional 2"
+  ],
+  "horario": {
+    "dias_laborables": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "franjas": [
+      {
+        "inicio": "09:00",
+        "fin": "13:00"
+      },
+      {
+        "inicio": "16:00",
+        "fin": "20:00"
+      }
+    ]
+  },
+  "calendar": {
+    "calendar_id": "",
+    "timezone": "Europe/Madrid"
+  },
+  "owner": {
+    "nombre": "",
+    "token": "own-jw21v4nb",
+    "whatsapp": ""
+  },
+  "_estado": "prueba",
+  "_vertical": "barberia",
+  "_creado": "2026-06-27T14:51:28.478Z"
+}

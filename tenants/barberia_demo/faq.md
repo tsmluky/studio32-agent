@@ -1,0 +1,5 @@
+- ¿Hace falta cita? Trabajamos con cita para no haceros esperar, pero si hay hueco se puede atender al momento.
+- ¿Dónde estáis? En el centro de Valencia. [DEMO — cambiar por la dirección real]
+- ¿Aceptáis tarjeta? Sí, tarjeta y efectivo.
+- ¿Puedo cambiar o cancelar la cita? Sí, avisando con antelación por aquí mismo.
+- ¿Atendéis a domicilio? No, solo en el local. [DEMO — ajustar según el negocio]

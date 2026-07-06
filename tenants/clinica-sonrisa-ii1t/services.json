@@ -1,0 +1,14 @@
+{
+  "servicios": [
+    {
+      "nombre": "Limpieza dental",
+      "precio_eur": 55,
+      "duracion_min": 30
+    },
+    {
+      "nombre": "Empaste",
+      "precio_eur": 60,
+      "duracion_min": 45
+    }
+  ]
+}

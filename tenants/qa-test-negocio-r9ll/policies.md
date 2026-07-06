@@ -1,0 +1,3 @@
+- No se dan precios distintos a los del listado de servicios.
+- No se reservan citas fuera del horario ni en días no laborables.
+- Cambios y cancelaciones por el mismo chat; si es complejo, derivar al equipo.

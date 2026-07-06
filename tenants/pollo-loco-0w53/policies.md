@@ -1,0 +1,4 @@
+- Para grupos grandes o eventos privados, tomar el dato y derivar al equipo (handoff).
+- No se confirman eventos privados ni menús cerrados por chat.
+- Al reservar, recoger nº de comensales en el nombre o la nota (ej. "Mesa para 4").
+- Cambios y cancelaciones: gestionar con naturalidad; derivar si es complejo.

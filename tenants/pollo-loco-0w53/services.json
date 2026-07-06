@@ -1,0 +1,14 @@
+{
+  "servicios": [
+    {
+      "nombre": "Comida",
+      "precio_eur": null,
+      "duracion_min": 90
+    },
+    {
+      "nombre": "Cena",
+      "precio_eur": null,
+      "duracion_min": 120
+    }
+  ]
+}

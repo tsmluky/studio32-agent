@@ -1,0 +1,4 @@
+- ¿Hace falta cita? Trabajamos con cita para no haceros esperar, pero si hay hueco te atendemos.
+- ¿Dónde estáis? [DEMO — dirección].
+- ¿Aceptáis tarjeta? Sí, tarjeta y efectivo.
+- ¿Puedo cambiar o cancelar la cita? Sí, avisando con antelación por aquí mismo.

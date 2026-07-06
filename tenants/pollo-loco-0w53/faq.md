@@ -1,0 +1,4 @@
+- ¿Tenéis terraza? [DEMO — sí/no y nº de plazas].
+- ¿Hay opciones para alergias o intolerancias? Sí, indícanoslo al reservar y lo preparamos.
+- ¿Aceptáis grupos grandes? Para grupos de más de [X] personas, lo gestionamos con el equipo.
+- ¿Hay menú del día? [DEMO — completar].

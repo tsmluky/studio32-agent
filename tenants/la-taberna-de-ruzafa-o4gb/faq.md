@@ -1,0 +1,7 @@
+- ¿Dónde estáis? Calle Sueca 12, Ruzafa (Valencia). [DEMO]
+- ¿Tenéis terraza? Sí, pequeña; se asigna por orden de llegada, no se reserva.
+- ¿Parking? No propio; el parking público de Mercado de Ruzafa está a 5 minutos.
+- ¿Opciones sin gluten o veganas? Hay opciones; los arroces pueden prepararse sin gluten avisando al reservar. Ante alergias serias, lo confirma el equipo.
+- ¿Niños? Sí, hay tronas. Avisar al reservar.
+- ¿Se puede encargar paella para llevar? Sí, encargando antes de las 11:00. [DEMO]
+- Los arroces son mínimo 2 personas y conviene encargarlos al reservar.

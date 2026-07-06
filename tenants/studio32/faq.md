@@ -1,0 +1,4 @@
+- ¿A qué os dedicáis? Ayudamos a negocios físicos a tener una presencia digital a la altura y a quitarse tareas con automatización e IA práctica.
+- ¿Cuánto cuesta? Depende del negocio; por eso el primer paso es una auditoría para darte una propuesta ajustada.
+- ¿Dónde estáis? En Valencia, trabajamos también en remoto.
+- ¿Qué es la auditoría? Una llamada corta donde vemos tu caso y te decimos qué tiene sentido para ti, sin compromiso.

@@ -1,0 +1,43 @@
+{
+  "nombre": "pollo loco",
+  "agente_nombre": "Reservas",
+  "ciudad": "valencia",
+  "whatsapp_number": "",
+  "horario_texto": "Martes a domingo, comidas de 13:00 a 16:00 y cenas de 20:00 a 23:30. Lunes cerrado.",
+  "profesionales": [
+    "Sala"
+  ],
+  "horario": {
+    "dias_laborables": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      0
+    ],
+    "franjas": [
+      {
+        "inicio": "13:00",
+        "fin": "16:00"
+      },
+      {
+        "inicio": "20:00",
+        "fin": "23:30"
+      }
+    ]
+  },
+  "calendar": {
+    "calendar_id": "",
+    "timezone": "Europe/Madrid"
+  },
+  "_nota_vertical": "[SIMPLIFICADO] El restaurante usa 'Comida' y 'Cena' como turnos (sin precio). La gestión real por número de mesas/comensales es una mejora posterior.",
+  "owner": {
+    "nombre": "",
+    "token": "own-ewznw8r3",
+    "whatsapp": ""
+  },
+  "_estado": "borrador",
+  "_vertical": "restaurante",
+  "_creado": "2026-06-26T13:55:48.206Z"
+}

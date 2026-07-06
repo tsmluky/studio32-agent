@@ -1,0 +1,4 @@
+- Las mesas se guardan 15 minutos de cortesía; pasado ese tiempo se pueden liberar.
+- Grupos de más de 8 o eventos privados: tomar datos y derivar al equipo (handoffHuman). No confirmar por chat.
+- Arroces por encargo: apuntar el arroz elegido en la reserva si el cliente lo dice.
+- Cancelaciones y cambios: gestionarlos con naturalidad; derivar si es complejo.

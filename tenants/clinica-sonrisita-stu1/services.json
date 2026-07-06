@@ -1,0 +1,29 @@
+{
+  "servicios": [
+    {
+      "nombre": "Limpieza dental",
+      "precio_eur": 50,
+      "duracion_min": 30
+    },
+    {
+      "nombre": "Revisión",
+      "precio_eur": 30,
+      "duracion_min": 20
+    },
+    {
+      "nombre": "Empaste",
+      "precio_eur": 60,
+      "duracion_min": 45
+    },
+    {
+      "nombre": "Blanqueamiento",
+      "precio_eur": 250,
+      "duracion_min": 60
+    },
+    {
+      "nombre": "Urgencia",
+      "precio_eur": 40,
+      "duracion_min": 30
+    }
+  ]
+}

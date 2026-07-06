@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Studio32 Agent · Demo</title>
+<style>
+  :root {
+    --bg: #090908;
+    --panel: #15140f;
+    --cream: #f6f0e5;
+    --muted: #9b958a;
+    --gold: #c9a86a;
+    --bot: #1e1c16;
+    --user: #2a2418;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--cream);
+    font-family: -apple-system, "Segoe UI", Inter, system-ui, sans-serif;
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+  }
+  header {
+    width: 100%; max-width: 720px; padding: 28px 20px 14px;
+    display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+  }
+  header h1 { font-size: 18px; margin: 0; letter-spacing: .3px; font-weight: 600; }
+  header .badge {
+    font-size: 11px; color: var(--bg); background: var(--gold);
+    padding: 2px 8px; border-radius: 999px; font-weight: 600;
+  }
+  header .tenant { margin-left: auto; font-size: 12px; color: var(--muted); }
+  header select {
+    background: var(--panel); color: var(--cream); border: 1px solid #2c2a22;
+    border-radius: 8px; padding: 4px 8px; font-size: 12px;
+  }
+  #chat {
+    width: 100%; max-width: 720px; flex: 1; padding: 8px 20px 0;
+    display: flex; flex-direction: column; gap: 10px; overflow-y: auto;
+  }
+  .msg { max-width: 80%; padding: 10px 14px; border-radius: var(--radius); line-height: 1.45; font-size: 15px; white-space: pre-wrap; }
+  .bot { background: var(--bot); border: 1px solid #2c2a22; align-self: flex-start; border-bottom-left-radius: 4px; }
+  .user { background: var(--user); align-self: flex-end; border-bottom-right-radius: 4px; }
+  .meta { font-size: 11px; color: var(--muted); align-self: center; margin: 6px 0; }
+  form {
+    width: 100%; max-width: 720px; padding: 14px 20px 24px;
+    display: flex; gap: 10px; position: sticky; bottom: 0; background: var(--bg);
+  }
+  input[type=text] {
+    flex: 1; background: var(--panel); color: var(--cream);
+    border: 1px solid #2c2a22; border-radius: 999px; padding: 12px 18px; font-size: 15px; outline: none;
+  }
+  input[type=text]:focus { border-color: var(--gold); }
+  button {
+    background: var(--gold); color: var(--bg); border: none; border-radius: 999px;
+    padding: 0 22px; font-size: 15px; font-weight: 600; cursor: pointer;
+  }
+  button:disabled { opacity: .5; cursor: default; }
+</style>
+</head>
+<body>
+  <header>
+    <h1>Studio32 Agent</h1>
+    <span class="badge" id="mode">demo</span>
+    <span class="tenant">
+      Negocio:
+      <select id="tenant"><option value="barberia_demo">barberia_demo</option></select>
+    </span>
+  </header>
+
+  <div id="chat">
+    <div class="meta">Demo · Studio32 · Digital Systems — conversación de prueba (sin WhatsApp)</div>
+  </div>
+
+  <form id="form">
+    <input type="text" id="input" placeholder="Escribe como un cliente… (ej: cuánto cuesta un corte?)" autocomplete="off" />
+    <button type="submit" id="send">Enviar</button>
+  </form>
+
+<script>
+  const chat = document.getElementById('chat');
+  const form = document.getElementById('form');
+  const input = document.getElementById('input');
+  const send = document.getElementById('send');
+  const tenantSel = document.getElementById('tenant');
+  const sesion = 'web-' + Math.random().toString(36).slice(2, 9);
+
+  // Permite previsualizar un agente concreto vía ?tenant=<id> (lo usa el onboarding)
+  const paramTenant = new URLSearchParams(location.search).get('tenant');
+  if (paramTenant && ![...tenantSel.options].some(o => o.value === paramTenant)) {
+    const opt = document.createElement('option');
+    opt.value = paramTenant; opt.textContent = paramTenant;
+    tenantSel.insertBefore(opt, tenantSel.firstChild);
+  }
+  if (paramTenant) tenantSel.value = paramTenant;
+  const ownerToken = new URLSearchParams(location.search).get('owner') || '';
+  if (ownerToken) { const b = document.getElementById('mode'); if (b) b.textContent = 'modo dueño'; }
+
+  function add(text, who) {
+    const el = document.createElement('div');
+    el.className = 'msg ' + who;
+    el.textContent = text;
+    chat.appendChild(el);
+    chat.scrollTop = chat.scrollHeight;
+    return el;
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const mensaje = input.value.trim();
+    if (!mensaje) return;
+    add(mensaje, 'user');
+    input.value = '';
+    send.disabled = true;
+    const pensando = add('…', 'bot');
+    try {
+      const r = await fetch('/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tenant: tenantSel.value, sesion, mensaje, ownerToken })
+      });
+      const data = await r.json();
+      pensando.textContent = data.respuesta || '(sin respuesta)';
+    } catch (err) {
+      pensando.textContent = 'Error de conexión con el servidor.';
+    } finally {
+      send.disabled = false;
+      input.focus();
+    }
+  });
+
+  input.focus();
+</script>
+</body>
+</html>

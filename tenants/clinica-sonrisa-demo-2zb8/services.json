@@ -1,0 +1,14 @@
+{
+  "servicios": [
+    {
+      "nombre": "Limpieza dental",
+      "precio_eur": 55,
+      "duracion_min": 30
+    },
+    {
+      "nombre": "Revisión",
+      "precio_eur": 0,
+      "duracion_min": 20
+    }
+  ]
+}

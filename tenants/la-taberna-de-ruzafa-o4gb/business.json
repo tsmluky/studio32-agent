@@ -1,0 +1,45 @@
+{
+  "nombre": "La Taberna de Ruzafa",
+  "agente_nombre": "Reservas de La Taberna",
+  "ciudad": "Valencia",
+  "whatsapp_number": "",
+  "horario_texto": "Martes a domingo, comidas de 13:00 a 16:00 y cenas de 20:00 a 23:30. Lunes cerrado.",
+  "profesionales": [],
+  "capacidad": {
+    "mesas": 8,
+    "max_comensales_por_reserva": 8
+  },
+  "horario": {
+    "dias_laborables": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      0
+    ],
+    "franjas": [
+      {
+        "inicio": "13:00",
+        "fin": "16:00"
+      },
+      {
+        "inicio": "20:00",
+        "fin": "23:30"
+      }
+    ]
+  },
+  "calendar": {
+    "calendar_id": "",
+    "timezone": "Europe/Madrid"
+  },
+  "_nota_vertical": "MODO AFORO: 'capacidad.mesas' = reservas simultáneas admitidas por hueco; 'max_comensales_por_reserva' = por encima de esto el agente deriva a persona (handoffHuman). Ajustar ambos con el dueño en el onboarding. El agente pide comensales siempre.",
+  "owner": {
+    "nombre": "",
+    "token": "434d574c7e1c6aaaf96e0d1f42bf8a750924ea945e62ddc9",
+    "whatsapp": ""
+  },
+  "_estado": "activo",
+  "_vertical": "restaurante",
+  "_creado": "2026-07-02T21:40:11.246Z"
+}
