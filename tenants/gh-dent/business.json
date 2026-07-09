@@ -1,0 +1,37 @@
+{
+  "nombre": "GH Dent · Clínica Dental",
+  "agente_nombre": "GH Dent",
+  "ciudad": "Guadalajara",
+  "whatsapp_number": "whatsapp:+34610238024",
+  "horario_texto": "Lunes a jueves de 10:00 a 19:00 y viernes de 10:00 a 14:00. Sábados y domingos, cerrado.",
+  "profesionales": [
+    "Equipo GH Dent"
+  ],
+  "horario": {
+    "dias_laborables": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "franjas": [
+      {
+        "inicio": "10:00",
+        "fin": "19:00"
+      }
+    ],
+    "_nota": "[REVISAR] Viernes solo hasta 14:00. Si checkAvailability no soporta franjas por dia, ajustar aqui o limitar dias_laborables."
+  },
+  "calendar": {
+    "calendar_id": "",
+    "timezone": "Europe/Madrid",
+    "_nota": "[RELLENAR] Compartir el Google Calendar de GH Dent con la service account del agente (permiso: hacer cambios en eventos)."
+  },
+  "owner": {
+    "nombre": "Gabriela",
+    "token": "cf96adef7e5ccd96fad9aeca6965ee87ffc3014996935b36",
+    "whatsapp": "whatsapp:+34610238024"
+  },
+  "web": "https://ghdent.es"
+}
