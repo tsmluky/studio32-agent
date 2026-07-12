@@ -100,6 +100,7 @@ async function push(tenantId, telefono, mensaje) {
                 direction: isUser ? 'inbound' : 'outbound',
                 sender_type: isUser ? 'contact' : 'agent',
                 body: mensaje.content,
+                payload: { provider: mensaje.provider || null },
                 occurred_at: now
             });
             if (result.error) throw result.error;

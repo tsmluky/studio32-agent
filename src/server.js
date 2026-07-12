@@ -173,7 +173,7 @@ app.post('/chat', rateLimit, async (req, res) => {
         const tenant = cargarTenant(tenantId);
         const ownerCfg = tenant.business.owner || {};
         const esOwner = !!(ownerToken && ownerCfg.token && ownerToken === ownerCfg.token);
-        const ctx = { tenant, tenantId: tenant.id, telefono: String(sesion), esOwner };
+        const ctx = { tenant, tenantId: tenant.id, telefono: String(sesion), esOwner, channel: 'web' };
         const respuesta = await responder(ctx, mensaje);
         res.json({ respuesta });
     } catch (err) {

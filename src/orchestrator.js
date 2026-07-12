@@ -29,7 +29,7 @@ async function responder(ctx, mensajeUsuario) {
     }
     const controlMode = inbound.controlMode || await conversations.controlMode(ctx.tenantId, ctx.telefono);
     if (controlMode !== 'agent') {
-        if (!inbound.persisted) await conversations.push(ctx.tenantId, ctx.telefono, { role: 'user', content: mensajeUsuario });
+        if (!inbound.persisted) await conversations.push(ctx.tenantId, ctx.telefono, { role: 'user', content: mensajeUsuario, provider: ctx.channel });
         console.log('[Agente en pausa]', ctx.tenantId, ctx.telefono, controlMode);
         return null;
     }
@@ -72,8 +72,8 @@ async function responder(ctx, mensajeUsuario) {
     if (!texto) texto = 'Perdona, me lo repites?';
 
     // Persistir SOLO el turno limpio: mensaje del usuario + respuesta final.
-    if (!inbound.persisted) await conversations.push(ctx.tenantId, ctx.telefono, { role: 'user', content: mensajeUsuario });
-    await conversations.push(ctx.tenantId, ctx.telefono, { role: 'assistant', content: texto });
+    if (!inbound.persisted) await conversations.push(ctx.tenantId, ctx.telefono, { role: 'user', content: mensajeUsuario, provider: ctx.channel });
+    await conversations.push(ctx.tenantId, ctx.telefono, { role: 'assistant', content: texto, provider: ctx.channel });
     return texto;
 }
 
