@@ -32,6 +32,6 @@ module.exports = {
 
     PATHS: {
         tenants: path.join(__dirname, '..', 'tenants'),
-        data: path.join(__dirname, '..', 'data')
+        data: process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : path.join(__dirname, '..', 'data')
     }
 };

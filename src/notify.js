@@ -46,7 +46,7 @@ async function notificarLead(tenant, lead) {
     return enviar(tenant, `Nuevo lead · ${lead.nombre}`, c);
 }
 async function notificarReserva(tenant, r) {
-    const c = `Nueva RESERVA · ${tenant.business.nombre || ''}\n\nCliente: ${r.nombre}\nContacto: ${r.contacto}\nServicio: ${r.servicio}\nDía: ${r.fecha} ${r.hora}${r.comensales ? `\nComensales: ${r.comensales}` : ``}\nProfesional: ${r.profesional || '-'}\nWhatsApp del cliente: ${r.telefono_cliente || '-'}\nID: ${r.id}`;
+    const c = `Nueva RESERVA · ${tenant.business.nombre || ''}\n\nCliente: ${r.nombre}\nContacto: ${r.contacto}\nServicio: ${r.servicio}\nDía: ${r.fecha} ${r.hora}${r.comensales ? `\nComensales: ${r.comensales}` : ``}\nProfesional: ${r.profesional || '-'}${r.notas ? `\nNotas: ${r.notas}` : ''}\nWhatsApp del cliente: ${r.telefono_cliente || '-'}\nID: ${r.id}`;
     return enviar(tenant, `Nueva reserva · ${r.fecha} ${r.hora} · ${r.nombre}`, c);
 }
 async function notificarCancelacion(tenant, r) {

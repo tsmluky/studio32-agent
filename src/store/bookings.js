@@ -132,7 +132,7 @@ async function crear(tenant, datos) {
         try {
             calendar = await gcal.createEvent(cfg.calendar_id, {
                 summary: `${datos.servicio} · ${datos.nombre}${datos.comensales ? ` · ${datos.comensales} pax` : ''}`,
-                description: `Reserva vía WhatsApp (Studio32 Agent)\nCliente: ${datos.nombre}\nContacto: ${datos.contacto}\nWhatsApp: ${datos.telefono_cliente || '-'}\nComensales: ${datos.comensales || '-'}\nProfesional: ${datos.profesional || '-'}`,
+                description: `Reserva vía WhatsApp (Studio32 Agent)\nCliente: ${datos.nombre}\nContacto: ${datos.contacto}\nWhatsApp: ${datos.telefono_cliente || '-'}\nComensales: ${datos.comensales || '-'}\nProfesional: ${datos.profesional || '-'}${datos.notas ? `\nNotas: ${datos.notas}` : ''}`,
                 fecha: datos.fecha, hora: datos.hora, duracion_min: datos.duracion_min || 60,
                 timezone: cfg.timezone || 'Europe/Madrid', profesional: datos.profesional, contacto: datos.contacto, tenantId: tenant.id
             });

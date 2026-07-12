@@ -40,7 +40,8 @@ module.exports = {
                     fecha: { type: 'string', description: 'DD/MM/YYYY' },
                     hora: { type: 'string', description: 'HH:MM' },
                     comensales: { type: 'integer', description: 'Número de personas. OBLIGATORIO en restaurantes: pregúntalo antes de reservar.' },
-                    profesional: { type: 'string', description: 'Opcional.' }
+                    profesional: { type: 'string', description: 'Opcional.' },
+                    notas: { type: 'string', description: 'Resumen breve (1-2 frases) de lo entendido en la conversación antes de reservar: negocio, necesidad concreta, herramientas que ya usa, volumen aproximado. Para que el equipo llegue informado a la cita. Opcional pero muy recomendable.' }
                 },
                 required: ['nombre', 'contacto', 'servicio', 'fecha', 'hora']
             }
@@ -111,6 +112,7 @@ module.exports = {
             comensales: comensales,
             profesional: args.profesional || null,
             duracion_min: duracion,
+            notas: args.notas || null,
             telefono_cliente: (ctx.telefono || '').replace('whatsapp:', '')
         });
 
