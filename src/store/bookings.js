@@ -12,7 +12,11 @@ const FILE = 'bookings.json';
 function horaAMin(h) { const [a, b] = h.split(':').map(Number); return a * 60 + (b || 0); }
 
 function zonedDateTimeToIso(fecha, hora, timeZone = 'Europe/Madrid') {
-    const [year, month, day] = fecha.split('-').map(Number);
+    const raw = String(fecha || '').trim();
+    let year, month, day;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) [year, month, day] = raw.split('-').map(Number);
+    else if (/^\d{2}\/\d{2}\/\d{4}$/.test(raw)) [day, month, year] = raw.split('/').map(Number);
+    else throw new Error(`Unsupported appointment date: ${fecha}`);
     const [hour, minute] = hora.split(':').map(Number);
     const desired = Date.UTC(year, month - 1, day, hour, minute || 0, 0);
     let candidate = new Date(desired);
@@ -44,9 +48,13 @@ async function mirrorAppointment(tenant, reserva) {
         const timezone = tenant.business?.calendar?.timezone || tenant.business?.timezone || 'Europe/Madrid';
         const startsAt = zonedDateTimeToIso(reserva.fecha, reserva.hora, timezone);
         const endsAt = new Date(new Date(startsAt).getTime() + Number(reserva.duracion_min || 60) * 60000).toISOString();
-        const result = await remote.getClient().from('appointments').insert({
+        const client = remote.getClient();
+        const conversation = await client.from('conversations').select('id').eq('organization_id', organization.id).eq('contact_id', contact.id).in('status', ['open', 'waiting']).order('last_message_at', { ascending: false, nullsFirst: false }).limit(1).maybeSingle();
+        if (conversation.error) throw conversation.error;
+        const values = {
             organization_id: organization.id,
             contact_id: contact.id,
+            conversation_id: conversation.data?.id || null,
             service_id: serviceId,
             external_calendar_event_id: reserva.calendar_event_id || null,
             status: reserva.estado === 'confirmada' ? 'confirmed' : 'pending',
@@ -55,7 +63,12 @@ async function mirrorAppointment(tenant, reserva) {
             party_size: reserva.comensales || null,
             resource_name: reserva.profesional || null,
             metadata: { ...reserva, legacy_id: reserva.id, timezone }
-        });
+        };
+        const existing = await client.from('appointments').select('id').eq('organization_id', organization.id).contains('metadata', { legacy_id: reserva.id }).maybeSingle();
+        if (existing.error) throw existing.error;
+        const result = existing.data
+            ? await client.from('appointments').update(values).eq('id', existing.data.id)
+            : await client.from('appointments').insert(values);
         if (result.error) throw result.error;
     } catch (error) { remote.report(error, 'write appointment; JSON retained'); }
 }
@@ -186,4 +199,4 @@ async function reprogramar(tenant, id, nuevaFecha, nuevaHora) {
 
 async function listar(tenantId) { return db.leer(tenantId, FILE, []); }
 
-module.exports = { busyIntervals, huecoLibre, capacidadDe, listarJSONPorFecha, activasDeCliente, crear, cancelar, reprogramar, listar, zonedDateTimeToIso };
+module.exports = { busyIntervals, huecoLibre, capacidadDe, listarJSONPorFecha, activasDeCliente, crear, cancelar, reprogramar, listar, zonedDateTimeToIso, mirrorAppointment };

@@ -24,6 +24,7 @@ test('normalizes WhatsApp addresses for stable contact identity', () => {
 test('converts Madrid appointments to UTC across daylight saving time', () => {
     assert.equal(zonedDateTimeToIso('2026-01-15', '10:00', 'Europe/Madrid'), '2026-01-15T09:00:00.000Z');
     assert.equal(zonedDateTimeToIso('2026-07-15', '10:00', 'Europe/Madrid'), '2026-07-15T08:00:00.000Z');
+    assert.equal(zonedDateTimeToIso('15/07/2026', '10:00', 'Europe/Madrid'), '2026-07-15T08:00:00.000Z');
 });
 
 test('preserves Meta message IDs for webhook idempotency', () => {
