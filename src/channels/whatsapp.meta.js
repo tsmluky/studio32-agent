@@ -29,6 +29,7 @@ function parseEntrante(payload) {
         const msg = value.messages && value.messages[0];
         if (!msg || msg.type !== 'text') return null; // ignora estados de entrega y no-texto
         return {
+            id: msg.id,
             from: msg.from,
             body: msg.text.body,
             displayNumber: value.metadata && value.metadata.display_phone_number
@@ -72,9 +73,16 @@ function router() {
             const ownerNum = (ownerCfg.whatsapp || '').replace(/[^0-9]/g, '');
             const fromNum = (entrante.from || '').replace(/[^0-9]/g, '');
             const esOwner = !!(ownerNum && fromNum === ownerNum); // match EXACTO, nunca subcadena
-            const ctx = { tenant, tenantId: tenant.id, telefono: entrante.from, esOwner };
+            const ctx = {
+                tenant,
+                tenantId: tenant.id,
+                telefono: entrante.from,
+                esOwner,
+                channel: 'whatsapp_meta',
+                providerMessageId: entrante.id || null
+            };
             const respuesta = await responder(ctx, entrante.body);
-            await enviarMensaje(entrante.from, respuesta);
+            if (respuesta) await enviarMensaje(entrante.from, respuesta);
         } catch (err) { console.error('Meta webhook error:', err); }
     });
 

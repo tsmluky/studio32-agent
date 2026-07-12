@@ -1,0 +1,3 @@
+-- Intentionally empty.
+-- Real organizations and users are provisioned through onboarding so every
+-- membership is linked to an authenticated user. Tenant import belongs to Phase 2.

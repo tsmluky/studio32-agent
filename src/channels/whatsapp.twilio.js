@@ -61,9 +61,16 @@ function router() {
             const ownerNum = (ownerCfg.whatsapp || '').replace(/[^0-9]/g, '');
             const fromNum = (from || '').replace(/[^0-9]/g, '');
             const esOwner = !!(ownerNum && fromNum === ownerNum); // match EXACTO, nunca subcadena
-            const ctx = { tenant, tenantId: tenant.id, telefono: from, esOwner };
+            const ctx = {
+                tenant,
+                tenantId: tenant.id,
+                telefono: from,
+                esOwner,
+                channel: 'whatsapp_twilio',
+                providerMessageId: req.body.MessageSid || req.body.SmsMessageSid || null
+            };
             const respuesta = await responder(ctx, body);
-            await enviarMensaje(from, respuesta);
+            if (respuesta) await enviarMensaje(from, respuesta);
         } catch (err) {
             console.error('Error en canal Twilio:', err);
             await enviarMensaje(from, 'Ahora mismo no puedo responder, pruebo de nuevo en unos minutos.');

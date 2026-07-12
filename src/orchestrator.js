@@ -16,6 +16,17 @@ const { conversations, usage } = require('./store');
 const { inspeccionarRespuesta, limpiarParaWhatsApp, MENSAJE_SEGURO_FALLBACK } = require('./safety');
 
 async function responder(ctx, mensajeUsuario) {
+    const inbound = await conversations.claimInbound(
+        ctx.tenantId,
+        ctx.telefono,
+        mensajeUsuario,
+        ctx.providerMessageId,
+        ctx.channel
+    );
+    if (!inbound.accepted) {
+        console.log('[Webhook duplicado ignorado]', ctx.channel || 'unknown', ctx.providerMessageId);
+        return null;
+    }
     try { await usage.registrar(ctx.tenantId); } catch (_) { /* uso best-effort */ }
 
     const system = construirSystemPrompt(ctx.tenant, { owner: !!ctx.esOwner });
@@ -23,7 +34,11 @@ async function responder(ctx, mensajeUsuario) {
 
     // Historial limpio (solo user/assistant de texto) + el mensaje nuevo.
     const previo = await conversations.get(ctx.tenantId, ctx.telefono);
-    const mensajes = [...previo, { role: 'user', content: mensajeUsuario }];
+    // A provider webhook is claimed and persisted before invoking the LLM. Webchat
+    // messages have no provider ID and are appended only in the working copy.
+    const mensajes = inbound.persisted
+        ? [...previo]
+        : [...previo, { role: 'user', content: mensajeUsuario }];
 
     let message = await llm.chat({ system, messages: mensajes, tools: schemas });
 
@@ -51,7 +66,7 @@ async function responder(ctx, mensajeUsuario) {
     if (!texto) texto = 'Perdona, me lo repites?';
 
     // Persistir SOLO el turno limpio: mensaje del usuario + respuesta final.
-    await conversations.push(ctx.tenantId, ctx.telefono, { role: 'user', content: mensajeUsuario });
+    if (!inbound.persisted) await conversations.push(ctx.tenantId, ctx.telefono, { role: 'user', content: mensajeUsuario });
     await conversations.push(ctx.tenantId, ctx.telefono, { role: 'assistant', content: texto });
     return texto;
 }

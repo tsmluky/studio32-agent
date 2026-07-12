@@ -5,10 +5,73 @@
 // y consulta de huecos.
 
 const db = require('./_db');
+const remote = require('./supabase');
 const gcal = require('../integrations/googleCalendar');
 const FILE = 'bookings.json';
 
 function horaAMin(h) { const [a, b] = h.split(':').map(Number); return a * 60 + (b || 0); }
+
+function zonedDateTimeToIso(fecha, hora, timeZone = 'Europe/Madrid') {
+    const [year, month, day] = fecha.split('-').map(Number);
+    const [hour, minute] = hora.split(':').map(Number);
+    const desired = Date.UTC(year, month - 1, day, hour, minute || 0, 0);
+    let candidate = new Date(desired);
+    const formatter = new Intl.DateTimeFormat('en-CA', {
+        timeZone, year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23'
+    });
+    for (let i = 0; i < 2; i++) {
+        const parts = Object.fromEntries(formatter.formatToParts(candidate).filter(p => p.type !== 'literal').map(p => [p.type, Number(p.value)]));
+        const represented = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second);
+        candidate = new Date(candidate.getTime() + desired - represented);
+    }
+    return candidate.toISOString();
+}
+
+async function mirrorAppointment(tenant, reserva) {
+    if (!remote.enabled()) return;
+    try {
+        const organization = await remote.organizationForTenant(tenant.id);
+        const phone = reserva.telefono_cliente || reserva.contacto;
+        const contact = await remote.contactForPhone(organization.id, phone, { source: 'appointment' });
+        await remote.getClient().from('contacts').update({ name: reserva.nombre || null, email: String(reserva.contacto || '').includes('@') ? reserva.contacto : null, status: 'customer' }).eq('id', contact.id);
+        let serviceId = null;
+        if (reserva.servicio) {
+            const service = await remote.getClient().from('services').select('id').eq('organization_id', organization.id).eq('name', reserva.servicio).maybeSingle();
+            if (service.error) throw service.error;
+            if (service.data) serviceId = service.data.id;
+        }
+        const timezone = tenant.business?.calendar?.timezone || tenant.business?.timezone || 'Europe/Madrid';
+        const startsAt = zonedDateTimeToIso(reserva.fecha, reserva.hora, timezone);
+        const endsAt = new Date(new Date(startsAt).getTime() + Number(reserva.duracion_min || 60) * 60000).toISOString();
+        const result = await remote.getClient().from('appointments').insert({
+            organization_id: organization.id,
+            contact_id: contact.id,
+            service_id: serviceId,
+            external_calendar_event_id: reserva.calendar_event_id || null,
+            status: reserva.estado === 'confirmada' ? 'confirmed' : 'pending',
+            starts_at: startsAt,
+            ends_at: endsAt,
+            party_size: reserva.comensales || null,
+            resource_name: reserva.profesional || null,
+            metadata: { ...reserva, legacy_id: reserva.id, timezone }
+        });
+        if (result.error) throw result.error;
+    } catch (error) { remote.report(error, 'write appointment; JSON retained'); }
+}
+
+async function updateMirroredAppointment(tenant, legacyId, changes) {
+    if (!remote.enabled()) return;
+    try {
+        const organization = await remote.organizationForTenant(tenant.id);
+        const found = await remote.getClient().from('appointments').select('id, metadata').eq('organization_id', organization.id).contains('metadata', { legacy_id: legacyId }).maybeSingle();
+        if (found.error) throw found.error;
+        if (!found.data) return;
+        const payload = { ...changes, metadata: { ...(found.data.metadata || {}), ...(changes.metadata || {}) } };
+        const result = await remote.getClient().from('appointments').update(payload).eq('id', found.data.id);
+        if (result.error) throw result.error;
+    } catch (error) { remote.report(error, 'update appointment; JSON retained'); }
+}
 
 function calCfg(tenant) {
     const c = (tenant.business && tenant.business.calendar) || null;
@@ -79,6 +142,7 @@ async function crear(tenant, datos) {
     const reserva = { id: db.id(), creada: new Date().toISOString(), estado: 'confirmada', calendar_event_id: calendar ? calendar.id : null, calendar_link: calendar ? calendar.htmlLink : null, ...datos };
     all.push(reserva);
     db.escribir(tenant.id, FILE, all);
+    await mirrorAppointment(tenant, reserva);
     return reserva;
 }
 
@@ -94,6 +158,7 @@ async function cancelar(tenant, id) {
     r.estado = 'cancelada';
     r.cancelada = new Date().toISOString();
     db.escribir(tenant.id, FILE, all);
+    await updateMirroredAppointment(tenant, id, { status: 'cancelled', metadata: r });
     return r;
 }
 
@@ -109,9 +174,16 @@ async function reprogramar(tenant, id, nuevaFecha, nuevaHora) {
     r.fecha_anterior = r.fecha; r.hora_anterior = r.hora;
     r.fecha = nuevaFecha; r.hora = nuevaHora; r.reprogramada = new Date().toISOString();
     db.escribir(tenant.id, FILE, all);
+    const timezone = tenant.business?.calendar?.timezone || tenant.business?.timezone || 'Europe/Madrid';
+    const startsAt = zonedDateTimeToIso(r.fecha, r.hora, timezone);
+    await updateMirroredAppointment(tenant, id, {
+        starts_at: startsAt,
+        ends_at: new Date(new Date(startsAt).getTime() + Number(r.duracion_min || 60) * 60000).toISOString(),
+        metadata: r
+    });
     return r;
 }
 
 async function listar(tenantId) { return db.leer(tenantId, FILE, []); }
 
-module.exports = { busyIntervals, huecoLibre, capacidadDe, listarJSONPorFecha, activasDeCliente, crear, cancelar, reprogramar, listar };
+module.exports = { busyIntervals, huecoLibre, capacidadDe, listarJSONPorFecha, activasDeCliente, crear, cancelar, reprogramar, listar, zonedDateTimeToIso };
