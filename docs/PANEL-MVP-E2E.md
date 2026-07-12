@@ -54,6 +54,19 @@ npm run supabase:sync-bookings -- gh-dent
 
 ## Pendientes de entrega
 
+### Estado de publicacion (12/07/2026)
+
+- `studio32-panel` ya tiene repositorio privado, configuracion de build y
+  redirect SPA para Netlify. Falta completar la autorizacion GitHub -> Netlify
+  y decidir el dominio final (`panel.studio32.es` o el subdominio temporal de
+  Netlify).
+- Cuando exista el dominio final, debe incluirse en `CORS_ORIGINS` de Bonto y
+  reiniciarse la aplicacion. Los origenes de desarrollo y el dominio previsto
+  ya estan contemplados.
+- El canal Twilio no esta activo todavia: se verifico que
+  `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` y `TWILIO_WHATSAPP_NUMBER` no
+  estan configuradas en Bonto. Se necesitan antes de la prueba Sandbox.
+
 - Desplegar `studio32-panel` en el proveedor de hosting y asignar
   `panel.studio32.es`.
 - Añadir el origen final del panel a `CORS_ORIGINS` de Bonto.
