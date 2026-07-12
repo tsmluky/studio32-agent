@@ -38,7 +38,7 @@ test('maps database services into the runtime tenant used by the next reply', ()
     const tenant = { business: { nombre: 'Clínica' }, services: { servicios: [] }, faq: 'Anterior', policies: '', tone: '', handoff: {} };
     const hydrated = remote.mergeRuntimeTenant(tenant, [{
         id: 'service-1', external_key: 'revision', name: 'Revisión dental', description: 'Valoración completa',
-        duration_minutes: 30, price_amount: '45.00', active: true, settings: { reservable: true }
+        duration_minutes: 30, price_amount: '45.00', active: true, settings: { reservable: true, precio_eur: null }
     }], { faq: 'Actualizada', tone: 'Claro y cercano', business: { ciudad: 'Valencia' }, handoff_config: { email: 'recepcion@example.test' } });
     assert.equal(hydrated.services.servicios[0].nombre, 'Revisión dental');
     assert.equal(hydrated.services.servicios[0].precio_eur, 45);

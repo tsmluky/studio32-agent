@@ -96,13 +96,13 @@ async function conversationForPhone(tenantId, phone, options = {}) {
 
 function mergeRuntimeTenant(tenant, services, config) {
     const mappedServices = (services || []).map(service => ({
+        ...(service.settings || {}),
         id: service.external_key || service.id,
         nombre: service.name,
         descripcion: service.description || '',
         duracion_min: service.duration_minutes,
         precio_eur: service.price_amount === null ? null : Number(service.price_amount),
-        activo: service.active,
-        ...(service.settings || {})
+        activo: service.active
     })).filter(service => service.activo !== false);
     return {
         ...tenant,
