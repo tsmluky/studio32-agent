@@ -71,6 +71,9 @@ The agent now loads `@supabase/supabase-js` only when both server variables are
 present. During the transition it reads from Supabase first and keeps a JSON
 mirror for rollback and for the legacy panel.
 
+The runtime baseline is Node.js 22 because the current Supabase JavaScript
+client requires Node 22 or newer. Bonto must use its Node 22 runtime.
+
 Connected stores:
 
 - conversations, contacts and message timeline;
