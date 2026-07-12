@@ -35,11 +35,12 @@ function getClient() {
 // Envía un WhatsApp por Twilio. `to` admite con o sin prefijo "whatsapp:".
 async function enviarMensaje(to, texto) {
     const client = getClient();
-    if (!client) { console.log('[TWILIO no configurado] →', to, ':', texto); return; }
+    if (!client) { console.log('[TWILIO no configurado] →', to, ':', texto); return false; }
     const dest = String(to).startsWith('whatsapp:') ? to : `whatsapp:${to}`;
     try {
         await client.messages.create({ from: process.env.TWILIO_WHATSAPP_NUMBER, to: dest, body: texto });
-    } catch (err) { console.error('Twilio send fallo:', err.message); }
+        return true;
+    } catch (err) { console.error('Twilio send fallo:', err.message); return false; }
 }
 
 function router() {

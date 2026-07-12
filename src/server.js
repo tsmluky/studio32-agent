@@ -14,6 +14,7 @@ const { responder } = require('./orchestrator');
 const { cargarTenant } = require('./tenants');
 const onboarding = require('./onboarding');
 const store = require('./store');
+const api = require('./api/router');
 
 const app = express();
 app.use(express.urlencoded({ extended: false }));
@@ -28,7 +29,7 @@ app.use((req, res, next) => {
     const origin = req.headers.origin;
     if (ORIGINS.includes('*')) res.set('Access-Control-Allow-Origin', '*');
     else if (origin && ORIGINS.includes(origin)) res.set('Access-Control-Allow-Origin', origin);
-    res.set('Access-Control-Allow-Headers', 'Content-Type, X-Panel-Token');
+    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Panel-Token');
     res.set('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
     if (req.method === 'OPTIONS') return res.sendStatus(204);
     next();
@@ -157,6 +158,9 @@ app.post('/panel/api/agente/:id', panelAuth, (req, res) => {
 // Canales WhatsApp. Meta primero para que /whatsapp/meta no lo capture Twilio.
 app.use('/whatsapp/meta', whatsappMeta.router());  // Meta Cloud API: /whatsapp/meta/webhook
 app.use('/whatsapp', whatsapp.router());           // Twilio (BSP):    /whatsapp/webhook
+
+// Authenticated API consumed by the independent Studio32 panel.
+app.use('/api', api.createRouter());
 
 // Canal web / pruebas (JSON). Body: { tenant, sesion, mensaje, ownerToken }
 app.post('/chat', rateLimit, async (req, res) => {

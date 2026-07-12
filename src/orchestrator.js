@@ -27,6 +27,12 @@ async function responder(ctx, mensajeUsuario) {
         console.log('[Webhook duplicado ignorado]', ctx.channel || 'unknown', ctx.providerMessageId);
         return null;
     }
+    const controlMode = inbound.controlMode || await conversations.controlMode(ctx.tenantId, ctx.telefono);
+    if (controlMode !== 'agent') {
+        if (!inbound.persisted) await conversations.push(ctx.tenantId, ctx.telefono, { role: 'user', content: mensajeUsuario });
+        console.log('[Agente en pausa]', ctx.tenantId, ctx.telefono, controlMode);
+        return null;
+    }
     try { await usage.registrar(ctx.tenantId); } catch (_) { /* uso best-effort */ }
 
     const system = construirSystemPrompt(ctx.tenant, { owner: !!ctx.esOwner });

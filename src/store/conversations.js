@@ -34,16 +34,27 @@ async function claimInbound(tenantId, telefono, mensaje, providerMessageId, prov
             occurred_at: now
         });
         if (result.error) {
-            if (result.error.code === '23505') return { accepted: false, persisted: true };
+            if (result.error.code === '23505') return { accepted: false, persisted: true, controlMode: ctx.conversation.control_mode };
             throw result.error;
         }
         appendJson(tenantId, telefono, { role: 'user', content: mensaje });
         const updated = await ctx.db.from('conversations').update({ last_message_at: now }).eq('id', ctx.conversation.id);
         if (updated.error) remote.report(updated.error, 'update inbound conversation timestamp');
-        return { accepted: true, persisted: true };
+        return { accepted: true, persisted: true, controlMode: ctx.conversation.control_mode };
     } catch (error) {
         remote.report(error, 'claim inbound webhook; processing with JSON fallback');
         return { accepted: true, persisted: false };
+    }
+}
+
+async function controlMode(tenantId, telefono) {
+    if (!remote.enabled()) return 'agent';
+    try {
+        const ctx = await remote.conversationForPhone(tenantId, telefono);
+        return ctx.conversation.control_mode || 'agent';
+    } catch (error) {
+        remote.report(error, 'read conversation control mode');
+        return 'agent';
     }
 }
 
@@ -99,4 +110,4 @@ async function push(tenantId, telefono, mensaje) {
     return h;
 }
 
-module.exports = { get, push, claimInbound };
+module.exports = { get, push, claimInbound, controlMode };

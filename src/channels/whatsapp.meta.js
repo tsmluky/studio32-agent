@@ -38,7 +38,7 @@ function parseEntrante(payload) {
 }
 
 async function enviarMensaje(to, texto) {
-    if (!configurado()) { console.log('[META no configurado] →', to, ':', texto); return; }
+    if (!configurado()) { console.log('[META no configurado] →', to, ':', texto); return false; }
     const url = `https://graph.facebook.com/${GRAPH}/${process.env.META_PHONE_NUMBER_ID}/messages`;
     try {
         const r = await fetch(url, {
@@ -46,8 +46,9 @@ async function enviarMensaje(to, texto) {
             headers: { Authorization: `Bearer ${process.env.META_ACCESS_TOKEN}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({ messaging_product: 'whatsapp', to, type: 'text', text: { body: texto } })
         });
-        if (!r.ok) console.error('Meta send error', r.status, await r.text());
-    } catch (err) { console.error('Meta send fallo:', err.message); }
+        if (!r.ok) { console.error('Meta send error', r.status, await r.text()); return false; }
+        return true;
+    } catch (err) { console.error('Meta send fallo:', err.message); return false; }
 }
 
 function router() {

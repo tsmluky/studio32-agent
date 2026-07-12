@@ -17,7 +17,7 @@
     "test:qa": "node test-qa.js",
     "test:sec": "node test-security.js",
     "check:supabase": "node scripts/check-supabase-schema.js",
-    "test:supabase": "node --test test/supabase-adapter.test.js",
+    "test:supabase": "node --test test/supabase-adapter.test.js test/api-auth.test.js",
     "supabase:import": "node scripts/import-tenants-to-supabase.js"
   },
   "dependencies": {
