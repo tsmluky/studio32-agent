@@ -38,7 +38,7 @@ async function responder(ctx, mensajeUsuario) {
 
     const runtimeTenant = await remote.hydrateTenant(ctx.tenant);
     const runtimeCtx = { ...ctx, tenant: runtimeTenant };
-    const system = construirSystemPrompt(runtimeTenant, { owner: !!ctx.esOwner });
+    const system = construirSystemPrompt(runtimeTenant, { owner: !!ctx.esOwner, clienteNombre: inbound.contactName || null });
     const schemas = tools.schemas({ owner: !!ctx.esOwner, tenant: runtimeTenant });
 
     // Historial limpio (solo user/assistant de texto) + el mensaje nuevo.

@@ -40,7 +40,7 @@ async function claimInbound(tenantId, telefono, mensaje, providerMessageId, prov
         appendJson(tenantId, telefono, { role: 'user', content: mensaje });
         const updated = await ctx.db.from('conversations').update({ last_message_at: now }).eq('id', ctx.conversation.id);
         if (updated.error) remote.report(updated.error, 'update inbound conversation timestamp');
-        return { accepted: true, persisted: true, controlMode: ctx.conversation.control_mode };
+        return { accepted: true, persisted: true, controlMode: ctx.conversation.control_mode, contactName: ctx.contact && ctx.contact.name ? ctx.contact.name : null };
     } catch (error) {
         remote.report(error, 'claim inbound webhook; processing with JSON fallback');
         return { accepted: true, persisted: false };
