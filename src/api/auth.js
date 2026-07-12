@@ -7,6 +7,19 @@ function bearerToken(header) {
     return match ? match[1].trim() : null;
 }
 
+async function userForToken(token, fetchImpl = fetch) {
+    const response = await fetchImpl(`${process.env.SUPABASE_URL}/auth/v1/user`, {
+        headers: {
+            apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+            Authorization: `Bearer ${token}`
+        },
+        signal: AbortSignal.timeout(8000)
+    });
+    if (!response.ok) return null;
+    const user = await response.json();
+    return user?.id ? user : null;
+}
+
 async function authenticate(req, res, next) {
     const token = bearerToken(req.headers.authorization);
     if (!token) return res.status(401).json({ error: 'Authorization bearer token required.' });
@@ -14,15 +27,15 @@ async function authenticate(req, res, next) {
 
     try {
         const db = remote.getClient();
-        const auth = await db.auth.getUser(token);
-        if (auth.error || !auth.data?.user) return res.status(401).json({ error: 'Invalid or expired session.' });
+        const user = await userForToken(token);
+        if (!user) return res.status(401).json({ error: 'Invalid or expired session.' });
         const memberships = await db.from('organization_members')
             .select('organization_id, role')
-            .eq('user_id', auth.data.user.id);
+            .eq('user_id', user.id);
         if (memberships.error) throw memberships.error;
         req.apiAuth = {
             token,
-            user: auth.data.user,
+            user,
             memberships: new Map((memberships.data || []).map(row => [row.organization_id, row.role]))
         };
         next();
@@ -39,4 +52,4 @@ function membership(req, organizationId, allowedRoles = null) {
     return { ok: true, role };
 }
 
-module.exports = { bearerToken, authenticate, membership };
+module.exports = { bearerToken, userForToken, authenticate, membership };
