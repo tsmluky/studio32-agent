@@ -94,6 +94,44 @@ async function conversationForPhone(tenantId, phone, options = {}) {
     return { db, organization, contact, conversation: result.data };
 }
 
+function mergeRuntimeTenant(tenant, services, config) {
+    const mappedServices = (services || []).map(service => ({
+        id: service.external_key || service.id,
+        nombre: service.name,
+        descripcion: service.description || '',
+        duracion_min: service.duration_minutes,
+        precio_eur: service.price_amount === null ? null : Number(service.price_amount),
+        activo: service.active,
+        ...(service.settings || {})
+    })).filter(service => service.activo !== false);
+    return {
+        ...tenant,
+        business: { ...(tenant.business || {}), ...(config?.business || {}) },
+        services: mappedServices.length ? { servicios: mappedServices } : tenant.services,
+        faq: config?.faq ?? tenant.faq,
+        policies: config?.policies ?? tenant.policies,
+        tone: config?.tone ?? tenant.tone,
+        handoff: { ...(tenant.handoff || {}), ...(config?.handoff_config || {}) }
+    };
+}
+
+async function hydrateTenant(tenant) {
+    if (!enabled()) return tenant;
+    try {
+        const organization = await organizationForTenant(tenant.id);
+        const [services, config] = await Promise.all([
+            getClient().from('services').select('*').eq('organization_id', organization.id).order('name'),
+            getClient().from('agent_configs').select('business,faq,policies,tone,handoff_config').eq('organization_id', organization.id).eq('status', 'active').order('version', { ascending: false }).limit(1).maybeSingle()
+        ]);
+        if (services.error) throw services.error;
+        if (config.error) throw config.error;
+        return mergeRuntimeTenant(tenant, services.data || [], config.data || null);
+    } catch (error) {
+        report(error, 'hydrate tenant configuration; using files');
+        return tenant;
+    }
+}
+
 function _setClientForTests(value) { client = value; warned = false; }
 
 module.exports = {
@@ -104,5 +142,7 @@ module.exports = {
     organizationForTenant,
     contactForPhone,
     conversationForPhone,
+    mergeRuntimeTenant,
+    hydrateTenant,
     _setClientForTests
 };

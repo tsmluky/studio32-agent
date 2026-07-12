@@ -13,6 +13,7 @@ const llm = require('./llm');
 const { construirSystemPrompt } = require('./prompt');
 const tools = require('./tools');
 const { conversations, usage } = require('./store');
+const remote = require('./store/supabase');
 const { inspeccionarRespuesta, limpiarParaWhatsApp, MENSAJE_SEGURO_FALLBACK } = require('./safety');
 
 async function responder(ctx, mensajeUsuario) {
@@ -35,8 +36,10 @@ async function responder(ctx, mensajeUsuario) {
     }
     try { await usage.registrar(ctx.tenantId); } catch (_) { /* uso best-effort */ }
 
-    const system = construirSystemPrompt(ctx.tenant, { owner: !!ctx.esOwner });
-    const schemas = tools.schemas({ owner: !!ctx.esOwner, tenant: ctx.tenant });
+    const runtimeTenant = await remote.hydrateTenant(ctx.tenant);
+    const runtimeCtx = { ...ctx, tenant: runtimeTenant };
+    const system = construirSystemPrompt(runtimeTenant, { owner: !!ctx.esOwner });
+    const schemas = tools.schemas({ owner: !!ctx.esOwner, tenant: runtimeTenant });
 
     // Historial limpio (solo user/assistant de texto) + el mensaje nuevo.
     const previo = await conversations.get(ctx.tenantId, ctx.telefono);
@@ -56,7 +59,7 @@ async function responder(ctx, mensajeUsuario) {
             let resultado;
             try {
                 const args = JSON.parse(call.function.arguments || '{}');
-                resultado = await tools.ejecutar(call.function.name, args, ctx);
+                resultado = await tools.ejecutar(call.function.name, args, runtimeCtx);
             } catch (err) {
                 console.error('Error ejecutando tool:', err);
                 resultado = 'ERROR: no se pudo completar.';

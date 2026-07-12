@@ -33,3 +33,16 @@ test('preserves Meta message IDs for webhook idempotency', () => {
     } }] }] });
     assert.deepEqual(parsed, { id: 'wamid.test-123', from: '34611111111', body: 'Hola', displayNumber: '+34600000000' });
 });
+
+test('maps database services into the runtime tenant used by the next reply', () => {
+    const tenant = { business: { nombre: 'Clínica' }, services: { servicios: [] }, faq: 'Anterior', policies: '', tone: '', handoff: {} };
+    const hydrated = remote.mergeRuntimeTenant(tenant, [{
+        id: 'service-1', external_key: 'revision', name: 'Revisión dental', description: 'Valoración completa',
+        duration_minutes: 30, price_amount: '45.00', active: true, settings: { reservable: true }
+    }], { faq: 'Actualizada', tone: 'Claro y cercano', business: { ciudad: 'Valencia' }, handoff_config: { email: 'recepcion@example.test' } });
+    assert.equal(hydrated.services.servicios[0].nombre, 'Revisión dental');
+    assert.equal(hydrated.services.servicios[0].precio_eur, 45);
+    assert.equal(hydrated.services.servicios[0].reservable, true);
+    assert.equal(hydrated.faq, 'Actualizada');
+    assert.equal(hydrated.business.ciudad, 'Valencia');
+});
