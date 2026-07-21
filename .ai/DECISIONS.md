@@ -65,3 +65,33 @@ El estado vivo es `.ai/STATE.md`, que señala qué partes están caducadas.
 **Por qué:** reescribir un documento fechado destruye la trazabilidad de cuándo
 se validó qué. Y mantener dos fuentes "vivas" es exactamente lo que provocó la
 divergencia en `studio32-web`.
+
+## 2026-07-21 · La ortografía del conocimiento es parte del producto
+
+Todo el conocimiento de `gh-dent` (`faq`, `tone`, `policies`, `services`) estaba
+escrito sin tildes ni signos de apertura. `tone.md` llegaba a pedir "Hablas en
+espanol de Espana, con tildes" sin una sola tilde, y decía "mas de 20 anos".
+
+**Decisión:** el conocimiento del tenant se escribe con ortografía correcta y se
+trata como texto de cara al cliente, no como configuración interna.
+
+**Por qué:** se lee en dos sitios que importan. El cliente lo ve en la pestaña
+"Asistente" del panel, y sobre todo es el prompt del sistema: un prompt sin
+acentos empuja al modelo a responder igual a los pacientes. No es cosmético.
+
+## 2026-07-21 · Tenant `clinica-cobalto` para demos, en vez de sembrar en gh-dent
+
+Para preparar una demo comercial hacía falta un dashboard con datos creíbles
+(agenda poblada, conversaciones en varios estados). El tenant real de gh-dent
+solo tenía ruido de pruebas: citas duplicadas, canceladas de QA y un "paciente"
+llamado Pancho.
+
+**Decisión:** se crea un tenant ficticio `clinica-cobalto` con su carpeta en
+`tenants/` y un seed acotado (`supabase/seed-demo-cobalto.sql`). El tenant real
+no se toca.
+
+**Por qué:** sembrar pacientes inventados en el tenant que será la producción de
+la clínica los dejaría indistinguibles de citas reales el día del go-live. El
+nombre reutiliza la "Clínica Cobalto" que ya aparece como demo en studio32.es,
+para no inventar otra marca. El seed es idempotente y filtra por la organización
+demo en cada sentencia.

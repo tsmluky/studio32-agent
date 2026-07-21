@@ -1,0 +1,27 @@
+{
+  "nombre": "Clínica Cobalto · Clínica Dental",
+  "agente_nombre": "Cobalto",
+  "ciudad": "Valencia",
+  "whatsapp_number": "whatsapp:+34600000001",
+  "horario_texto": "Lunes a viernes de 09:30 a 20:00. Sábados y domingos, cerrado.",
+  "profesionales": [
+    "Equipo Cobalto"
+  ],
+  "horario": {
+    "dias_laborables": [1, 2, 3, 4, 5],
+    "franjas": [
+      { "inicio": "09:30", "fin": "20:00" }
+    ]
+  },
+  "calendar": {
+    "calendar_id": "",
+    "timezone": "Europe/Madrid"
+  },
+  "owner": {
+    "nombre": "Equipo Studio32",
+    "token": "demo-no-usar",
+    "whatsapp": "whatsapp:+34600000001"
+  },
+  "web": "https://studio32.es",
+  "_demo": "Tenant FICTICIO para demostraciones comerciales. No es un cliente real: no contiene datos personales ni credenciales válidas."
+}

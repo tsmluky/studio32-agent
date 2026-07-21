@@ -54,12 +54,21 @@ importar.
 
 ## Tenants
 
-13 carpetas. Reales/relevantes: `gh-dent` (cliente), `studio32` (propio),
-`barberia_demo` (demo por defecto). El resto son demo/QA y **no deben importarse
-a producción**: `asdasd-lq8h`, `clinica-sonrisa*`, `clinica-sonrisita-stu1`,
+14 carpetas. Reales/relevantes: `gh-dent` (cliente), `studio32` (propio),
+`clinica-cobalto` (**demo comercial**, ver abajo), `barberia_demo` (demo por
+defecto). El resto son demo/QA y **no deben importarse a producción**:
+`asdasd-lq8h`, `clinica-sonrisa*`, `clinica-sonrisita-stu1`,
 `la-taberna-de-ruzafa-o4gb`, `la-terraza-ygad`, `pollo-loco-0w53`, `qa-*`.
 
 Conviene una limpieza de las carpetas basura (`asdasd-lq8h`, `qa-*`) — no urgente.
+
+### `clinica-cobalto` · tenant de demostración
+
+Ficticio, para enseñar el flujo completo del dashboard sin tocar el tenant real
+de un cliente. Datos sintéticos (teléfonos `+3460000001x`, sin credenciales
+válidas). Se siembra con `supabase/seed-demo-cobalto.sql`: idempotente, acotado
+a esa organización y con la agenda **relativa a hoy** para que no caduque.
+El acceso se concede a los mismos usuarios que ya entran a `gh-dent`.
 
 ## Docs históricos (leer con fecha en la mano)
 
@@ -83,5 +92,17 @@ Rama: `main`. Se trabaja desde portátil y sobremesa.
 
 ## Foco actual
 
-Sin tarea abierta en el repo (worktree limpio). El foco del ecosistema es cerrar
-el go-live de GH Dent: los tres bloqueadores de arriba son el camino crítico.
+**Preparar la demo comercial** (Juanma la enseña en persona, desde móvil o
+portátil). El go-live de GH Dent queda en pausa deliberada: no se involucra a la
+clínica todavía, así que sus tres bloqueadores no son el camino crítico ahora.
+
+Hecho en esta tanda:
+- Ortografía del conocimiento de `gh-dent` corregida en `tenants/` (**pendiente
+  de reimportar a Supabase**: el agente y el panel leen de ahí, no del repo).
+- Tenant `clinica-cobalto` creado + seed listo para ejecutar.
+
+Pendiente inmediato:
+1. Ejecutar `supabase/seed-demo-cobalto.sql` en el proyecto de Supabase.
+2. Propagar la ortografía de `gh-dent` a `agent_configs` (reimportar o SQL).
+   Ojo al renombrar servicios con tildes: que la importación **actualice** las
+   filas existentes en vez de duplicarlas.
