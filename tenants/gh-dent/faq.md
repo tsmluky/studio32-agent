@@ -1,8 +1,8 @@
-- La primera consulta es gratuita? Si, la primera valoracion en GH Dent es totalmente gratuita y sin compromiso; te entregamos un presupuesto cerrado y detallado.
-- Es dolorosa la revision? No debe doler. Usamos tecnicas modernas y un protocolo cuidadoso, sobre todo si vienes con miedo o llevas tiempo sin venir.
-- Hay limite de edad para la ortodoncia? No, se puede a cualquier edad; ademas de estetica mejora la mordida, la higiene y la articulacion.
-- Trabajais con seguros o mutuas? Si, con la mayoria: Asisa, Mapfre, Cigna, Helvetia, Allianz, Dentired y mas. Dinos tu poliza y te confirmamos coberturas sin compromiso.
-- Ofreceis financiacion? Si, hasta 36 meses sin intereses.
-- Donde estais y que horario teneis? C. Cardenal Gonzalez de Mendoza, 8, Guadalajara. Lunes a jueves 10:00-19:00 y viernes 10:00-14:00. Sabado y domingo cerrado.
-- Que tratamientos haceis? Odontologia general, odontopediatria, ortodoncia, implantes, carillas, blanqueamiento, endodoncia, periodoncia, diseno de sonrisa y cirugia oral.
-- Como pido cita? Por aqui mismo te ayudo a agendar, o por WhatsApp al 610 23 80 24 y por telefono al 949 23 51 60.
+- ¿La primera consulta es gratuita? Sí, la primera valoración en GH Dent es totalmente gratuita y sin compromiso; te entregamos un presupuesto cerrado y detallado.
+- ¿Es dolorosa la revisión? No debe doler. Usamos técnicas modernas y un protocolo cuidadoso, sobre todo si vienes con miedo o llevas tiempo sin venir.
+- ¿Hay límite de edad para la ortodoncia? No, se puede a cualquier edad; además de estética mejora la mordida, la higiene y la articulación.
+- ¿Trabajáis con seguros o mutuas? Sí, con la mayoría: Asisa, Mapfre, Cigna, Helvetia, Allianz, Dentired y más. Dinos tu póliza y te confirmamos coberturas sin compromiso.
+- ¿Ofrecéis financiación? Sí, hasta 36 meses sin intereses.
+- ¿Dónde estáis y qué horario tenéis? C. Cardenal González de Mendoza, 8, Guadalajara. Lunes a jueves 10:00-19:00 y viernes 10:00-14:00. Sábado y domingo cerrado.
+- ¿Qué tratamientos hacéis? Odontología general, odontopediatría, ortodoncia, implantes, carillas, blanqueamiento, endodoncia, periodoncia, diseño de sonrisa y cirugía oral.
+- ¿Cómo pido cita? Por aquí mismo te ayudo a agendar, o por WhatsApp al 610 23 80 24 y por teléfono al 949 23 51 60.
