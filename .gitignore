@@ -7,3 +7,12 @@ data/*
 !data/.gitkeep
 *.log
 .DS_Store
+
+# ── Herramientas de agente / sesiones locales ──
+# `.claude/*` y no `.claude/`: git no puede re-incluir un archivo si su directorio
+# padre está excluido. Con `/*` la excepción de abajo sí funciona.
+.claude/*
+# Excepción: la config compartida SÍ va al repo — es lo que sincroniza los hooks
+# entre portátil y sobremesa. Las sesiones y la caché siguen ignoradas.
+!.claude/settings.json
+.hermes/

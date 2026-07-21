@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "git fetch --quiet origin 2>/dev/null; behind=$(git rev-list --count HEAD..@{u} 2>/dev/null || echo 0); dirty=$(git status --porcelain -- .ai/ | wc -l); if [ \"$behind\" -gt 0 ] && [ \"$dirty\" -eq 0 ]; then git pull --rebase --quiet && echo \"[.ai] Sincronizado: $behind commit(s) traidos de origin. Lee .ai/STATE.md.\"; elif [ \"$behind\" -gt 0 ]; then echo \"[.ai] AVISO: origin va $behind commit(s) por delante y tienes cambios locales sin commitear en .ai/. Resuelvelo antes de trabajar (la otra maquina ya avanzo).\"; else echo \"[.ai] Al dia con origin. Lee .ai/STATE.md antes de tocar nada.\"; fi",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}
