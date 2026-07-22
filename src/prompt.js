@@ -6,11 +6,38 @@
 // motor sirve para una barbería, una clínica o un restaurante solo cambiando
 // la carpeta tenants/<id>/.
 
-function fechaHoy() {
-    const d = new Date();
-    const dias = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
-    const f = (n) => String(n).padStart(2, '0');
-    return `${dias[d.getDay()]} ${f(d.getDate())}/${f(d.getMonth() + 1)}/${d.getFullYear()}`;
+const DIAS = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+const TZ_NEGOCIO = 'Europe/Madrid';
+
+// Partes de la fecha EN LA ZONA DEL NEGOCIO. El servidor corre en UTC, así que
+// entre medianoche y las 02:00 de España un `new Date()` pelado devuelve el día
+// anterior y el agente reservaría un día antes.
+function partesEnZona(date, timezone) {
+    const p = new Intl.DateTimeFormat('en-CA', {
+        timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'short',
+    }).formatToParts(date);
+    const leer = (t) => p.find(x => x.type === t)?.value || '';
+    // El índice de día de la semana lo sacamos de la clave en inglés, estable.
+    const idx = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(leer('weekday'));
+    return { y: leer('year'), m: leer('month'), d: leer('day'), dow: idx };
+}
+
+function fechaHoy(timezone) {
+    const { y, m, d, dow } = partesEnZona(new Date(), timezone || TZ_NEGOCIO);
+    return `${DIAS[dow]} ${d}/${m}/${y}`;
+}
+
+// El modelo se equivoca al calcular "el viernes" a partir de "hoy es miércoles":
+// en pruebas convirtió "viernes" en la fecha de hoy y reservó el día que no era.
+// Dándole la semana ya resuelta no hay nada que calcular, solo que consultar.
+function proximosDias(timezone, total) {
+    const tz = timezone || TZ_NEGOCIO;
+    const salida = [];
+    for (let i = 1; i <= (total || 7); i++) {
+        const { y, m, d, dow } = partesEnZona(new Date(Date.now() + i * 86400000), tz);
+        salida.push(`${DIAS[dow]} ${d}/${m}/${y}`);
+    }
+    return salida.join(' · ');
 }
 
 function listarServicios(services) {
@@ -34,7 +61,9 @@ function construirSystemPrompt(tenant, opts = {}) {
     return `
 Eres ${b.agente_nombre || 'el asistente'}, atiendes por WhatsApp a los clientes de ${b.nombre || 'el negocio'}${b.ciudad ? ' (' + b.ciudad + ')' : ''}. Hablas como una persona real del sitio, no como un bot.
 
-Hoy es ${fechaHoy()}. Úsalo para interpretar "mañana", "el lunes", "este finde", etc., y convertir a DD/MM/YYYY cuando uses herramientas.
+Hoy es ${fechaHoy(b.horario && b.calendar && b.calendar.timezone)}.
+Próximos días: ${proximosDias(b.calendar && b.calendar.timezone, 7)}.
+Cuando el cliente diga "mañana", "el viernes", "este finde" o similar, BUSCA el día en esa lista y usa esa fecha exacta en DD/MM/YYYY al llamar a las herramientas. No la calcules de cabeza ni asumas que es hoy.
 
 ${tenant.tone || ''}
 
