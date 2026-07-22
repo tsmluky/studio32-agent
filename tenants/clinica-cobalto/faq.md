@@ -1,7 +1,7 @@
 - ¿La primera visita es gratuita? Sí, la primera visita incluye revisión y presupuesto cerrado, sin compromiso.
 - ¿Cuánto cuesta una higiene dental? La higiene completa son 45 € y dura unos 40 minutos.
 - ¿Es doloroso el tratamiento? No debe doler. Trabajamos con técnicas actuales y un protocolo cuidadoso, sobre todo si vienes con miedo o llevas tiempo sin venir.
-- ¿Trabajáis con seguros o mutuas? Sí, con la mayoría. Dinos tu póliza y te confirmamos coberturas sin compromiso.
+- ¿Trabajáis con seguros o mutuas? Trabajamos con la mayoría, pero cada póliza cubre cosas distintas. Dinos cuál es la tuya y te confirmamos la cobertura sin compromiso.
 - ¿Ofrecéis financiación? Sí, hasta 36 meses sin intereses.
 - ¿Dónde estáis y qué horario tenéis? En el centro de Valencia. Lunes a viernes de 09:30 a 20:00. Sábados y domingos, cerrado.
 - ¿Qué tratamientos hacéis? Revisiones, higiene, ortodoncia invisible, implantes, blanqueamiento, endodoncia y odontopediatría.
