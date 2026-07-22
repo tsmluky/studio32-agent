@@ -70,6 +70,11 @@ válidas). Se siembra con `supabase/seed-demo-cobalto.sql`: idempotente, acotado
 a esa organización y con la agenda **relativa a hoy** para que no caduque.
 El acceso se concede a los mismos usuarios que ya entran a `gh-dent`.
 
+**Sembrado en Supabase el 2026-07-22** y verificado en `dashboard.studio32.es`
+(escritorio y móvil): 6 pacientes, 4 conversaciones (una en control humano),
+16 mensajes, 8 servicios y 13 citas repartidas alrededor de hoy. El selector de
+organización del panel muestra Clínica Cobalto y GH Dent.
+
 ## Docs históricos (leer con fecha en la mano)
 
 - `docs/SUPABASE_FOUNDATION.md` — arquitectura, RLS y contrato de control.
@@ -92,17 +97,18 @@ Rama: `main`. Se trabaja desde portátil y sobremesa.
 
 ## Foco actual
 
-**Preparar la demo comercial** (Juanma la enseña en persona, desde móvil o
-portátil). El go-live de GH Dent queda en pausa deliberada: no se involucra a la
-clínica todavía, así que sus tres bloqueadores no son el camino crítico ahora.
+**Demo comercial lista** (Juanma la enseña en persona, desde móvil o portátil,
+el viernes). El go-live de GH Dent sigue en pausa deliberada: no se involucra a
+la clínica todavía, así que sus tres bloqueadores no son el camino crítico.
 
-Hecho en esta tanda:
-- Ortografía del conocimiento de `gh-dent` corregida en `tenants/` (**pendiente
-  de reimportar a Supabase**: el agente y el panel leen de ahí, no del repo).
-- Tenant `clinica-cobalto` creado + seed listo para ejecutar.
+Hecho y **cerrado** (2026-07-22):
+- Ortografía del conocimiento de `gh-dent` corregida en `tenants/` y **propagada
+  a Supabase** por SQL: `agent_configs` (faq/policies/tone) y los 5 nombres de
+  servicio que llevaban tilde. Se actualizaron las filas existentes; no hay
+  duplicados.
+- Tenant `clinica-cobalto` creado y sembrado. Ver arriba.
 
-Pendiente inmediato:
-1. Ejecutar `supabase/seed-demo-cobalto.sql` en el proyecto de Supabase.
-2. Propagar la ortografía de `gh-dent` a `agent_configs` (reimportar o SQL).
-   Ojo al renombrar servicios con tildes: que la importación **actualice** las
-   filas existentes en vez de duplicarlas.
+Aviso para la próxima importación: `npm run supabase:import -- gh-dent`
+sobrescribiría `agent_configs` desde `tenants/`. Como el repo ya tiene el texto
+correcto, es seguro — pero conviene ejecutarlo desde este repo actualizado, no
+desde una copia antigua.
