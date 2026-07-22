@@ -95,3 +95,23 @@ la clínica los dejaría indistinguibles de citas reales el día del go-live. El
 nombre reutiliza la "Clínica Cobalto" que ya aparece como demo en studio32.es,
 para no inventar otra marca. El seed es idempotente y filtra por la organización
 demo en cada sentencia.
+
+## 2026-07-22 · La fecha se le da resuelta al modelo, no calculada
+
+Probando el flujo de reserva se pidió cita "el viernes por la mañana" y el
+agente contestó "el viernes 22 de julio" —fecha que se contradice, porque el 22
+era miércoles— y guardó la cita ese mismo día en vez del viernes.
+
+El prompt ya inyectaba la fecha de hoy y el modelo la sabía: preguntado a
+bocajarro respondía "miércoles, 22 de julio". Lo que falla es la aritmética.
+
+**Decisión:** el prompt lista los próximos 7 días ya resueltos (día de la semana
++ DD/MM/YYYY) y pide buscar en la lista en vez de calcular. Además la fecha se
+deriva en la zona del negocio, no en la del proceso.
+
+**Por qué:** una reserva mal fechada es de los peores fallos posibles aquí —
+llega al calendario del cliente y nadie lo detecta hasta que el paciente no
+aparece. Fiarlo a que el modelo cuente días es innecesario cuando el servidor
+puede resolverlo. Lo de la zona horaria importa porque el servidor corre en UTC:
+entre medianoche y las 02:00 de España un `new Date()` pelado da el día anterior,
+justo en la franja nocturna que este agente existe para cubrir.

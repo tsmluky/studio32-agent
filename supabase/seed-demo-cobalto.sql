@@ -9,6 +9,12 @@
 --     Ninguna toca otras organizaciones.
 --   · Fechas relativas a hoy (Europe/Madrid), para que la agenda no caduque.
 --
+-- USO COMO RESET ANTES DE UNA DEMO: reejecutarlo hace las dos cosas que hacen
+-- falta tras un ensayo. Borra el rastro de las pruebas (conversaciones y citas
+-- que haya creado el agente) y, como las fechas son relativas, recoloca la
+-- agenda alrededor del día en que se lanza. Ensaya lo que quieras y ejecútalo
+-- justo antes de presentar.
+--
 -- Fuente de la configuración: tenants/clinica-cobalto/ en este repo.
 
 begin;

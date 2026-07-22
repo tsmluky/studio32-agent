@@ -75,6 +75,16 @@ El acceso se concede a los mismos usuarios que ya entran a `gh-dent`.
 16 mensajes, 8 servicios y 13 citas repartidas alrededor de hoy. El selector de
 organización del panel muestra Clínica Cobalto y GH Dent.
 
+**Reset antes de la demo:** reejecutar el seed borra el rastro de los ensayos y
+recoloca la agenda en el día en que se lanza. Ensayar libremente y ejecutarlo
+justo antes de presentar.
+
+**WhatsApp de la demo:** el sandbox de Twilio (`+14155238886`) no coincide con el
+`whatsapp_number` de ningún tenant, así que cae en `DEFAULT_TENANT` (variable de
+Railway). Apuntándola a `clinica-cobalto`, WhatsApp y dashboard van coordinados.
+**Valor original: `gh-dent`** — hay que devolverlo ahí al retomar su go-live.
+El `join` del sandbox dura 72 h; reenviarlo antes de presentar si hay dudas.
+
 ## Docs históricos (leer con fecha en la mano)
 
 - `docs/SUPABASE_FOUNDATION.md` — arquitectura, RLS y contrato de control.
