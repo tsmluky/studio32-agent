@@ -115,3 +115,39 @@ aparece. Fiarlo a que el modelo cuente días es innecesario cuando el servidor
 puede resolverlo. Lo de la zona horaria importa porque el servidor corre en UTC:
 entre medianoche y las 02:00 de España un `new Date()` pelado da el día anterior,
 justo en la franja nocturna que este agente existe para cubrir.
+
+## 2026-07-22 · El agente no promete lo que no puede cumplir
+
+Sondeando el agente con conversaciones reales aparecieron cuatro conductas que
+en una demo —y en producción— hacen daño:
+
+- Prometía "lo miro y te aviso". **Solo puede responder, no iniciar**, así que
+  ese segundo mensaje no llega nunca y la persona se queda esperando.
+- Confirmaba mutuas por su nombre sin tenerlas por escrito ("sí, trabajamos con
+  Adeslas"). El paciente se presentaría creyendo que tiene cobertura.
+- Ofrecía cita en días cerrados.
+- Enumeraba los 21 huecos del día, contra su propio tono de "una o dos frases".
+
+**Decisión:** el motor lleva una sección "LO QUE NO PUEDES HACER" con esos
+límites explícitos: prohibido prometer mensajes futuros (resolver en el turno o
+`handoffHuman`), prohibido confirmar coberturas no escritas —aclarando que un
+"trabajamos con la mayoría" en el FAQ NO autoriza a confirmar una concreta—, y
+2 o 3 horas concretas al ofrecer hueco. Los días cerrados van marcados en la
+lista de próximos días.
+
+**Por qué en el motor y no en cada tenant:** son límites de lo que el sistema
+puede hacer, no preferencias de negocio. Un tenant nuevo los hereda sin que
+nadie se acuerde de copiarlos.
+
+## 2026-07-22 · El agente lee de `tenants/`, el panel de Supabase
+
+Al corregir el FAQ de Cobalto se vio que cambiar el archivo arreglaba al agente
+pero dejaba el panel mostrando el texto viejo: el agente carga la config con
+`cargarTenant()` desde `tenants/<slug>/`, mientras que la pestaña "Asistente"
+del panel lee `agent_configs` de Supabase.
+
+**Decisión:** al tocar conocimiento de un tenant hay que actualizar **las dos**
+capas (archivo + `agent_configs`), o reimportar.
+
+**Por qué importa:** la divergencia es silenciosa. El agente dice una cosa al
+paciente y el cliente lee otra en su panel, y nada falla de forma visible.
