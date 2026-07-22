@@ -30,12 +30,15 @@ function fechaHoy(timezone) {
 // El modelo se equivoca al calcular "el viernes" a partir de "hoy es miércoles":
 // en pruebas convirtió "viernes" en la fecha de hoy y reservó el día que no era.
 // Dándole la semana ya resuelta no hay nada que calcular, solo que consultar.
-function proximosDias(timezone, total) {
+function proximosDias(timezone, total, diasLaborables) {
     const tz = timezone || TZ_NEGOCIO;
+    const laborables = Array.isArray(diasLaborables) && diasLaborables.length ? diasLaborables : null;
     const salida = [];
     for (let i = 1; i <= (total || 7); i++) {
         const { y, m, d, dow } = partesEnZona(new Date(Date.now() + i * 86400000), tz);
-        salida.push(`${DIAS[dow]} ${d}/${m}/${y}`);
+        // Marcar los cerrados: si no, el modelo ofrece citas en sábado.
+        const cerrado = laborables && !laborables.includes(dow);
+        salida.push(`${DIAS[dow]} ${d}/${m}/${y}${cerrado ? ' (CERRADO)' : ''}`);
     }
     return salida.join(' · ');
 }
@@ -61,9 +64,17 @@ function construirSystemPrompt(tenant, opts = {}) {
     return `
 Eres ${b.agente_nombre || 'el asistente'}, atiendes por WhatsApp a los clientes de ${b.nombre || 'el negocio'}${b.ciudad ? ' (' + b.ciudad + ')' : ''}. Hablas como una persona real del sitio, no como un bot.
 
-Hoy es ${fechaHoy(b.horario && b.calendar && b.calendar.timezone)}.
-Próximos días: ${proximosDias(b.calendar && b.calendar.timezone, 7)}.
-Cuando el cliente diga "mañana", "el viernes", "este finde" o similar, BUSCA el día en esa lista y usa esa fecha exacta en DD/MM/YYYY al llamar a las herramientas. No la calcules de cabeza ni asumas que es hoy.
+Hoy es ${fechaHoy(b.calendar && b.calendar.timezone)}.
+Próximos días: ${proximosDias(b.calendar && b.calendar.timezone, 7, b.horario && b.horario.dias_laborables)}.
+Cuando el cliente diga "mañana", "el viernes", "este finde" o similar, BUSCA el día en esa lista y usa esa fecha exacta en DD/MM/YYYY al llamar a las herramientas. No la calcules de cabeza ni asumas que es hoy. Nunca ofrezcas ni aceptes un día marcado (CERRADO): di que ese día no se abre y ofrece el siguiente día laborable.
+
+═══ LO QUE NO PUEDES HACER ═══
+- SOLO PUEDES RESPONDER. No puedes escribir por tu cuenta más tarde ni enviar un segundo mensaje. Por eso NUNCA digas "lo miro y te aviso", "te confirmo en un rato", "te escribo luego" ni nada que prometa un mensaje futuro: ese mensaje no existirá y la persona se quedará esperando. Si hace falta comprobar algo, compruébalo AHORA con tus herramientas y responde en este mismo mensaje. Si no puedes resolverlo, usa handoffHuman y dile que le atenderá una persona del equipo.
+- No confirmes coberturas de mutuas o seguros concretos que no aparezcan escritos arriba. Si te preguntan por una que no está, di que lo confirman sin compromiso con los datos de su póliza; no respondas "sí, trabajamos con esa".
+- No te inventes datos que no estén arriba (precios cerrados, plazos, profesionales, tratamientos).
+
+═══ CÓMO OFRECES HORAS ═══
+Ofrece como mucho 2 o 3 horas concretas, las más cercanas a lo que ha pedido. Nunca enumeres todos los huecos del día: es un chat, no un listado.
 
 ${tenant.tone || ''}
 
