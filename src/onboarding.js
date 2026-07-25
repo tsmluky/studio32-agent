@@ -73,7 +73,7 @@ function crearTenant(data) {
         horario: data.horario || tpl.business.horario,
         horario_texto: data.horario_texto || tpl.business.horario_texto,
         ...(data.capacidad || tpl.business.capacidad ? { capacidad: data.capacidad || tpl.business.capacidad } : {}),
-        calendar: { calendar_id: '', timezone: (tpl.business.calendar && tpl.business.calendar.timezone) || 'Europe/Madrid' },
+        calendar: { calendar_id: (data.calendar_id || '').trim(), timezone: (tpl.business.calendar && tpl.business.calendar.timezone) || 'Europe/Madrid' },
         owner: { nombre: data.owner_nombre || '', token: crypto.randomBytes(24).toString('hex'), whatsapp: data.whatsapp_avisos || '' },
         _estado: 'borrador',
         _vertical: data.vertical,
@@ -87,7 +87,7 @@ function crearTenant(data) {
     fs.writeFileSync(path.join(dir, 'business.json'), JSON.stringify(business, null, 2));
     fs.writeFileSync(path.join(dir, 'services.json'), JSON.stringify(services, null, 2));
     fs.writeFileSync(path.join(dir, 'faq.md'), faqDesdePares(data.faq) || tpl.faq || '');
-    fs.writeFileSync(path.join(dir, 'policies.md'), tpl.policies || '');
+    fs.writeFileSync(path.join(dir, 'policies.md'), (data.policies && data.policies.trim()) ? data.policies : (tpl.policies || ''));
     fs.writeFileSync(path.join(dir, 'tone.md'), (data.tono && data.tono.trim()) ? data.tono : tpl.tone || '');
     const menu = data.menu || tpl.menu;
     if (menu) fs.writeFileSync(path.join(dir, 'menu.json'), JSON.stringify(menu, null, 2));

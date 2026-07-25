@@ -1,0 +1,6 @@
+- ¿Hace falta reservar? Recomendamos reservar, sobre todo fines de semana. Por aquí mismo te ayudo.
+- ¿Dónde estáis? [Dirección del restaurante].
+- ¿Tenéis menú del día? Sí, de martes a viernes en las comidas.
+- ¿Tenéis opciones para alergias o intolerancias? Sí, dinos qué necesitas y te informamos de los platos según los alérgenos de la carta.
+- ¿Se puede ir con niños o grupos grandes? Sí; para grupos grandes tomamos los datos y os confirma el equipo.
+- ¿Puedo cambiar o cancelar la reserva? Sí, avisando con antelación por aquí mismo.

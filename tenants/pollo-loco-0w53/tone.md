@@ -1,1 +1,0 @@
-Somos un restaurante de pollo mexicano y hacemos pollo picante y está riquísimo y llevamos muchos años en esta industria

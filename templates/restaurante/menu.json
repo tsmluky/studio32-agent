@@ -1,0 +1,29 @@
+{
+  "_nota": "Carta de ejemplo. Sustituir por la carta real del cliente en el onboarding.",
+  "menu_del_dia": {
+    "precio_eur": 15,
+    "descripcion": "Entrante + principal + postre o café. De martes a viernes, solo comidas."
+  },
+  "secciones": [
+    {
+      "nombre": "Entrantes",
+      "platos": [
+        { "nombre": "Ensalada de la casa", "precio_eur": 8, "descripcion": "", "alergenos": [] },
+        { "nombre": "Croquetas caseras (6 uds)", "precio_eur": 8, "descripcion": "", "alergenos": ["gluten", "lactosa", "huevo"] }
+      ]
+    },
+    {
+      "nombre": "Principales",
+      "platos": [
+        { "nombre": "Solomillo a la plancha", "precio_eur": 17, "descripcion": "Con guarnición", "alergenos": [] },
+        { "nombre": "Pescado del día", "precio_eur": 16, "descripcion": "Según mercado", "alergenos": ["pescado"] }
+      ]
+    },
+    {
+      "nombre": "Postres",
+      "platos": [
+        { "nombre": "Postre casero", "precio_eur": 5, "descripcion": "", "alergenos": ["gluten", "lactosa", "huevo"] }
+      ]
+    }
+  ]
+}

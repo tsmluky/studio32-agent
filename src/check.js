@@ -26,7 +26,6 @@ console.log('\n=== Studio32 Agent · chequeo de configuración ===\n');
 console.log('Motor LLM');
 line(true, `Proveedor activo: ${llm.PROVIDER}`, llm.PROVIDER === 'mock' ? '(simulación, sin coste)' : `(modelo ${llm.MODEL})`);
 line(has(process.env.OPENAI_API_KEY), 'OPENAI_API_KEY');
-line(has(process.env.DEEPSEEK_API_KEY), 'DEEPSEEK_API_KEY');
 
 console.log('\nWhatsApp · Twilio (BSP)');
 line(has(process.env.TWILIO_ACCOUNT_SID), 'TWILIO_ACCOUNT_SID');
@@ -67,8 +66,8 @@ for (const id of dirs) {
 console.log('\nResumen');
 const listoLLM = has(process.env.OPENAI_API_KEY) || llm.PROVIDER === 'mock';
 line(true, 'Probar HOY por webchat/CLI (modo simulación)', listoLLM ? 'listo' : '');
-const keyReal = has(process.env.OPENAI_API_KEY) || has(process.env.DEEPSEEK_API_KEY);
-line(keyReal, 'Conversación con IA real', keyReal ? `listo (${llm.PROVIDER})` : 'falta una API key (OpenAI o DeepSeek)');
+const keyReal = has(process.env.OPENAI_API_KEY);
+line(keyReal, 'Conversación con IA real', keyReal ? `listo (${llm.PROVIDER})` : 'falta la API key de OpenAI');
 const listoTw = has(process.env.TWILIO_ACCOUNT_SID) && has(process.env.TWILIO_AUTH_TOKEN) && has(process.env.TWILIO_WHATSAPP_NUMBER);
 line(listoTw, 'Operar por WhatsApp (Twilio)', listoTw ? 'listo' : 'faltan datos de Twilio');
 const listoMeta = has(process.env.META_ACCESS_TOKEN) && has(process.env.META_PHONE_NUMBER_ID);

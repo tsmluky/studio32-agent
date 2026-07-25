@@ -25,7 +25,7 @@ Dependencias: `@supabase/supabase-js` · `express` · `googleapis` · `openai` �
 src/
   server.js          entrada (Procfile / railway.json)
   orchestrator.js    bucle del agente: decide y llama tools
-  llm.js · prompt.js · providers/   motor LLM (openai | deepseek | mock)
+  llm.js · prompt.js · providers/   motor LLM (openai | mock)
   tools/             acciones del agente — una por archivo, registradas en index.js
   store/             persistencia — interfaz pública estable (ver abajo)
   channels/          whatsapp.meta.js · whatsapp.twilio.js

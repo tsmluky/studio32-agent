@@ -13,16 +13,13 @@ module.exports = {
     // cambiar de proveedor sin tocar el resto del agente.
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
     OPENAI_MODEL: process.env.OPENAI_MODEL || 'gpt-4o-mini',
-    // Endpoint compatible con OpenAI (para DeepSeek u otros). Opcional.
+    // Endpoint compatible con OpenAI (opcional, para apuntar a otro proveedor).
     OPENAI_BASE_URL: process.env.OPENAI_BASE_URL,
     LLM_PROVIDER: process.env.LLM_PROVIDER,
     // Twilio (canal WhatsApp alternativo a Meta).
     TWILIO_ACCOUNT_SID: process.env.TWILIO_ACCOUNT_SID,
     TWILIO_AUTH_TOKEN: process.env.TWILIO_AUTH_TOKEN,
     TWILIO_WHATSAPP_NUMBER: process.env.TWILIO_WHATSAPP_NUMBER,
-    // DeepSeek (compatible con la API de OpenAI).
-    DEEPSEEK_API_KEY: process.env.DEEPSEEK_API_KEY,
-    DEEPSEEK_MODEL: process.env.DEEPSEEK_MODEL || 'deepseek-chat',
     // CORS para el widget embebido (coma-separado, o * para todos).
     CORS_ORIGINS: process.env.CORS_ORIGINS || '*',
 

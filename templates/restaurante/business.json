@@ -1,0 +1,21 @@
+{
+  "agente_nombre": "Reservas",
+  "ciudad": "",
+  "horario_texto": "Martes a domingo, comidas de 13:00 a 16:00 y cenas de 20:00 a 23:30. Lunes cerrado.",
+  "profesionales": [],
+  "capacidad": {
+    "mesas": 8,
+    "max_comensales_por_reserva": 8
+  },
+  "horario": {
+    "dias_laborables": [2, 3, 4, 5, 6, 0],
+    "franjas": [
+      { "inicio": "13:00", "fin": "16:00" },
+      { "inicio": "20:00", "fin": "23:30" }
+    ]
+  },
+  "calendar": {
+    "calendar_id": "",
+    "timezone": "Europe/Madrid"
+  }
+}

@@ -151,3 +151,37 @@ capas (archivo + `agent_configs`), o reimportar.
 
 **Por qué importa:** la divergencia es silenciosa. El agente dice una cosa al
 paciente y el cliente lee otra en su panel, y nada falla de forma visible.
+
+## 2026-07-25 · El onboarding lo opera Studio32, no es self-service; plantillas por vertical
+
+Al comparar el agente con dos bots a medida (`BOTStudio32`, `peluqueria-bot`) surgió
+la duda de cómo adaptar el agente a cada negocio sin picar código por cliente. El
+onboarding (`src/onboarding.js` + `public/onboarding.html`) ya lo resolvía —genera la
+config del tenant desde un formulario partiendo de una plantilla por vertical— pero
+estaba **roto**: faltaba la carpeta `templates/`, así que el desplegable de verticales
+salía vacío y `crearTenant` fallaba con "Falta el vertical".
+
+**Decisión:** (1) se recrean las plantillas `templates/{clinica_dental, barberia,
+restaurante}` con datos genéricos, sin identidad de ningún cliente real. (2) El
+onboarding se reencuadra como **consola de alta interna** que Studio32 rellena CON el
+cliente en la reunión, no como un self-service "crea tu agente en 5 minutos": se
+cambió la copy (título, botón, textos) para que no parezca un juguete.
+
+**Por qué:** Juanma no quiere que delante del cliente parezca un generador de bots
+instantáneo; el valor es un sistema a medida. Que lo rellene Studio32 elimina ese
+riesgo sin rehacer nada, porque el agente ya es genérico y lee la config del tenant en
+tiempo de ejecución. Las plantillas genéricas evitan que cada clínica nueva arranque
+con la identidad (nombre, dirección, mutuas) de gh-dent.
+
+## 2026-07-25 · Limpieza de tenants basura y del proveedor `deepseek`
+
+**Decisión:** se borran los 10 tenants de demo/QA (`asdasd-lq8h`, `clinica-sonrisa*`,
+`clinica-sonrisita-stu1`, `la-taberna-de-ruzafa-o4gb`, `la-terraza-ygad`,
+`pollo-loco-0w53`, `qa-*`); quedan los 4 vivos: `gh-dent`, `studio32`,
+`clinica-cobalto`, `barberia_demo`. Y se elimina el proveedor LLM `deepseek`
+(estaba en `config.js`, `llm.js`, `check.js`, `.env.example`, `CONVENTIONS.md`).
+
+**Por qué:** era superficie muerta que confundía. Ninguno de esos tenants estaba en
+Supabase, así que borrarlos no afecta a producción. DeepSeek reutilizaba el cliente de
+OpenAI y no se usaba; si hiciera falta, se consigue con `LLM_PROVIDER=openai` +
+`OPENAI_BASE_URL`, sin variables dedicadas.

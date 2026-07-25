@@ -1,0 +1,7 @@
+- ¿La primera consulta es gratuita? Sí, la primera valoración es gratuita y sin compromiso; se entrega un presupuesto cerrado y detallado.
+- ¿Es dolorosa la revisión? No debe doler. Se usan técnicas modernas y un protocolo cuidadoso, sobre todo con pacientes con miedo o que llevan tiempo sin venir.
+- ¿Hay límite de edad para la ortodoncia? No, se puede a cualquier edad; además de estética mejora la mordida, la higiene y la articulación.
+- ¿Trabajáis con seguros o mutuas? Se trabaja con varias mutuas. Dinos tu póliza y te confirmamos coberturas sin compromiso.
+- ¿Ofrecéis financiación? Sí, consúltanos las opciones de financiación disponibles.
+- ¿Dónde estáis y qué horario tenéis? [Dirección de la clínica]. Lunes a viernes de 10:00 a 14:00 y de 16:00 a 20:00. Sábado y domingo cerrado.
+- ¿Cómo pido cita? Por aquí mismo te ayudo a agendar.

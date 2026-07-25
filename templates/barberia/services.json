@@ -1,0 +1,9 @@
+{
+  "servicios": [
+    { "nombre": "Corte de pelo", "precio_eur": 13, "duracion_min": 30 },
+    { "nombre": "Corte y barba", "precio_eur": 18, "duracion_min": 45 },
+    { "nombre": "Arreglo de barba", "precio_eur": 8, "duracion_min": 20 },
+    { "nombre": "Tinte", "precio_eur": 25, "duracion_min": 60 },
+    { "nombre": "Mechas", "precio_eur": 45, "duracion_min": 90 }
+  ]
+}

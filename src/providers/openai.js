@@ -1,7 +1,7 @@
 'use strict';
 
 // Cliente compatible con la API de OpenAI. Sirve para OpenAI y para cualquier
-// endpoint compatible (DeepSeek, etc.) cambiando baseURL y model. La librería
+// endpoint compatible cambiando baseURL y model. La librería
 // 'openai' se carga de forma perezosa. Se crea con createProvider({apiKey,baseURL,model}).
 
 module.exports = function createProvider({ apiKey, baseURL, model }) {

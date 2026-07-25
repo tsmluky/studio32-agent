@@ -1,0 +1,14 @@
+{
+  "servicios": [
+    { "nombre": "Primera valoración (gratuita)", "precio_eur": 0, "duracion_min": 30 },
+    { "nombre": "Odontología general y revisiones", "precio_eur": null, "duracion_min": 30 },
+    { "nombre": "Odontopediatría", "precio_eur": null, "duracion_min": 30 },
+    { "nombre": "Ortodoncia", "precio_eur": null, "duracion_min": 45 },
+    { "nombre": "Implantes", "precio_eur": null, "duracion_min": 45 },
+    { "nombre": "Carillas dentales", "precio_eur": null, "duracion_min": 45 },
+    { "nombre": "Blanqueamiento", "precio_eur": null, "duracion_min": 45 },
+    { "nombre": "Endodoncia", "precio_eur": null, "duracion_min": 45 },
+    { "nombre": "Periodoncia", "precio_eur": null, "duracion_min": 45 },
+    { "nombre": "Cirugía oral", "precio_eur": null, "duracion_min": 45 }
+  ]
+}
