@@ -128,8 +128,16 @@ Cerrado el 2026-07-26:
   10:00–14:00. Aditivo, probado offline.
 - `prompt.js` + `safety.js`: el agente puede admitir que es asistente virtual si se lo
   preguntan (antes se le empujaba a mentir).
-- **Pendiente de desplegar para la demo de esta noche:** push (código) + `supabase:import
-  -- gh-dent` (config, porque Supabase pisa los archivos) + Railway `DEFAULT_TENANT=gh-dent`.
+- **Desplegado y verificado en vivo (2026-07-26):** el agente corre en Railway
+  proyecto `thriving-presence` → servicio `web` (autodeploy desde el repo, dominio
+  `web-production-d722c.up.railway.app`). Hecho: `supabase:import -- gh-dent` (config
+  activa v1 con el alma nueva) + Railway `DEFAULT_TENANT` cambiado `clinica-cobalto`→
+  `gh-dent` (la demo de Twilio ahora cae en gh-dent). Probado por `/chat`: reconoce el
+  miedo, deriva a la valoración gratuita sin dar precios, y el viernes solo ofrece
+  mañanas (10:00–14:00). El agente NO está en `studio32-hub-agent` (ese es un bot de
+  Telegram distinto).
+- **Guarda de fecha añadida:** el modelo resolvía "este viernes" a un viernes ya pasado.
+  El prompt ahora prohíbe fechas anteriores a mañana y fuerza el próximo día de la lista.
 - Siguiente paso previsto: encapsular investigar→arquetipo+huella en una **skill**.
 
 Cerrado el 2026-07-25:
