@@ -52,7 +52,6 @@ module.exports = {
         const duracion = svc.duracion_min;
 
         const horario = b.horario || {};
-        const franjas = (horario.franjas || []).map(f => ({ inicio: horaAMin(f.inicio), fin: horaAMin(f.fin) }));
         const diasLab = horario.dias_laborables || [1, 2, 3, 4, 5];
         const profesionales = b.profesionales || [];
 
@@ -75,6 +74,13 @@ module.exports = {
                 fecha_sugerida: fmt(prox)
             });
         }
+
+        // Franjas del día. Si el negocio define un horario distinto por día de la
+        // semana (p.ej. el viernes solo por la mañana) en horario.franjas_por_dia
+        // ({ "5": [...] }), se usan esas; si no, las franjas base para todos.
+        const dow = fecha.getDay();
+        const franjasDia = (horario.franjas_por_dia && horario.franjas_por_dia[dow]) || horario.franjas || [];
+        const franjas = franjasDia.map(f => ({ inicio: horaAMin(f.inicio), fin: horaAMin(f.fin) }));
 
         const intervals = await bookings.busyIntervals(ctx.tenant, args.fecha);
         const PASO = 30;

@@ -21,7 +21,14 @@
         "fin": "19:00"
       }
     ],
-    "_nota": "[REVISAR] Viernes solo hasta 14:00. Si checkAvailability no soporta franjas por dia, ajustar aqui o limitar dias_laborables."
+    "franjas_por_dia": {
+      "5": [
+        {
+          "inicio": "10:00",
+          "fin": "14:00"
+        }
+      ]
+    }
   },
   "calendar": {
     "calendar_id": "",

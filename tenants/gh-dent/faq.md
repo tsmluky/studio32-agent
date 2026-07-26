@@ -1,8 +1,12 @@
-- ¿La primera consulta es gratuita? Sí, la primera valoración en GH Dent es totalmente gratuita y sin compromiso; te entregamos un presupuesto cerrado y detallado.
-- ¿Es dolorosa la revisión? No debe doler. Usamos técnicas modernas y un protocolo cuidadoso, sobre todo si vienes con miedo o llevas tiempo sin venir.
-- ¿Hay límite de edad para la ortodoncia? No, se puede a cualquier edad; además de estética mejora la mordida, la higiene y la articulación.
-- ¿Trabajáis con seguros o mutuas? Sí, con la mayoría: Asisa, Mapfre, Cigna, Helvetia, Allianz, Dentired y más. Dinos tu póliza y te confirmamos coberturas sin compromiso.
+- ¿La primera consulta es gratuita? Sí, la primera valoración en GH Dent es totalmente gratuita y sin compromiso. Incluye un estudio digital y te llevas un presupuesto cerrado y detallado.
+- ¿Me va a doler? La primera visita es solo para veros y explicaros; no se toca nada sin contártelo antes. Trabajamos con técnicas modernas y mucho cuidado, sobre todo si vienes con miedo o llevas tiempo sin venir.
+- Me da bastante miedo el dentista. Es muy normal, nos pasa cada día. Vamos con calma, te explicamos cada paso y tú decides. La primera valoración no tiene ningún compromiso.
+- ¿Puedo ver cómo quedaría antes de empezar? Sí. Hacemos un estudio digital y te enseñamos una simulación en 3D del resultado antes de comenzar cualquier tratamiento.
+- ¿Hacéis ortodoncia invisible? Sí, ortodoncia con alineadores casi imperceptibles. En la valoración vemos qué opción te encaja mejor.
+- ¿Hay límite de edad para la ortodoncia? No, se puede a cualquier edad; además de la estética, mejora la mordida, la higiene y la articulación.
+- ¿Lo hacéis todo en la misma clínica? Sí, todos los tratamientos bajo un mismo techo. No te mandamos de un sitio a otro.
+- ¿Trabajáis con seguros o mutuas? Sí, con más de 20 (Asisa, Mapfre, Cigna, Helvetia, Allianz, Dentired y más). Dinos tu póliza y te confirmamos coberturas sin compromiso.
 - ¿Ofrecéis financiación? Sí, hasta 36 meses sin intereses.
-- ¿Dónde estáis y qué horario tenéis? C. Cardenal González de Mendoza, 8, Guadalajara. Lunes a jueves 10:00-19:00 y viernes 10:00-14:00. Sábado y domingo cerrado.
-- ¿Qué tratamientos hacéis? Odontología general, odontopediatría, ortodoncia, implantes, carillas, blanqueamiento, endodoncia, periodoncia, diseño de sonrisa y cirugía oral.
+- ¿Dónde estáis y qué horario tenéis? C. Cardenal González de Mendoza, 8, Guadalajara. Lunes a jueves de 10:00 a 19:00 y viernes de 10:00 a 14:00. Sábado y domingo, cerrado.
 - ¿Cómo pido cita? Por aquí mismo te ayudo a agendar, o por WhatsApp al 610 23 80 24 y por teléfono al 949 23 51 60.
+- ¿Cuántos años lleváis? Más de 20 años cuidando sonrisas en Guadalajara.

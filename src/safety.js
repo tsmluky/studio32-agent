@@ -2,8 +2,11 @@
 
 // Guardrails de salida: última línea de defensa antes de enviar al cliente.
 // Aunque el modelo se equivoque, evita filtrar "texto interno" (notas al
-// sistema, nombres de herramientas, que es una IA) o referencias a otros
+// sistema, nombres de herramientas o del modelo) o referencias a otros
 // clientes. Si detecta algo, sustituye por un mensaje neutro.
+// Nota: admitir con naturalidad que es un "asistente virtual" SÍ está permitido
+// (honestidad si el cliente pregunta); lo que se bloquea es filtrar el proveedor
+// o el modelo concreto (OpenAI, GPT...).
 
 const PATRONES_PROHIBIDOS = [
     /nota\s+(importante\s+)?(para|al)\s+(el\s+)?sistema/i,
@@ -12,7 +15,7 @@ const PATRONES_PROHIBIDOS = [
     /\bla\s+herramienta\b/i,
     /seg[uú]n\s+la\s+herramienta/i,
     /\b(tool|tool_call|function call|api|backend|endpoint|system\s*prompt)\b/i,
-    /\b(openai|gpt|chatgpt|modelo de lenguaje|language model|soy una ia|como ia)\b/i,
+    /\b(openai|gpt|chatgpt|modelo de lenguaje|language model)\b/i,
     /(otros?|los\s+dem[aá]s)\s+(clientes|leads)/i
 ];
 

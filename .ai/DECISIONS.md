@@ -185,3 +185,82 @@ con la identidad (nombre, dirección, mutuas) de gh-dent.
 Supabase, así que borrarlos no afecta a producción. DeepSeek reutilizaba el cliente de
 OpenAI y no se usaba; si hiciera falta, se consigue con `LLM_PROVIDER=openai` +
 `OPENAI_BASE_URL`, sin variables dedicadas.
+
+## 2026-07-26 · En runtime, Supabase PISA los archivos (riesgo de deriva) [DEUDA]
+
+Corrige y amplía la nota del 2026-07-22 ("el agente lee de `tenants/`"). El
+`orchestrator` no solo hace `cargarTenant()` desde archivo: acto seguido llama a
+`remote.hydrateTenant()`, que trae `agent_configs` de Supabase y las **fusiona con
+prioridad de Supabase** (`mergeRuntimeTenant`: `config?.tone ?? tenant.tone`, etc.).
+O sea: si el tenant tiene una config activa en Supabase, **esa gana**; los archivos
+son la semilla + el respaldo (si no hay config activa o Supabase falla).
+
+**Consecuencia práctica:** editar los archivos NO cambia producción hasta correr
+`npm run supabase:import -- <id>`. Y al revés: un `import` "a ciegas" **pisa** lo que
+se haya editado desde el panel (que escribe Supabase). Son dos fuentes de verdad que
+pueden divergir en silencio.
+
+**Decisión (por ahora):** mientras el conocimiento se redacta a mano en archivos,
+**los archivos son la fuente** y se hace `import` tras cada cambio. NO refactorizar la
+carga de config antes del go-live: funciona y es un diseño razonable (BD = config viva
+para el panel, archivos = semilla/versionado).
+
+**Pendiente (deuda, no urgente):** cuando el panel sea la superficie de edición, hay
+que invertir la fuente de verdad y hacer el `import` consciente — que **avise si la
+config de Supabase difiere** de los archivos en vez de sobrescribir sin preguntar.
+No perder esto de vista: una sobrescritura silenciosa borraría trabajo del cliente.
+
+## 2026-07-26 · Excepcionalización del contexto: arquetipo por vertical + huella minada
+
+Con Juanma se acota el problema: la parte DURA del agente (motor `prompt.js`) está a
+buen nivel; la BLANDA (el "alma": tono, prioridades, inteligencia emocional) sale del
+onboarding como campos planos y queda pobre/clónica. Se levanta **conscientemente** la
+regla de freeze para atacar esto por ser el diferenciador real.
+
+**Decisión (modelo de dos capas):**
+- **Arquetipo** por vertical (lo redacta Studio32, profundo, investigado): el alma del
+  oficio, en `templates/<vertical>/`. Reutilizable, es el 90% de la calidad.
+- **Huella** por negocio (mínima): lo poco que distingue a ESE cliente. No se saca con
+  una entrevista profunda (el dueño no sabe describir su alma) sino **minándola de su
+  presencia pública** (web + reseñas) + 2-3 perillas concretas.
+
+**Hecho hoy sobre gh-dent** (patrón oro y cliente piloto), investigando `ghdent.es` y
+sus reseñas: reescritos `tone/policies/faq`. Hallazgos que cambiaron el alma — su lema
+real es "Vuelve a sonreír, sin miedo" (el miedo es el eje, confirmado por reseñas:
+"saben quitar el miedo al dentista"), integralidad ("todo bajo un mismo techo"),
+estudio digital 3D, y "explican cada paso" (lo que más repiten los pacientes). El
+arquetipo `templates/clinica_dental/` queda como versión genérica con huecos para la
+huella.
+
+**Por qué:** dos bots del mismo vertical parecidos NO es problema — cada uno compite
+con la competencia local, no entre sí. El arquetipo los hace excepcionales frente a su
+competencia real. Siguiente paso previsto: encapsular el flujo (investigar → generar
+arquetipo + minar huella) en una **skill**.
+
+## 2026-07-26 · `checkAvailability` soporta horario por día (`franjas_por_dia`)
+
+gh-dent cierra los viernes a las 14:00, pero `checkAvailability` aplicaba una sola lista
+de franjas a todos los días laborables (ofrecía huecos de viernes hasta las 18:30, que
+no existen). Estaba marcado `[REVISAR]` en su `business.json`.
+
+**Decisión:** el motor acepta `horario.franjas_por_dia` (`{ "5": [{inicio,fin}] }`),
+resuelto por día de la semana; si no existe, usa `horario.franjas` para todos. Cambio
+**aditivo**: los tenants sin ese campo se comportan igual. gh-dent: viernes 10:00–14:00.
+
+**Por qué:** ofrecer un hueco inexistente es un fallo de cara al paciente (se presenta y
+no le atienden). El horario partido por día es común (mañanas de sábado, viernes corto).
+
+## 2026-07-26 · El agente puede admitir que es un asistente virtual si se lo preguntan
+
+La regla inviolable decía "nunca hables de que eres una IA" y el filtro `safety.js`
+bloqueaba "soy una IA". Combinado con dar al agente un nombre humano, empujaba a mentir.
+
+**Decisión:** (1) no se personifica con nombre humano (gh-dent vuelve a `agente_nombre`
+"GH Dent"); el nombre real es decisión de la clínica. (2) Si preguntan directamente si es
+un bot o una persona, el agente lo admite con naturalidad como "asistente virtual del
+negocio". Se relaja `safety.js` para no bloquear eso; se sigue bloqueando filtrar el
+proveedor/modelo (OpenAI, GPT).
+
+**Por qué:** hacerse pasar por humano es un riesgo de honestidad y de marca, y una
+mentira detectable destruye la confianza. Admitir que es un asistente virtual no resta
+calidez y es lo correcto.

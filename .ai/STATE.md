@@ -113,10 +113,24 @@ Rama: `main`. Se trabaja desde portátil y sobremesa.
 
 ## Foco actual
 
-**Demo comercial lista.** El go-live de GH Dent sigue en pausa deliberada: no se
-involucra a la clínica todavía, así que sus tres bloqueadores no son el camino
-crítico. **Regla vigente: congelar features nuevas hasta tener gh-dent vivo en
-producción** (Meta + Calendar). Lo hecho hasta ahora es limpieza, no features.
+**Excepcionalización del contexto (freeze levantado a propósito).** Se decidió que
+la calidad de las "partes blandas" del agente es el diferenciador y se ataca ya, aun
+con el go-live de GH Dent en pausa. Modelo: **arquetipo por vertical + huella minada
+del negocio** (ver DECISIONS 2026-07-26). Los tres bloqueadores de go-live (Meta,
+Calendar, viernes) siguen sin ser camino crítico; el del viernes ya está resuelto en
+código (`franjas_por_dia`).
+
+Cerrado el 2026-07-26:
+- gh-dent: `tone/policies/faq` reescritos desde investigación real de `ghdent.es` +
+  reseñas (eje "sin miedo"). `agente_nombre` vuelto a "GH Dent" (sin nombre humano).
+- `templates/clinica_dental/` ascendido a arquetipo genérico.
+- `checkAvailability`: soporte de horario por día (`franjas_por_dia`); viernes gh-dent
+  10:00–14:00. Aditivo, probado offline.
+- `prompt.js` + `safety.js`: el agente puede admitir que es asistente virtual si se lo
+  preguntan (antes se le empujaba a mentir).
+- **Pendiente de desplegar para la demo de esta noche:** push (código) + `supabase:import
+  -- gh-dent` (config, porque Supabase pisa los archivos) + Railway `DEFAULT_TENANT=gh-dent`.
+- Siguiente paso previsto: encapsular investigar→arquetipo+huella en una **skill**.
 
 Cerrado el 2026-07-25:
 - Onboarding arreglado y reencuadrado; plantillas por vertical recreadas.
