@@ -138,6 +138,18 @@ Cerrado el 2026-07-26:
   Telegram distinto).
 - **Guarda de fecha añadida:** el modelo resolvía "este viernes" a un viernes ya pasado.
   El prompt ahora prohíbe fechas anteriores a mañana y fuerza el próximo día de la lista.
+- **Avisos por email FUNCIONANDO (Resend).** Railway bloquea el SMTP saliente
+  (timeout en 465 y 587; desde fuera conectan) → `notify.js` envía por la API HTTPS
+  de Resend cuando hay `RESEND_API_KEY` (variable en Railway). Dominio `studio32.es`
+  verificado en Resend (cuenta del usuario); remitente `SMTP_FROM` = Citas Studio32
+  <citas@studio32.es>. DNS en **Cloudflare** (no Hostinger): añadidos TXT
+  `resend._domainkey` (DKIM) + MX/TXT `send` (SPF). NO se añadió el MX de recepción:
+  el correo entrante sigue en Hostinger (buzón `info@`, 8 alias, plan 1/1 lleno).
+  Probado E2E: reserva → email "Delivered" a soporte.studio32@gmail.com.
+- **createBooking endurecido:** rechaza placeholders ("Cliente"/"CLIENTE_NO_ESPECIFICADO"
+  creaba citas fantasma que bloqueaban el hueco); el contacto debe parecer tel/email.
+- **handoff gh-dent en fase de pruebas:** avisos → soporte.studio32@gmail.com.
+  Al go-live: restaurar gabriela@ghdent.es (+ whatsapp), ver nota en handoff.json.
 - Siguiente paso previsto: encapsular investigar→arquetipo+huella en una **skill**.
 
 Cerrado el 2026-07-25:
