@@ -52,6 +52,18 @@ module.exports = {
             return 'ERROR: faltan datos de la reserva, pídelos antes de reservar.';
         }
 
+        // Datos REALES, no placeholders: el modelo a veces rellena "Cliente" /
+        // "no especificado" para saltarse los campos obligatorios y crea una
+        // cita fantasma que bloquea el hueco. Aquí se corta.
+        const contactoOk = /\d[\d\s.-]{5,}/.test(args.contacto) || /@/.test(args.contacto);
+        if (!contactoOk) {
+            return 'ERROR: el contacto debe ser un teléfono o un email reales del cliente. Pídeselo antes de reservar.';
+        }
+        const nombreGenerico = /^(el\s+)?(cliente|paciente|usuario|persona|desconocido|an[oó]nimo|sin\s+nombre|no\s+especificado|n\/?a|-+)$/i;
+        if (nombreGenerico.test(String(args.nombre).trim())) {
+            return 'ERROR: falta el nombre real del cliente. Pregúntaselo antes de reservar.';
+        }
+
         const servicios = ctx.tenant.services.servicios || [];
         const svc = servicios.find(s => s.nombre.toLowerCase() === String(args.servicio).toLowerCase());
         const servicioNombre = svc ? svc.nombre : args.servicio;
