@@ -1,13 +1,32 @@
 'use strict';
 
-// Avisos al equipo del NEGOCIO: email (Nodemailer) y, si está configurado,
-// WhatsApp por el canal disponible (Meta Cloud API o Twilio). nodemailer y el canal Meta se cargan
-// de forma perezosa. El destino va por tenant en handoff.json.
+// Avisos al equipo del NEGOCIO: email y, si está configurado, WhatsApp por el
+// canal disponible (Meta Cloud API o Twilio). El destino va por tenant en
+// handoff.json.
+//
+// Email: preferimos la API HTTPS de Resend (RESEND_API_KEY) porque Railway
+// bloquea el SMTP saliente (puertos 465/587 dan Connection timeout desde el
+// contenedor; verificado el 2026-07-26). El SMTP clásico (Nodemailer) queda
+// como respaldo para entornos donde sí hay salida SMTP.
 //
 // Nota: enviar WhatsApp iniciado por el negocio fuera de la ventana de 24h
 // requiere plantilla aprobada en Meta; el email no tiene esa limitación.
 
-const { SMTP_HOST, SMTP_PORT = 587, SMTP_USER, SMTP_PASS, SMTP_FROM } = process.env;
+const { SMTP_HOST, SMTP_PORT = 587, SMTP_USER, SMTP_PASS, SMTP_FROM, RESEND_API_KEY } = process.env;
+
+async function enviarEmailAPI(destinatario, asunto, cuerpo) {
+    const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            from: SMTP_FROM || 'onboarding@resend.dev',
+            to: [destinatario],
+            subject: asunto,
+            text: cuerpo
+        })
+    });
+    if (!res.ok) throw new Error(`Resend ${res.status}: ${await res.text()}`);
+}
 
 let _mailer = null, _mailerTried = false;
 function getMailer() {
@@ -25,8 +44,12 @@ function getMailer() {
 async function enviar(tenant, asunto, cuerpo) {
     const dest = tenant.handoff || {};
     const tareas = [];
-    const mailer = getMailer();
-    if (mailer && dest.email) tareas.push(mailer.sendMail({ from: SMTP_FROM || SMTP_USER, to: dest.email, subject: asunto, text: cuerpo }));
+    if (RESEND_API_KEY && dest.email) {
+        tareas.push(enviarEmailAPI(dest.email, asunto, cuerpo));
+    } else {
+        const mailer = getMailer();
+        if (mailer && dest.email) tareas.push(mailer.sendMail({ from: SMTP_FROM || SMTP_USER, to: dest.email, subject: asunto, text: cuerpo }));
+    }
     if (dest.whatsapp) {
         const msg = `${asunto}\n\n${cuerpo}`;
         try {
