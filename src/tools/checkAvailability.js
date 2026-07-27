@@ -6,6 +6,10 @@
 // huecos.
 
 const { bookings } = require('../store');
+const { compararConHoy, minutosAhora } = require('../fechas');
+
+// Antelación mínima para una cita de HOY: no ofrecer una hora que empieza ya.
+const MARGEN_HOY_MIN = 60;
 
 function horaAMin(h) { const [a, b] = h.split(':').map(Number); return a * 60 + (b || 0); }
 function minAHora(m) { const h = Math.floor(m / 60), x = m % 60; return `${String(h).padStart(2, '0')}:${String(x).padStart(2, '0')}`; }
@@ -64,16 +68,23 @@ module.exports = {
         try { fecha = parsear(args.fecha); if (isNaN(fecha.getTime())) throw new Error('x'); }
         catch (_) { return JSON.stringify({ error: 'Fecha no válida, usa DD/MM/YYYY.' }); }
 
+        // Pasado/hoy/futuro se decide en la zona del negocio, no en la del servidor
+        // (que corre en UTC): de madrugada, un `new Date()` pelado da el día anterior.
+        const tz = (b.calendar && b.calendar.timezone) || 'Europe/Madrid';
+        const rel = compararConHoy(args.fecha, tz);
         const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
-        if (fecha < hoy || !diasLab.includes(fecha.getDay())) {
+        if (rel === -1 || !diasLab.includes(fecha.getDay())) {
             const prox = new Date(Math.max(fecha.getTime(), hoy.getTime()));
             do { prox.setDate(prox.getDate() + 1); } while (!diasLab.includes(prox.getDay()));
             return JSON.stringify({
                 disponible: false,
-                motivo: fecha < hoy ? 'fecha_pasada' : 'dia_no_laborable',
+                motivo: rel === -1 ? 'fecha_pasada' : 'dia_no_laborable',
                 fecha_sugerida: fmt(prox)
             });
         }
+
+        // Si la cita es para HOY, las horas ya pasadas no existen.
+        const minimoHoy = rel === 0 ? minutosAhora(tz) + MARGEN_HOY_MIN : -1;
 
         // Franjas del día. Si el negocio define un horario distinto por día de la
         // semana (p.ej. el viernes solo por la mañana) en horario.franjas_por_dia
@@ -93,6 +104,7 @@ module.exports = {
             const libres = [];
             for (const fr of franjasDelTurno(franjas, svc.nombre)) {
                 for (let t = fr.inicio; t + duracion <= fr.fin; t += PASO) {
+                    if (t < minimoHoy) continue;
                     const solapadas = intervals.filter(o => t < o.fin && (t + duracion) > o.ini).length;
                     if (solapadas < mesas) libres.push(minAHora(t));
                 }
@@ -119,6 +131,7 @@ module.exports = {
             const libres = [];
             for (const fr of franjas) {
                 for (let t = fr.inicio; t + duracion <= fr.fin; t += PASO) {
+                    if (t < minimoHoy) continue;
                     const ini = t, fin = t + duracion;
                     if (!ocupados.some(o => ini < o.fin && fin > o.ini)) libres.push(minAHora(ini));
                 }
@@ -126,8 +139,15 @@ module.exports = {
             huecosPorProf[p || 'cualquiera'] = libres;
         }
 
+        const hayHuecos = Object.values(huecosPorProf).some(h => h.length > 0);
+        // Hoy sin huecos no es "cerrado": es que ya no da tiempo. Se dice distinto.
+        if (!hayHuecos && rel === 0) {
+            const prox = new Date(hoy);
+            do { prox.setDate(prox.getDate() + 1); } while (!diasLab.includes(prox.getDay()));
+            return JSON.stringify({ disponible: false, motivo: 'sin_huecos_hoy', fecha: args.fecha, fecha_sugerida: fmt(prox) });
+        }
         return JSON.stringify({
-            disponible: Object.values(huecosPorProf).some(h => h.length > 0),
+            disponible: hayHuecos,
             fecha: args.fecha,
             servicio: svc.nombre,
             duracion_min: duracion,

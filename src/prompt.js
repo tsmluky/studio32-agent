@@ -34,11 +34,14 @@ function proximosDias(timezone, total, diasLaborables) {
     const tz = timezone || TZ_NEGOCIO;
     const laborables = Array.isArray(diasLaborables) && diasLaborables.length ? diasLaborables : null;
     const salida = [];
-    for (let i = 1; i <= (total || 7); i++) {
+    // Empieza en HOY (i=0), no en mañana: las citas para el mismo día son
+    // habituales (una urgencia, un hueco de última hora) y si el día de hoy no
+    // aparece aquí el modelo lo da por cerrado y manda al cliente a mañana.
+    for (let i = 0; i <= (total || 7); i++) {
         const { y, m, d, dow } = partesEnZona(new Date(Date.now() + i * 86400000), tz);
         // Marcar los cerrados: si no, el modelo ofrece citas en sábado.
         const cerrado = laborables && !laborables.includes(dow);
-        salida.push(`${DIAS[dow]} ${d}/${m}/${y}${cerrado ? ' (CERRADO)' : ''}`);
+        salida.push(`${DIAS[dow]} ${d}/${m}/${y}${i === 0 ? ' (HOY)' : ''}${cerrado ? ' (CERRADO)' : ''}`);
     }
     return salida.join(' · ');
 }
@@ -66,7 +69,7 @@ Eres ${b.agente_nombre || 'el asistente'}, atiendes por WhatsApp a los clientes 
 
 Hoy es ${fechaHoy(b.calendar && b.calendar.timezone)}.
 Próximos días: ${proximosDias(b.calendar && b.calendar.timezone, 7, b.horario && b.horario.dias_laborables)}.
-Esa lista empieza MAÑANA y va hacia adelante; es tu única referencia de fechas. Cuando el cliente diga "mañana", "el viernes", "este finde", "el 20" o similar, BUSCA el día en esa lista y usa esa fecha exacta en DD/MM/YYYY al llamar a las herramientas. No la calcules de cabeza ni asumas que es hoy. NUNCA uses una fecha anterior a mañana: si un día (p. ej. "el viernes" o "este lunes") pudiera ser uno ya pasado o el próximo, usa SIEMPRE el próximo, el que aparece en la lista. Nunca ofrezcas ni aceptes un día marcado (CERRADO): di que ese día no se abre y ofrece el siguiente día laborable.
+Esa lista empieza HOY y va hacia adelante; es tu única referencia de fechas. Cuando el cliente diga "hoy", "mañana", "el viernes", "este finde", "el 20" o similar, BUSCA el día en esa lista y usa esa fecha exacta en DD/MM/YYYY al llamar a las herramientas; no la calcules de cabeza. Si pide algo para HOY y hoy no está marcado (CERRADO), es un día normal: consulta la disponibilidad como cualquier otro día. Nunca uses una fecha anterior a la marcada (HOY): ante un día ambiguo ("el viernes"), usa siempre el próximo, el que aparece en la lista. Nunca ofrezcas ni aceptes un día marcado (CERRADO): di que ese día no se abre y ofrece el siguiente día laborable.
 
 ═══ LO QUE NO PUEDES HACER ═══
 - SOLO PUEDES RESPONDER. No puedes escribir por tu cuenta más tarde ni enviar un segundo mensaje. Por eso NUNCA digas "lo miro y te aviso", "te confirmo en un rato", "te escribo luego" ni nada que prometa un mensaje futuro: ese mensaje no existirá y la persona se quedará esperando. Si hace falta comprobar algo, compruébalo AHORA con tus herramientas y responde en este mismo mensaje. Si no puedes resolverlo, usa handoffHuman y dile que le atenderá una persona del equipo.

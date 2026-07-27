@@ -8,6 +8,7 @@
 
 const { bookings } = require('../store');
 const { notificarReserva } = require('../notify');
+const { compararConHoy, minutosAhora } = require('../fechas');
 
 function horaAMin(h) { const [a, b] = h.split(':').map(Number); return a * 60 + (b || 0); }
 function parsear(s) { const [d, m, y] = s.split('/').map(Number); return new Date(y, m - 1, d); }
@@ -75,11 +76,16 @@ module.exports = {
         const diasLab = horario.dias_laborables || [1, 2, 3, 4, 5];
         const fechaObj = parsear(args.fecha);
         if (isNaN(fechaObj.getTime())) return 'ERROR: fecha no válida (usa DD/MM/YYYY).';
-        const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
-        if (fechaObj < hoy || !diasLab.includes(fechaObj.getDay())) {
+        // Pasado/hoy se decide en la zona del negocio (el servidor corre en UTC).
+        const tz = (b.calendar && b.calendar.timezone) || 'Europe/Madrid';
+        const rel = compararConHoy(args.fecha, tz);
+        if (rel === -1 || !diasLab.includes(fechaObj.getDay())) {
             return 'CERRADO: ese día no abrimos o ya pasó. Ofrece otra fecha con checkAvailability.';
         }
         const ini = horaAMin(args.hora), fin = ini + duracion;
+        if (rel === 0 && ini < minutosAhora(tz)) {
+            return 'HORA_PASADA: esa hora ya ha pasado hoy. Ofrece otra con checkAvailability.';
+        }
         const franjas = (horario.franjas || []).map(f => ({ inicio: horaAMin(f.inicio), fin: horaAMin(f.fin) }));
         if (franjas.length && !franjas.some(f => ini >= f.inicio && fin <= f.fin)) {
             return 'FUERA_HORARIO: esa hora está fuera del horario. Ofrece otra con checkAvailability.';
