@@ -38,18 +38,33 @@ personal). El repo es privado, así que el riesgo es medio, no crítico. Pero:
 - Mientras tanto: no pegar contenido de esos archivos en chats, issues ni
   capturas, y no hacer público el repo.
 
+## Persistencia · volumen montado (2026-07-27)
+
+`web-volume` montado en **`/app/data`**. Antes NO existía y el contenedor es efímero:
+cada despliegue borraba `data/<tenant>/bookings.json`, que es la fuente OPERATIVA de
+las citas (getAgenda, cancel/reschedule, dedup y —sin Calendar— disponibilidad).
+Verificado E2E: reservar → desplegar → sobrevive → cancelar → hueco libre.
+Ver `DECISIONS.md` 2026-07-27.
+
 ## Cliente activo · GH Dent (Clínica Dental, Guadalajara)
 
 Único cliente real en producción. En Supabase hay 3 organizaciones: `studio32`,
 `gh-dent` y `clinica-cobalto` (demo, sembrada por SQL). El resto de tenants no
 están importados.
 
-**Bloqueadores de go-live (camino crítico, en pausa deliberada):**
-1. Verificar el número en **Meta** (tarea principal pendiente).
-2. `calendar.calendar_id` está **vacío** → compartir el Google Calendar de GH Dent
-   con la service account.
-3. El horario de viernes (solo hasta 14:00) puede no estar soportado por
-   `checkAvailability` — marcado `[REVISAR]` en su `business.json`.
+**Bloqueadores de go-live (entrega prevista: primera semana de agosto):**
+1. Verificar el número en **Meta** (tarea principal pendiente; plazo incierto,
+   empezar cuanto antes).
+2. **Google Calendar sin configurar del todo**: no hay service account creada
+   (`GOOGLE_CREDENTIALS_JSON` no existe en Railway) NI `calendar.calendar_id`.
+   Plan acordado: el calendario lo crea Studio32 desde `soporte.studio32@gmail.com`
+   (uno por cliente) y se invita a los correos de la clínica → menos fricción.
+   **Antes de montarlo hay que confirmar dónde lleva GH Dent su agenda hoy**: el
+   agente consulta UN solo calendario, así que las citas por teléfono tienen que
+   caer ahí o habrá doble reserva.
+3. ~~Horario de viernes~~ → resuelto (`franjas_por_dia`).
+4. `handoff.json` apunta a `soporte.studio32@gmail.com` (pruebas) → restaurar
+   `gabriela@ghdent.es` al go-live.
 
 ## Tenants · 4 (limpieza hecha el 2026-07-25)
 

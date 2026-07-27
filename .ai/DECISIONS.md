@@ -264,3 +264,44 @@ proveedor/modelo (OpenAI, GPT).
 **Por qué:** hacerse pasar por humano es un riesgo de honestidad y de marca, y una
 mentira detectable destruye la confianza. Admitir que es un asistente virtual no resta
 calidez y es lo correcto.
+
+## 2026-07-27 · Volumen persistente en `/app/data` (era pérdida total de la agenda)
+
+Auditoría E2E previa a la entrega. `data/<tenant>/bookings.json` es la fuente
+OPERATIVA de las citas: de ahí leen `getAgenda`, `activasDeCliente`
+(cancel/reschedule), el dedup de `createBooking` y —si no hay Calendar—
+`busyIntervals`. Supabase es solo un **espejo** (`mirrorAppointment`) para el panel.
+
+El servicio de Railway **no tenía volumen**: el sistema de archivos del contenedor es
+efímero, así que **cada despliegue borraba todas las citas**. Verificado en producción:
+se reservaron 3 citas, se desplegó, y la agenda quedó vacía y los huecos libres.
+
+**Decisión:** volumen `web-volume` montado en `/app/data` (región us-west2, la del
+servicio). Verificado: cita creada → despliegue → la cita sobrevive → cancelada por el
+agente → hueco liberado.
+
+**Por qué importaba tanto:** sin esto el agente ofrecía como libre un hueco ya
+reservado (dos pacientes a la misma hora en una clínica), los pacientes no podían
+anular ni mover su cita, y la agenda del dueño salía vacía. El panel sí conservaba
+todo, así que el fallo era invisible desde Supabase.
+
+**Pendiente (deuda):** la fuente operativa sigue siendo un JSON en disco. Lo robusto
+es que `cancel/reschedule/getAgenda` lean de Supabase, y que la disponibilidad salga
+de Google Calendar. No se toca antes del go-live.
+
+## 2026-07-27 · La lista de próximos días incluye HOY (regresión de citas del día)
+
+La guarda de fecha del 2026-07-26 ("nunca uses una fecha anterior a mañana"), sumada a
+que `proximosDias()` empezaba en `i=1`, dejó el día de hoy fuera del universo del
+agente. En producción, un paciente con dolor pidiendo hora **para hoy** recibía "hoy
+estamos cerrados" en un día laborable: el caso más valioso de una clínica.
+
+**Decisión:** (1) la lista empieza en `i=0`, con el día marcado `(HOY)`, y el texto del
+prompt permite el mismo día de forma explícita. (2) Nuevo `src/fechas.js`: hoy / ahora
+/ comparación **siempre en la zona del negocio** (el servidor corre en UTC y de
+madrugada un `new Date()` pelado cambia de día). (3) `checkAvailability` no ofrece
+horas ya pasadas si la cita es para hoy (margen 60 min) y distingue `sin_huecos_hoy`
+de "cerrado"; `createBooking` rechaza una hora ya pasada.
+
+**Por qué:** el bug lo introdujo un parche de prompt sin cubrir el caso del mismo día.
+La lección: las reglas de fecha se validan en la herramienta, no solo en el prompt.
