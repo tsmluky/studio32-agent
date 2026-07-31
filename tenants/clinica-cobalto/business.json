@@ -23,5 +23,6 @@
     "whatsapp": "whatsapp:+34600000001"
   },
   "web": "https://studio32.es",
-  "_demo": "Tenant FICTICIO para demostraciones comerciales. No es un cliente real: no contiene datos personales ni credenciales válidas."
+  "demo": true,
+  "_demo": "Tenant FICTICIO para demostraciones comerciales. No es un cliente real: no contiene datos personales ni credenciales válidas. El flag 'demo' activa agenda por sesión y límites de uso (ver src/store/demoLimits.js)."
 }

@@ -171,6 +171,17 @@ app.post('/chat', rateLimit, async (req, res) => {
         if (!sesion || !mensaje) return res.status(400).json({ error: 'Faltan los campos sesion y mensaje.' });
         mensaje = String(mensaje).slice(0, MAX_MENSAJE);
         const tenant = cargarTenant(tenantId);
+
+        // Tenants de demostración (landing pública): el rateLimit de arriba cubre
+        // ráfagas pero vive en memoria. Esto acota el uso sostenido y persiste en
+        // el volumen, así que un despliegue no regala el contador.
+        if (store.bookings.esDemo(tenant)) {
+            const ipCliente = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
+            const permiso = store.demoLimits.registrar(tenant.id, { sesion, ip: ipCliente });
+            if (!permiso.ok) return res.status(429).json({ respuesta: permiso.respuesta });
+            store.bookings.purgarDemo(tenant).catch(err => console.error('Purga de demo falló:', err.message));
+        }
+
         const ownerCfg = tenant.business.owner || {};
         const esOwner = !!(ownerToken && ownerCfg.token && ownerToken === ownerCfg.token);
         const ctx = { tenant, tenantId: tenant.id, telefono: String(sesion), esOwner, channel: 'web' };

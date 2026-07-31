@@ -117,7 +117,7 @@ module.exports = {
         if (duplicada) return 'OK: esa reserva ya estaba registrada, no se duplica.';
 
         // 3) Disponibilidad real: evita doble-booking del hueco (o aforo lleno).
-        const libre = await bookings.huecoLibre(ctx.tenant, args.fecha, args.hora, duracion, args.profesional || null);
+        const libre = await bookings.huecoLibre(ctx.tenant, args.fecha, args.hora, duracion, args.profesional || null, { sesion: ctx.telefono });
         if (!libre) return 'OCUPADO: ese hueco ya está cogido. Ofrece otra hora con checkAvailability.';
 
         // 4) Crear.

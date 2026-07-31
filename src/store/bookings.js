@@ -99,23 +99,38 @@ function capacidadDe(tenant) {
     return (c && Number(c.mesas) > 0) ? c : null;
 }
 
+// Tenant de demostración (business.demo === true). En ellos cada visitante ve
+// SU propia agenda: las reservas de otros visitantes no le bloquean huecos. Sin
+// esto, la agenda del tenant de demo se llena con el uso y la landing acaba
+// enseñando "no hay huecos". Los tenants reales no se ven afectados.
+function esDemo(tenant) {
+    return !!(tenant && tenant.business && tenant.business.demo === true);
+}
+
+function normalizarSesion(valor) {
+    return String(valor || '').replace('whatsapp:', '');
+}
+
 // Huecos ocupados [{ ini, fin, profesional }] (minutos) para una fecha.
-async function busyIntervals(tenant, fecha) {
+// opts.sesion: en tenants de demo, restringe la ocupación a esa sesión.
+async function busyIntervals(tenant, fecha, opts = {}) {
     const cfg = calCfg(tenant);
     if (cfg) {
         try { return await gcal.busyIntervalsForDate(cfg.calendar_id, fecha, cfg.timezone || 'Europe/Madrid'); }
         catch (err) { console.error('Lectura de Calendar falló, uso JSON:', err.message); }
     }
     const servicios = (tenant.services && tenant.services.servicios) || [];
+    const soloSesion = esDemo(tenant) ? normalizarSesion(opts.sesion) : '';
     return db.leer(tenant.id, FILE, [])
         .filter(r => r.fecha === fecha && r.estado === 'confirmada')
+        .filter(r => !soloSesion || normalizarSesion(r.telefono_cliente) === soloSesion)
         .map(r => { const ini = horaAMin(r.hora); const dur = (servicios.find(s => s.nombre === r.servicio) || {}).duracion_min || 60; return { ini, fin: ini + dur, profesional: r.profesional || null }; });
 }
 
 // ¿Está libre un hueco concreto? En modo aforo cuenta reservas solapadas contra
 // el nº de mesas; en modo cita basta un solape para bloquear.
-async function huecoLibre(tenant, fecha, hora, duracionMin, profesional) {
-    const intervals = await busyIntervals(tenant, fecha);
+async function huecoLibre(tenant, fecha, hora, duracionMin, profesional, opts = {}) {
+    const intervals = await busyIntervals(tenant, fecha, opts);
     const ini = horaAMin(hora), fin = ini + duracionMin;
     const cap = capacidadDe(tenant);
     if (cap) {
@@ -199,4 +214,20 @@ async function reprogramar(tenant, id, nuevaFecha, nuevaHora) {
 
 async function listar(tenantId) { return db.leer(tenantId, FILE, []); }
 
-module.exports = { busyIntervals, huecoLibre, capacidadDe, listarJSONPorFecha, activasDeCliente, crear, cancelar, reprogramar, listar, zonedDateTimeToIso, mirrorAppointment };
+// Purga las reservas viejas de un tenant de demo. La agenda ya va por sesión,
+// así que esto no cambia lo que ve nadie: solo evita que bookings.json crezca
+// sin fin en el volumen. Devuelve cuántas ha borrado.
+async function purgarDemo(tenant, horas = 48) {
+    if (!esDemo(tenant)) return 0;
+    const corte = Date.now() - horas * 60 * 60 * 1000;
+    const all = db.leer(tenant.id, FILE, []);
+    const vivas = all.filter(r => {
+        const creada = Date.parse(r.creada || '');
+        return Number.isNaN(creada) ? true : creada >= corte;
+    });
+    if (vivas.length === all.length) return 0;
+    db.escribir(tenant.id, FILE, vivas);
+    return all.length - vivas.length;
+}
+
+module.exports = { busyIntervals, huecoLibre, capacidadDe, listarJSONPorFecha, activasDeCliente, crear, cancelar, reprogramar, listar, zonedDateTimeToIso, mirrorAppointment, esDemo, purgarDemo };

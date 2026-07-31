@@ -8,5 +8,6 @@ module.exports = {
     bookings: require('./bookings'),
     leads: require('./leads'),
     logs: require('./logs'),
-    usage: require('./usage')
+    usage: require('./usage'),
+    demoLimits: require('./demoLimits')
 };

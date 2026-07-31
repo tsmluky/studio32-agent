@@ -93,7 +93,7 @@ module.exports = {
         const franjasDia = (horario.franjas_por_dia && horario.franjas_por_dia[dow]) || horario.franjas || [];
         const franjas = franjasDia.map(f => ({ inicio: horaAMin(f.inicio), fin: horaAMin(f.fin) }));
 
-        const intervals = await bookings.busyIntervals(ctx.tenant, args.fecha);
+        const intervals = await bookings.busyIntervals(ctx.tenant, args.fecha, { sesion: ctx.telefono });
         const PASO = 30;
 
         // Modo AFORO (restaurantes): un hueco admite tantas reservas solapadas

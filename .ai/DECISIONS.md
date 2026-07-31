@@ -338,3 +338,51 @@ contradicción entre dos fuentes.
 tono nuevo solo se puede comprobar tras desplegar en Railway. `cargarTenant()`
 lee de archivo y **cachea en memoria**: hace falta reinicio del servicio, no basta
 con tocar el fichero.
+
+## 2026-07-31 · Tenants de demostración: agenda por sesión y límites persistentes
+
+La landing pública (`studio32-web`, sección `#control`) habla con `POST /chat`
+usando `tenant=clinica-cobalto`. Eso abre dos problemas que no existían cuando el
+agente solo atendía WhatsApp de clientes reales.
+
+**1. La agenda compartida se llena.** `busyIntervals` devolvía la ocupación de
+TODO el tenant, así que la reserva de un visitante bloqueaba el hueco al
+siguiente. En días, la demo enseñaría "no hay huecos".
+
+**Decisión:** `business.demo === true` activa **agenda por sesión**. Como cada
+visitante entra con una `sesion` única que se guarda en `telefono_cliente`, las
+reservas ya venían etiquetadas; `busyIntervals`/`huecoLibre` aceptan ahora
+`opts.sesion` y filtran por ella **solo en tenants de demo**. Un cliente real
+sigue viendo su agenda completa (hay test de regresión). Se añade `purgarDemo()`
+para que `bookings.json` no crezca sin fin en el volumen.
+
+Descartado guardar el estado en el navegador (idea inicial): las reservas se
+crean en el servidor, así que `localStorage` solo puede llevar el identificador
+de sesión — no evita que las reservas de otros ocupen la agenda.
+
+**2. Endpoint público con un modelo detrás.** El `rateLimit` de `server.js` (30
+peticiones / 5 min por IP) cubre ráfagas pero vive **en memoria**: cada
+despliegue regala el contador.
+
+**Decisión:** `store/demoLimits.js`, persistido en el volumen: 40 mensajes por
+sesión, 150 por IP y día, 12 sesiones por IP y día. Se aplica **solo** a tenants
+de demo, así que los canales de clientes reales no cambian. Los rechazos también
+cuentan (si no, reintentar sale gratis) y las IP se guardan **hasheadas**: para
+contar no hace falta la IP real y así el fichero no contiene datos personales.
+
+Cobertura: `test/demo-scope.test.js` (6 casos, incluida la no-regresión en
+tenants reales y que la IP no aparezca en claro).
+
+## 2026-07-31 · La config de Supabase pisa la de archivo (aviso)
+
+Al desplegar el tono nuevo, el agente siguió respondiendo con el viejo. Causa:
+`orchestrator.js` llama a `remote.hydrateTenant()`, y `mergeRuntimeTenant` hace
+`tone: config?.tone ?? tenant.tone` — **Supabase gana** sobre `tenants/<id>/`.
+
+**Regla:** tocar `tenants/<id>/*` NO cambia el agente en vivo. Hay que ejecutar
+después `node scripts/import-tenants-to-supabase.js <id>`. El script exige IDs
+explícitos, así que no hay riesgo de pisar otros tenants por descuido.
+
+Ojo con `business`: se fusiona (`{...archivo, ...supabase}`), no se sustituye.
+Una clave nueva en el archivo sobrevive mientras Supabase no la tenga — pero no
+conviene depender de eso: reimporta.

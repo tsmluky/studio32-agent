@@ -56,7 +56,7 @@ module.exports = {
         const dentro = franjas.some(f => ini >= f.inicio && fin <= f.fin);
         if (franjas.length && !dentro) return 'FUERA_HORARIO: esa hora está fuera del horario. Ofrece otra con checkAvailability.';
 
-        const libre = await bookings.huecoLibre(ctx.tenant, args.nueva_fecha, args.nueva_hora, dur, r.profesional);
+        const libre = await bookings.huecoLibre(ctx.tenant, args.nueva_fecha, args.nueva_hora, dur, r.profesional, { sesion: ctx.telefono });
         if (!libre) return 'OCUPADO: esa nueva hora no está libre. Ofrece otras con checkAvailability.';
 
         const updated = await bookings.reprogramar(ctx.tenant, r.id, args.nueva_fecha, args.nueva_hora);
