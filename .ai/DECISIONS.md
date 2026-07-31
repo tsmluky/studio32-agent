@@ -305,3 +305,36 @@ de "cerrado"; `createBooking` rechaza una hora ya pasada.
 
 **Por qué:** el bug lo introdujo un parche de prompt sin cubrir el caso del mismo día.
 La lección: las reglas de fecha se validan en la herramienta, no solo en el prompt.
+
+## 2026-07-31 · Reescrito el tono de `clinica-cobalto` (arquetipo dental)
+
+El tenant de demo pasa a ser la cara pública del producto: la landing
+(`studio32-web`, sección `#control`) ya no lleva un mockup con guion, sino un
+chat de texto libre contra `POST /chat` con `tenant=clinica-cobalto`. Lo que el
+visitante juzga, por tanto, **es el tono**.
+
+El `tone.md` anterior enunciaba reglas correctas pero el agente no las cumplía:
+respondía en registro de folleto ("contamos con un enfoque cuidadoso y técnicas
+actuales", "es completamente normal sentirse así") y en párrafos de tres frases,
+justo lo que el propio archivo prohibía.
+
+**Decisión:** reescrito entero siguiendo el modelo de arquetipo por vertical:
+- **Mapa emocional** de quién escribe a un dentista (con dolor / con miedo o
+  vergüenza / comparando precio / con prisa) y qué necesita cada uno ANTES que
+  información. Un modelo de la persona al otro lado, no adjetivos.
+- **Lista negra literal** de expresiones de folleto. Enunciar "sé cercano" no
+  funciona; prohibir "disponemos de" y "te recomendaría que" sí.
+- **Ejemplos de intercambio** con el registro exacto. El modelo copia registro de
+  ejemplos mucho mejor que de adjetivos.
+- **Formato humano de fechas** al hablar ("el lunes a las 10", nunca
+  "lunes 03/08/2026"), sin tocar el DD/MM/YYYY que exigen las herramientas.
+
+Se **eliminó el contexto factual duplicado** que llevaba dentro (tratamientos,
+precios de higiene y blanqueamiento, horario): ya lo inyecta el prompt desde
+`services.json`, `business.json` y `policies.md`. Duplicarlo era pedir una
+contradicción entre dos fuentes.
+
+**Verificación pendiente:** el `.env` local no tiene clave de modelo, así que el
+tono nuevo solo se puede comprobar tras desplegar en Railway. `cargarTenant()`
+lee de archivo y **cachea en memoria**: hace falta reinicio del servicio, no basta
+con tocar el fichero.
