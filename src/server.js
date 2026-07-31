@@ -61,6 +61,36 @@ function panelAuth(req, res, next) {
 app.get('/', (_req, res) => res.send('Studio32 Agent · OK · /demo · /widget-demo · /onboarding · /panel'));
 
 // Webchat de demo (acepta ?tenant= y ?owner=)
+// Estado de una sesión de demostración, para que la landing pinte en su panel
+// lo que el agente ha hecho de verdad (citas creadas). SOLO LECTURA y acotado a
+// la sesión que se pide: el identificador es aleatorio y solo lo conoce quien lo
+// generó, así que nadie ve las conversaciones de otro. Restringido a tenants de
+// demo — nunca puede devolver datos de un cliente real.
+app.get('/demo/estado', rateLimit, async (req, res) => {
+    try {
+        const tenantId = String(req.query.tenant || '');
+        const sesion = String(req.query.sesion || '');
+        if (!tenantId || !sesion) return res.status(400).json({ error: 'Faltan los parámetros tenant y sesion.' });
+
+        const tenant = cargarTenant(tenantId);
+        if (!store.bookings.esDemo(tenant)) return res.status(403).json({ error: 'Solo disponible en tenants de demostración.' });
+
+        const activas = await store.bookings.activasDeCliente(tenant, { telefono: sesion });
+        res.json({
+            citas: activas.map(r => ({
+                fecha: r.fecha,
+                hora: r.hora,
+                servicio: r.servicio,
+                nombre: r.nombre || null,
+                creada: r.creada || null
+            }))
+        });
+    } catch (err) {
+        console.error('Error en /demo/estado:', err.message);
+        res.status(500).json({ error: 'No se pudo leer el estado de la demostración.' });
+    }
+});
+
 app.use('/demo', express.static(PUBLIC));
 
 // Widget embebible
