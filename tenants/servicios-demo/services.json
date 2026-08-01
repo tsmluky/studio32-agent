@@ -1,0 +1,10 @@
+{
+  "servicios": [
+    { "nombre": "Visita de valoración (gratuita)", "precio_eur": 0, "duracion_min": 45 },
+    { "nombre": "Llamada del técnico", "precio_eur": 0, "duracion_min": 20 },
+    { "nombre": "Reparación urgente", "precio_eur": null, "duracion_min": 90 },
+    { "nombre": "Mantenimiento de caldera", "precio_eur": 85, "duracion_min": 60 },
+    { "nombre": "Instalación de aire acondicionado", "precio_eur": null, "duracion_min": 240 },
+    { "nombre": "Cambio de caldera", "precio_eur": null, "duracion_min": 300 }
+  ]
+}

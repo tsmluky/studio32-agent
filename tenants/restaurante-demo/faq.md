@@ -1,0 +1,11 @@
+- DÓNDE: Casa Duarte, Valencia. Cocina de mercado, carta corta que cambia con la temporada.
+- HORARIO: de martes a domingo. Comidas de 13:00 a 16:00, cenas de 20:00 a 23:30. Lunes cerrado.
+- MENÚ DEL DÍA: 18 €, solo de martes a viernes al mediodía. Incluye entrante, principal, postre y bebida.
+- ARROCES: se hacen al momento y van mínimo para dos personas. Tardan unos 35 minutos, conviene avisar al reservar.
+- CELÍACOS Y VEGANOS: hay opciones en carta (arroz de verduras, alcachofas, berenjena con miso). La cocina trabaja con ellas a diario.
+- NIÑOS: sí, hay tronas y se puede adaptar cualquier plato. Mejor avisarlo en la reserva.
+- GRUPOS: hasta 8 personas se reserva por aquí. A partir de ahí lo cierra el equipo, con menú cerrado y hora acordada.
+- TERRAZA: hay terraza, pero no se puede garantizar mesa concreta al reservar. Se asigna al llegar según el tiempo.
+- MASCOTAS: se admiten perros en terraza.
+- APARCAMIENTO: no hay parking propio. Hay zona azul en las calles de alrededor y un aparcamiento público a cinco minutos andando.
+- PAGO: efectivo y tarjeta. No se fracciona la cuenta en más de cuatro pagos.

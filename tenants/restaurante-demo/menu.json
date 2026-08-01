@@ -1,0 +1,98 @@
+{
+  "menu_del_dia": "De martes a viernes al mediodía: 18 € — entrante, principal, postre y bebida.",
+  "secciones": [
+    {
+      "nombre": "Para empezar",
+      "platos": [
+        {
+          "nombre": "Coca de tomate seco y anchoa",
+          "descripcion": "Masa fina de horno, tomate seco de la huerta y anchoa del Cantábrico.",
+          "precio_eur": 9.5,
+          "alergenos": ["gluten", "pescado"]
+        },
+        {
+          "nombre": "Ensaladilla de la casa",
+          "descripcion": "Patata, atún, huevo y aceituna. Mayonesa hecha aquí.",
+          "precio_eur": 8.0,
+          "alergenos": ["huevo", "pescado"]
+        },
+        {
+          "nombre": "Alcachofas a la brasa",
+          "descripcion": "Con aceite de romero. Sin gluten y sin lactosa.",
+          "precio_eur": 11.0,
+          "alergenos": []
+        },
+        {
+          "nombre": "Croquetas de puchero",
+          "descripcion": "Doce horas de caldo. Seis unidades.",
+          "precio_eur": 9.0,
+          "alergenos": ["gluten", "lactosa", "huevo"]
+        }
+      ]
+    },
+    {
+      "nombre": "Arroces",
+      "platos": [
+        {
+          "nombre": "Arroz de pato y setas",
+          "descripcion": "En paella, mínimo dos personas. Precio por persona.",
+          "precio_eur": 19.5,
+          "alergenos": []
+        },
+        {
+          "nombre": "Arroz a banda",
+          "descripcion": "Fumet de roca y alioli aparte. Mínimo dos personas, precio por persona.",
+          "precio_eur": 18.0,
+          "alergenos": ["pescado", "crustaceos", "huevo"]
+        },
+        {
+          "nombre": "Arroz de verduras de temporada",
+          "descripcion": "Apto para celíacos y veganos. Mínimo dos personas, precio por persona.",
+          "precio_eur": 16.5,
+          "alergenos": []
+        }
+      ]
+    },
+    {
+      "nombre": "Principales",
+      "platos": [
+        {
+          "nombre": "Corvina a la brasa",
+          "descripcion": "Con pimientos asados y aceite de ajo.",
+          "precio_eur": 22.0,
+          "alergenos": ["pescado"]
+        },
+        {
+          "nombre": "Presa ibérica",
+          "descripcion": "Con puré de manzana asada y jugo propio.",
+          "precio_eur": 21.0,
+          "alergenos": []
+        },
+        {
+          "nombre": "Berenjena asada con miso",
+          "descripcion": "Plato vegano. Contiene soja.",
+          "precio_eur": 15.0,
+          "alergenos": ["soja"]
+        }
+      ]
+    },
+    {
+      "nombre": "Postres",
+      "platos": [
+        {
+          "nombre": "Tarta de queso",
+          "descripcion": "Horneada cada mañana.",
+          "precio_eur": 6.5,
+          "alergenos": ["lactosa", "huevo", "gluten"]
+        },
+        {
+          "nombre": "Naranja con aceite y sal",
+          "descripcion": "Sencillo y sin alérgenos.",
+          "precio_eur": 5.0,
+          "alergenos": []
+        }
+      ]
+    }
+  ],
+  "_demo": "Carta ficticia para demostraciones comerciales. No corresponde a ningún restaurante real."
+}

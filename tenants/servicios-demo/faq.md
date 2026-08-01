@@ -1,0 +1,11 @@
+- QUIÉNES SON: Instalaciones Vera, Valencia. Climatización y fontanería para vivienda y pequeño comercio. Dos técnicos, Sergio y Marta.
+- HORARIO: de lunes a viernes de 08:00 a 18:00. Fines de semana cerrado, salvo urgencias ya abiertas.
+- ZONA: Valencia ciudad y área metropolitana. Fuera de ahí, lo valora el equipo caso por caso.
+- VISITA DE VALORACIÓN: gratuita y sin compromiso. Se ve la instalación y se entrega presupuesto por escrito.
+- MANTENIMIENTO DE CALDERA: 85 €, incluye revisión completa y certificado. Se recomienda una vez al año.
+- QUÉ TRABAJOS HACEN: cambio e instalación de calderas, aire acondicionado (instalación y mantenimiento), reparación de averías, fontanería general y termos eléctricos.
+- URGENCIAS: se atienden el mismo día siempre que entren dentro del horario. Sin agua caliente, sin calefacción o fuga de agua tienen prioridad.
+- GARANTÍA: los trabajos llevan garantía; las condiciones concretas las explica el técnico en el presupuesto, porque cambian según el aparato y el fabricante.
+- FINANCIACIÓN: para instalaciones grandes existe la posibilidad de fraccionar. Lo concreta el equipo, no se cierra por chat.
+- FACTURA: se emite siempre, con IVA desglosado.
+- OLOR A GAS: no es un aviso normal. Hay que salir de casa, cerrar la llave de paso y llamar al 112 o al servicio de urgencias de la compañía de gas.

@@ -1,0 +1,29 @@
+{
+  "nombre": "Instalaciones Vera · Climatización y fontanería",
+  "agente_nombre": "Vera",
+  "ciudad": "Valencia",
+  "whatsapp_number": "whatsapp:+34600000003",
+  "horario_texto": "De lunes a viernes de 08:00 a 18:00. Sábados y domingos, cerrado.",
+  "profesionales": [
+    "Sergio",
+    "Marta"
+  ],
+  "horario": {
+    "dias_laborables": [1, 2, 3, 4, 5],
+    "franjas": [
+      { "inicio": "08:00", "fin": "18:00" }
+    ]
+  },
+  "calendar": {
+    "calendar_id": "",
+    "timezone": "Europe/Madrid"
+  },
+  "owner": {
+    "nombre": "Equipo Studio32",
+    "token": "demo-no-usar",
+    "whatsapp": "whatsapp:+34600000003"
+  },
+  "web": "https://studio32.es",
+  "demo": true,
+  "_demo": "Tenant FICTICIO para demostraciones comerciales. No es un cliente real: no contiene datos personales ni credenciales válidas. El flag 'demo' activa agenda por sesión y límites de uso (ver src/store/demoLimits.js)."
+}
