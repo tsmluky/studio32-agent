@@ -8,6 +8,20 @@ data/*
 *.log
 .DS_Store
 
+# ── Tenants ──
+# Por defecto NO se versionan: `business.json` lleva `owner.token` y el WhatsApp
+# del dueño, y en el flujo de campo se crea un tenant por cada negocio que se
+# visita — datos de terceros que nunca deben acabar en el repositorio.
+# Se re-incluyen a mano solo los ficticios que sirven de plantilla.
+tenants/*
+!tenants/.gitkeep
+!tenants/barberia_demo/
+!tenants/clinica-cobalto/
+!tenants/estetica-demo/
+!tenants/restaurante-demo/
+!tenants/servicios-demo/
+!tenants/studio32/
+
 # ── Herramientas de agente / sesiones locales ──
 # `.claude/*` y no `.claude/`: git no puede re-incluir un archivo si su directorio
 # padre está excluido. Con `/*` la excepción de abajo sí funciona.
@@ -16,3 +30,8 @@ data/*
 # entre portátil y sobremesa. Las sesiones y la caché siguen ignoradas.
 !.claude/settings.json
 .hermes/
+
+# Datos generados por el banco de pruebas de evals/ (nunca son datos reales)
+.eval-data/
+# Resultados y cache de promptfoo
+.promptfoo/
