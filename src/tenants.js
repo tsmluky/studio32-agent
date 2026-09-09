@@ -19,10 +19,33 @@ function leerTexto(p) {
     catch (_) { return ''; }
 }
 
+// Carpeta de un tenant. Runtime (volumen, creados desde /onboarding) tiene
+// prioridad sobre el repo, para poder corregir en caliente un tenant de demo sin
+// desplegar. Devuelve null si no existe en ninguna de las dos raíces.
+function dirDeTenant(tenantId) {
+    for (const raiz of [PATHS.tenantsRuntime, PATHS.tenants]) {
+        const dir = path.join(raiz, tenantId);
+        if (fs.existsSync(dir)) return dir;
+    }
+    return null;
+}
+
+// Todos los ids disponibles, de las dos raíces y sin repetir.
+function listarTenantIds() {
+    const ids = new Set();
+    for (const raiz of [PATHS.tenantsRuntime, PATHS.tenants]) {
+        if (!fs.existsSync(raiz)) continue;
+        for (const d of fs.readdirSync(raiz, { withFileTypes: true })) {
+            if (d.isDirectory()) ids.add(d.name);
+        }
+    }
+    return [...ids];
+}
+
 function cargarTenant(tenantId) {
     if (cache.has(tenantId)) return cache.get(tenantId);
-    const dir = path.join(PATHS.tenants, tenantId);
-    if (!fs.existsSync(dir)) throw new Error(`Tenant no encontrado: ${tenantId}`);
+    const dir = dirDeTenant(tenantId);
+    if (!dir) throw new Error(`Tenant no encontrado: ${tenantId}`);
 
     const tenant = {
         id: tenantId,
@@ -44,9 +67,7 @@ function cargarTenant(tenantId) {
 function resolverTenantPorNumero(numeroDestino) {
     if (!numeroDestino) return null;
     const objetivo = numeroDestino.replace('whatsapp:', '');
-    const dirs = fs.readdirSync(PATHS.tenants, { withFileTypes: true })
-        .filter(d => d.isDirectory()).map(d => d.name);
-    for (const id of dirs) {
+    for (const id of listarTenantIds()) {
         const t = cargarTenant(id);
         const num = (t.business.whatsapp_number || '').replace('whatsapp:', '');
         if (num && objetivo.includes(num)) return t;
@@ -54,4 +75,4 @@ function resolverTenantPorNumero(numeroDestino) {
     return null;
 }
 
-module.exports = { cargarTenant, resolverTenantPorNumero };
+module.exports = { cargarTenant, resolverTenantPorNumero, listarTenantIds, dirDeTenant };

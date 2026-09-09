@@ -1,0 +1,13 @@
+{
+  "_nota": "Los precios se dejan en null salvo que el centro los tenga publicados. Con null el agente explica de qué depende y ofrece la valoración gratuita, que es la conducta que se vende. No rellenar cifras a ojo.",
+  "servicios": [
+    { "nombre": "Valoración personalizada (gratuita)", "precio_eur": 0, "duracion_min": 30 },
+    { "nombre": "Limpieza facial profunda", "precio_eur": null, "duracion_min": 60 },
+    { "nombre": "Tratamiento facial personalizado", "precio_eur": null, "duracion_min": 75 },
+    { "nombre": "Radiofrecuencia facial (sesión)", "precio_eur": null, "duracion_min": 45 },
+    { "nombre": "Presoterapia (sesión)", "precio_eur": null, "duracion_min": 45 },
+    { "nombre": "Masaje descontracturante", "precio_eur": null, "duracion_min": 60 },
+    { "nombre": "Depilación láser · valoración (gratuita)", "precio_eur": 0, "duracion_min": 30 },
+    { "nombre": "Bono de sesiones", "precio_eur": null, "duracion_min": 45 }
+  ]
+}

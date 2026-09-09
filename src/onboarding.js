@@ -60,7 +60,10 @@ function crearTenant(data) {
 
     const tpl = cargarPlantilla(data.vertical);
     const tenantId = `${slug(data.nombre)}-${idCorto()}`;
-    const dir = path.join(PATHS.tenants, tenantId);
+    // Al volumen, no junto al código: el contenedor de Railway es efímero y un
+    // tenant creado en una visita comercial no puede evaporarse en el deploy
+    // siguiente.
+    const dir = path.join(PATHS.tenantsRuntime, tenantId);
     fs.mkdirSync(dir, { recursive: true });
 
     const business = {

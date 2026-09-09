@@ -6,6 +6,10 @@ try { require('dotenv').config(); } catch (_) { /* dotenv aún no instalado */ }
 
 const path = require('path');
 
+const DATA_DIR = process.env.DATA_DIR
+    ? path.resolve(process.env.DATA_DIR)
+    : path.join(__dirname, '..', 'data');
+
 module.exports = {
     PORT: process.env.PORT || 3000,
 
@@ -28,7 +32,15 @@ module.exports = {
     DEFAULT_TENANT: process.env.DEFAULT_TENANT || 'barberia_demo',
 
     PATHS: {
+        // Dos raíces a propósito:
+        // - `tenants`: los versionados en el repo (demos y plantillas). Railway los
+        //   despliega con el código, y sin ellos se cae la demo de studio32.es.
+        // - `tenantsRuntime`: los creados en caliente desde /onboarding. Cuelgan del
+        //   volumen (DATA_DIR → /app/data en Railway) porque el contenedor es
+        //   efímero: escritos junto al código, desaparecerían en el siguiente deploy.
+        // Al resolver, runtime tiene prioridad (ver src/tenants.js).
         tenants: path.join(__dirname, '..', 'tenants'),
-        data: process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : path.join(__dirname, '..', 'data')
+        tenantsRuntime: path.join(DATA_DIR, 'tenants'),
+        data: DATA_DIR
     }
 };

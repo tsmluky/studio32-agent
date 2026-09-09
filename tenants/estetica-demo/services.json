@@ -1,0 +1,12 @@
+{
+  "servicios": [
+    { "nombre": "Valoración personalizada (gratuita)", "precio_eur": 0, "duracion_min": 30 },
+    { "nombre": "Limpieza facial profunda", "precio_eur": 55, "duracion_min": 60 },
+    { "nombre": "Tratamiento facial personalizado", "precio_eur": null, "duracion_min": 75 },
+    { "nombre": "Radiofrecuencia facial (sesión)", "precio_eur": 60, "duracion_min": 45 },
+    { "nombre": "Presoterapia (sesión)", "precio_eur": 35, "duracion_min": 45 },
+    { "nombre": "Masaje descontracturante", "precio_eur": 45, "duracion_min": 60 },
+    { "nombre": "Depilación láser · valoración (gratuita)", "precio_eur": 0, "duracion_min": 30 },
+    { "nombre": "Bono de sesiones", "precio_eur": null, "duracion_min": 45 }
+  ]
+}

@@ -11,7 +11,7 @@ const llm = require('./llm');
 const whatsappMeta = require('./channels/whatsapp.meta');
 const whatsapp = require('./channels/whatsapp.twilio');
 const { responder } = require('./orchestrator');
-const { cargarTenant } = require('./tenants');
+const { cargarTenant, listarTenantIds, dirDeTenant } = require('./tenants');
 const onboarding = require('./onboarding');
 const store = require('./store');
 const api = require('./api/router');
@@ -119,7 +119,7 @@ app.post('/onboarding/api/crear', (req, res) => {
 
 // ───────── Panel interno de Studio32 ─────────
 function listaTenants() {
-    return fs.readdirSync(cfg.PATHS.tenants, { withFileTypes: true }).filter(d => d.isDirectory()).map(d => d.name);
+    return listarTenantIds();
 }
 app.get('/panel', (_req, res) => res.sendFile(path.join(PUBLIC, 'panel.html')));
 
@@ -167,8 +167,8 @@ app.get('/panel/api/agente/:id', panelAuth, async (req, res) => {
 // Editar detalles ligeros del contexto (email avisos, tono, estado, servicios).
 app.post('/panel/api/agente/:id', panelAuth, (req, res) => {
     try {
-        const dir = path.join(cfg.PATHS.tenants, req.params.id);
-        if (!fs.existsSync(dir)) return res.status(404).json({ error: 'Agente no encontrado.' });
+        const dir = dirDeTenant(req.params.id);
+        if (!dir) return res.status(404).json({ error: 'Agente no encontrado.' });
         const bp = path.join(dir, 'business.json');
         const business = JSON.parse(fs.readFileSync(bp, 'utf8'));
         if (req.body.estado) business._estado = req.body.estado;

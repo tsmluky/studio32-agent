@@ -12,7 +12,7 @@
 
 const fs = require('fs');
 const { PATHS } = require('./config');
-const { cargarTenant } = require('./tenants');
+const { cargarTenant, listarTenantIds } = require('./tenants');
 const db = require('./store/_db');
 
 function aFecha(fecha, hora) {
@@ -55,10 +55,7 @@ function mensaje(tenant, r, tipo) {
 async function revisar() {
     const enviar = canal();
     let dirs = [];
-    try {
-        dirs = fs.readdirSync(PATHS.tenants, { withFileTypes: true })
-            .filter(d => d.isDirectory()).map(d => d.name);
-    } catch (_) { return; }
+    try { dirs = listarTenantIds(); } catch (_) { return; }
 
     for (const id of dirs) {
         let tenant;

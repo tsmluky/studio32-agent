@@ -10,6 +10,7 @@ const path = require('path');
 const llm = require('./llm');
 const gcal = require('./integrations/googleCalendar');
 const { PATHS } = require('./config');
+const { listarTenantIds, dirDeTenant } = require('./tenants');
 
 const V = '\x1b[32m✓\x1b[0m';
 const X = '\x1b[31m✗\x1b[0m';
@@ -46,15 +47,14 @@ line(has(process.env.SMTP_USER), 'SMTP_USER');
 line(has(process.env.SMTP_PASS), 'SMTP_PASS');
 
 console.log('\nTenants');
-const dirs = fs.existsSync(PATHS.tenants)
-    ? fs.readdirSync(PATHS.tenants, { withFileTypes: true }).filter(d => d.isDirectory()).map(d => d.name)
-    : [];
+const dirs = listarTenantIds();
 if (!dirs.length) line(false, 'No hay tenants en /tenants');
 for (const id of dirs) {
+    const base = dirDeTenant(id);
     let business = {}, services = { servicios: [] }, handoff = {};
-    try { business = JSON.parse(fs.readFileSync(path.join(PATHS.tenants, id, 'business.json'), 'utf8')); } catch (_) {}
-    try { services = JSON.parse(fs.readFileSync(path.join(PATHS.tenants, id, 'services.json'), 'utf8')); } catch (_) {}
-    try { handoff = JSON.parse(fs.readFileSync(path.join(PATHS.tenants, id, 'handoff.json'), 'utf8')); } catch (_) {}
+    try { business = JSON.parse(fs.readFileSync(path.join(base, 'business.json'), 'utf8')); } catch (_) {}
+    try { services = JSON.parse(fs.readFileSync(path.join(base, 'services.json'), 'utf8')); } catch (_) {}
+    try { handoff = JSON.parse(fs.readFileSync(path.join(base, 'handoff.json'), 'utf8')); } catch (_) {}
     const calId = business.calendar && business.calendar.calendar_id;
     console.log(`  • ${id}`);
     line(true, `  servicios: ${(services.servicios || []).length}`);

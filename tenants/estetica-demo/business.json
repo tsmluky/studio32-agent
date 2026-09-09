@@ -1,0 +1,35 @@
+{
+  "nombre": "Estudio Áurea · Estética avanzada",
+  "agente_nombre": "Alba",
+  "ciudad": "Valencia",
+  "whatsapp_number": "whatsapp:+34600000004",
+  "horario_texto": "De martes a viernes de 10:00 a 20:00 y sábados de 10:00 a 14:00. Domingos y lunes, cerrado.",
+  "profesionales": [
+    "Nuria",
+    "Carmen",
+    "Bea"
+  ],
+  "horario": {
+    "dias_laborables": [2, 3, 4, 5, 6],
+    "franjas": [
+      { "inicio": "10:00", "fin": "20:00" }
+    ],
+    "franjas_por_dia": {
+      "6": [
+        { "inicio": "10:00", "fin": "14:00" }
+      ]
+    }
+  },
+  "calendar": {
+    "calendar_id": "",
+    "timezone": "Europe/Madrid"
+  },
+  "owner": {
+    "nombre": "Equipo Studio32",
+    "token": "demo-no-usar",
+    "whatsapp": "whatsapp:+34600000004"
+  },
+  "web": "https://studio32.es",
+  "demo": true,
+  "_demo": "Tenant FICTICIO para demostraciones comerciales. No es un cliente real: no contiene datos personales ni credenciales válidas. El flag 'demo' activa agenda por sesión y límites de uso (ver src/store/demoLimits.js)."
+}

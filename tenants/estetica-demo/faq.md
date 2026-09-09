@@ -1,0 +1,12 @@
+- QUIÉNES SON: Estudio Áurea, Valencia. Centro de estética avanzada: facial, corporal y depilación láser. Tres profesionales, Nuria, Carmen y Bea.
+- HORARIO: de martes a viernes de 10:00 a 20:00 y sábados de 10:00 a 14:00. Domingos y lunes, cerrado.
+- VALORACIÓN: gratuita y sin compromiso. Se ve la piel o la zona y se explica qué se puede hacer, con precio y número de sesiones por escrito.
+- PRECIOS CERRADOS: limpieza facial profunda 55 €, radiofrecuencia facial 60 € la sesión, presoterapia 35 € la sesión, masaje descontracturante 45 €.
+- PRECIOS QUE NO SON CERRADOS: el tratamiento facial personalizado, la depilación láser y los bonos. Dependen de la zona, del estado de la piel y del número de sesiones, y se cierran en la valoración.
+- ELEGIR PROFESIONAL: se puede pedir hora con Nuria, Carmen o Bea. Si no hay hueco con esa persona, se dice y se ofrece alternativa.
+- LÁSER: siempre empieza por una valoración gratuita. El número de sesiones y el precio dependen de la zona y del tipo de vello y de piel; no se dan por chat.
+- EMBARAZO, LACTANCIA Y MEDICACIÓN: hay tratamientos que no se pueden hacer o hay que adaptar. No se decide por chat: se valora en el centro.
+- MÉDICO-ESTÉTICA: bótox, rellenos, hilos y mesoterapia no se hacen aquí. Se deriva al equipo, que lo ve un médico.
+- BONOS: existen bonos de sesiones. Lo que incluyen y su precio se cierra en la valoración, no por chat.
+- CANCELAR O CAMBIAR: se puede mover la cita avisando con antelación. Se agradece avisar cuanto antes, porque el hueco se le da a otra persona.
+- FORMA DE PAGO: efectivo y tarjeta. Se emite factura siempre que se pida.

@@ -29,6 +29,9 @@ tenants/*
 # Excepción: la config compartida SÍ va al repo — es lo que sincroniza los hooks
 # entre portátil y sobremesa. Las sesiones y la caché siguen ignoradas.
 !.claude/settings.json
+# Las skills también viajan: son parte de cómo se trabaja el repo, no caché local.
+!.claude/skills/
+!.claude/skills/**
 .hermes/
 
 # Datos generados por el banco de pruebas de evals/ (nunca son datos reales)
