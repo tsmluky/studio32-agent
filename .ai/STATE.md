@@ -2,7 +2,7 @@
 
 > **Se sobrescribe, no se acumula.** Refleja dónde está el repo AHORA.
 > Lo histórico va a `DECISIONS.md`. Tope: ~100 líneas.
-> Última actualización: **2026-07-25**
+> Última actualización: **2026-09-09**
 
 ## Qué es este repo
 
