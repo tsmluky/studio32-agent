@@ -56,13 +56,21 @@ las citas (getAgenda, cancel/reschedule, dedup y —sin Calendar— disponibilid
 Verificado E2E: reservar → desplegar → sobrevive → cancelar → hueco libre.
 Ver `DECISIONS.md` 2026-07-27.
 
-## Cliente activo · GH Dent (Clínica Dental, Guadalajara)
+## Clientes · ninguno (2026-09-09)
 
-Único cliente real en producción. En Supabase hay 3 organizaciones: `studio32`,
-`gh-dent` y `clinica-cobalto` (demo, sembrada por SQL). El resto de tenants no
-están importados.
+**GH Dent ya no existe como cliente.** Se les envió el presupuesto y nunca
+respondieron. No tratarlo como cliente activo ni perseguir ese hilo: sus dos
+bloqueadores dejaron de ser bloqueadores porque no hay nadie esperando al otro lado.
+Su tenant sigue en disco, fuera del control de versiones.
 
-**Bloqueadores de go-live (entrega prevista: primera semana de agosto):**
+En Supabase siguen las 3 organizaciones: `studio32`, `gh-dent` y `clinica-cobalto`
+(demo, sembrada por SQL). El resto de tenants no están importados.
+
+Lo de abajo se conserva porque **es la lista de lo que hará falta con el primer
+cliente que entre**, sea quien sea. Ahora mismo el orden de trabajo lo manda el repo
+`Studio32` → `notes/CAMINO.md`.
+
+**Lo que hará falta para cualquier go-live:**
 1. Verificar el número en **Meta** (tarea principal pendiente; plazo incierto,
    empezar cuanto antes).
 2. **Google Calendar sin configurar del todo**: no hay service account creada
@@ -136,14 +144,26 @@ Rama: `main`. Se trabaja desde portátil y sobremesa.
 1. **`git pull --rebase` al empezar** una sesión.
 2. **Commit + push de `.ai/` (y del resto) al cerrar** una tarea.
 
-## Foco actual
+## Foco actual (2026-09-09)
 
-**Excepcionalización del contexto (freeze levantado a propósito).** Se decidió que
-la calidad de las "partes blandas" del agente es el diferenciador y se ataca ya, aun
-con el go-live de GH Dent en pausa. Modelo: **arquetipo por vertical + huella minada
-del negocio** (ver DECISIONS 2026-07-26). Los tres bloqueadores de go-live (Meta,
-Calendar, viernes) siguen sin ser camino crítico; el del viernes ya está resuelto en
-código (`franjas_por_dia`).
+**Que el producto aguante.** El plan entero vive en el repo `Studio32` →
+`notes/CAMINO.md`; aquí solo lo que toca a este repo:
+
+- `evals/` (promptfoo, 08/09) comprueba el criterio del agente, pero sus doce casos
+  están escritos contra `gh-dent`, que ya no es cliente. Reapuntarlos a los
+  arquetipos por vertical.
+- `package.json` declara `test:agent`, `test:qa`, `test:sec` y `test:llm` apuntando a
+  archivos que **no existen ni existieron nunca** (`test-cli.js`, `test-qa.js`,
+  `test-security.js`, `test-llm.js`). El smoke del agente es una entrada en un JSON.
+  Se escribe de verdad o se borran, pero no se deja mintiendo.
+- Nadie comprueba nunca que **lo desplegado** responde, ni avisa si deja de hacerlo.
+
+Sigue en pie el modelo de **arquetipo por vertical + huella minada del negocio** (ver
+DECISIONS 2026-07-26) como diferenciador. Lo nuevo es que la huella tiene que ser una
+sola: hoy la prospección y `montar-demo` investigan el mismo negocio por separado.
+
+Este archivo está por encima de su tope de ~100 líneas y arrastra registros de julio
+que ya son historia. Toca podarlo.
 
 Cerrado el 2026-07-26:
 - gh-dent: `tone/policies/faq` reescritos desde investigación real de `ghdent.es` +
