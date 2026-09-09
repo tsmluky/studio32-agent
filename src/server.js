@@ -60,6 +60,38 @@ function panelAuth(req, res, next) {
 
 app.get('/', (_req, res) => res.send('Studio32 Agent · OK · /demo · /widget-demo · /onboarding · /panel'));
 
+// Salud del servicio. Existe para poder preguntar DESDE FUERA si esto está vivo y
+// con qué está funcionando, sin entrar al panel del hosting. Hasta ahora, si el
+// agente dejaba de responder un domingo, lo descubría el cliente.
+// No devuelve ningún secreto: nombres de proveedor y síes/noes, nada de claves ni
+// de datos de negocios.
+app.get('/health', async (_req, res) => {
+    const salud = {
+        ok: true,
+        arrancado_hace_s: Math.round(process.uptime()),
+        modelo: { proveedor: llm.PROVIDER, modelo: llm.MODEL },
+        tenants: 0,
+        volumen: { ruta: cfg.PATHS.data, escribible: false },
+        supabase: require('./store/supabase').enabled(),
+        avisos: !!(process.env.RESEND_API_KEY || process.env.SMTP_USER),
+        whatsapp: {
+            twilio: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN),
+            meta: !!(process.env.META_ACCESS_TOKEN && process.env.META_PHONE_NUMBER_ID)
+        }
+    };
+    try { salud.tenants = listarTenantIds().length; } catch (_) { salud.ok = false; }
+    // El volumen es el punto donde más duele que falle: sin él, las citas se
+    // borran en cada despliegue y se puede citar a dos personas a la misma hora.
+    try {
+        const prueba = path.join(cfg.PATHS.data, '.health');
+        fs.mkdirSync(cfg.PATHS.data, { recursive: true });
+        fs.writeFileSync(prueba, String(Date.now()));
+        fs.unlinkSync(prueba);
+        salud.volumen.escribible = true;
+    } catch (_) { salud.ok = false; }
+    res.status(salud.ok ? 200 : 503).json(salud);
+});
+
 // Webchat de demo (acepta ?tenant= y ?owner=)
 // Estado de una sesión de demostración, para que la landing pinte en su panel
 // lo que el agente ha hecho de verdad (citas creadas). SOLO LECTURA y acotado a
@@ -205,7 +237,13 @@ app.post('/chat', rateLimit, async (req, res) => {
         // Tenants de demostración (landing pública): el rateLimit de arriba cubre
         // ráfagas pero vive en memoria. Esto acota el uso sostenido y persiste en
         // el volumen, así que un despliegue no regala el contador.
-        if (store.bookings.esDemo(tenant)) {
+        // El smoke habla con los tenants de demostración igual que un visitante, así
+        // que se comía la cuota de la demo: dos pasadas y la landing quedaba muda
+        // para todo el que saliera por esa IP. Con el token acordado se salta el
+        // contador —solo eso, ningún otro permiso— para poder comprobar cada
+        // despliegue sin gastarle la demo a nadie.
+        const esSmoke = !!(process.env.SMOKE_TOKEN && req.headers['x-smoke-token'] === process.env.SMOKE_TOKEN);
+        if (store.bookings.esDemo(tenant) && !esSmoke) {
             const ipCliente = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
             const permiso = store.demoLimits.registrar(tenant.id, { sesion, ip: ipCliente });
             if (!permiso.ok) return res.status(429).json({ respuesta: permiso.respuesta });

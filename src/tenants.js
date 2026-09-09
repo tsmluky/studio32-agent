@@ -81,6 +81,31 @@ function cargarTenant(tenantId) {
     return tenant;
 }
 
+// Tenant al que caen los mensajes que no se pueden atribuir a nadie (por ejemplo,
+// los del sandbox de Twilio, cuyo número no es de ningún negocio).
+//
+// Antes esto era `cargarTenant(process.env.DEFAULT_TENANT)` a pelo, y si esa
+// variable apuntaba a un tenant que ya no existe —pasó: quedó apuntando a un
+// cliente cuyos archivos salieron del repo— el canal entero dejaba de responder,
+// en silencio y solo en producción. Un ajuste de configuración no puede tumbar
+// WhatsApp: si el de la variable no está, se usa cualquier tenant de demostración
+// y se avisa por consola, bien fuerte.
+let avisadoPorDefecto = false;
+function tenantPorDefecto() {
+    const pedido = process.env.DEFAULT_TENANT || 'barberia_demo';
+    if (dirDeTenant(pedido)) return cargarTenant(pedido);
+
+    const alternativa = listarTenantIds().find(id => /demo|cobalto/i.test(id));
+    if (!avisadoPorDefecto) {
+        avisadoPorDefecto = true;
+        console.error(`[tenants] DEFAULT_TENANT="${pedido}" no existe. ` +
+            (alternativa ? `Atendiendo con "${alternativa}" mientras tanto. Corrige la variable.`
+                : 'Y no hay ningún tenant de demostración al que caer.'));
+    }
+    if (!alternativa) throw new Error(`Tenant por defecto no encontrado: ${pedido}`);
+    return cargarTenant(alternativa);
+}
+
 // Resuelve el tenant por el número de WhatsApp del NEGOCIO (el "To" del webhook).
 // Así un mismo backend atiende a varios clientes. Si no encuentra, devuelve null
 // y el canal usa DEFAULT_TENANT.
@@ -95,4 +120,4 @@ function resolverTenantPorNumero(numeroDestino) {
     return null;
 }
 
-module.exports = { cargarTenant, resolverTenantPorNumero, listarTenantIds, dirDeTenant };
+module.exports = { cargarTenant, resolverTenantPorNumero, listarTenantIds, dirDeTenant, tenantPorDefecto };

@@ -94,8 +94,9 @@ El panel es **solo-lectura** sobre esa config.
 npm start                  # node src/server.js
 npm run dev                # --watch
 npm run check              # comprobación de configuración
-npm run chat               # CLI conversacional
-npm run test:agent         # smoke
+npm run test:agent         # smoke: reservar/mover/cancelar comprobado en la agenda
+npm run test:agent:prod    # el mismo smoke contra Railway
+npm run eval               # criterio del agente (evals/, promptfoo)
 npm run test:supabase      # node --test (adapter + api-auth)
 npm run check:supabase     # contrato de esquema (sin Docker ni credenciales)
 npm run supabase:import -- <tenant>...

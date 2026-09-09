@@ -52,12 +52,15 @@ npm start               # o: npm run dev
 |---|---|
 | `npm start` | Arranca el servidor |
 | `npm run dev` | Arranca con recarga automática |
-| `npm run chat` | Chat interactivo por consola |
 | `npm run check` | Comprueba la configuración |
-| `npm run test:agent` | Smoke test del agente |
-| `npm run test:llm` | Prueba la capa del modelo |
-| `npm run test:qa` | Batería de preguntas y respuestas |
-| `npm run test:sec` | Pruebas de seguridad del prompt |
+| `npm run test:agent` | Smoke: habla con el agente y comprueba que la cita existe |
+| `npm run test:agent:prod` | El mismo smoke, contra lo desplegado en Railway |
+| `npm run eval` | Banco de pruebas del criterio (`evals/`) |
+| `npm run test:supabase` | Pruebas del adaptador y de los permisos de la API |
+
+Cuatro comandos que había aquí —`chat`, `test:llm`, `test:qa`, `test:sec`— apuntaban
+a archivos que nunca existieron en el repositorio. Se han quitado: lo que probaban de
+verdad ahora está en el smoke y en `evals/`.
 
 ## Despliegue
 

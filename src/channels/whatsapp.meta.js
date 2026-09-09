@@ -14,7 +14,7 @@
 
 const express = require('express');
 const { responder } = require('../orchestrator');
-const { resolverTenantPorNumero, cargarTenant } = require('../tenants');
+const { resolverTenantPorNumero, cargarTenant, tenantPorDefecto } = require('../tenants');
 
 const GRAPH = process.env.META_GRAPH_VERSION || 'v22.0';
 
@@ -69,7 +69,7 @@ function router() {
         const entrante = parseEntrante(req.body);
         if (!entrante) return;
         try {
-            const tenant = resolverTenantPorNumero(entrante.displayNumber) || cargarTenant(process.env.DEFAULT_TENANT || 'studio32');
+            const tenant = resolverTenantPorNumero(entrante.displayNumber) || tenantPorDefecto();
             const ownerCfg = tenant.business.owner || {};
             const ownerNum = (ownerCfg.whatsapp || '').replace(/[^0-9]/g, '');
             const fromNum = (entrante.from || '').replace(/[^0-9]/g, '');

@@ -15,7 +15,7 @@
 
 const express = require('express');
 const { responder } = require('../orchestrator');
-const { resolverTenantPorNumero, cargarTenant } = require('../tenants');
+const { resolverTenantPorNumero, cargarTenant, tenantPorDefecto } = require('../tenants');
 
 let _twilio = null;
 function lib() { if (!_twilio) _twilio = require('twilio'); return _twilio; }
@@ -57,7 +57,7 @@ function router() {
 
         if (!from || !body) return;
         try {
-            const tenant = resolverTenantPorNumero(to) || cargarTenant(process.env.DEFAULT_TENANT || 'studio32');
+            const tenant = resolverTenantPorNumero(to) || tenantPorDefecto();
             const ownerCfg = tenant.business.owner || {};
             const ownerNum = (ownerCfg.whatsapp || '').replace(/[^0-9]/g, '');
             const fromNum = (from || '').replace(/[^0-9]/g, '');
