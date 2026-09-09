@@ -171,8 +171,17 @@ Rama: `main`. Se trabaja desde portátil y sobremesa.
 confirmaba citas inexistentes, el dedup de reservas no miraba la sesión en las demos,
 y cualquiera podía cancelar la cita de otro dando su teléfono por chat.
 
-**Lo que sigue verde:** nadie vigila que producción siga respondiendo. `/health` ya
-existe, pero no hay nada que lo mire cada X minutos y avise.
+- **Vigilancia**: `npm run vigilar` + `.github/workflows/vigilancia.yml`, cada media
+  hora. Comprueba que está vivo con el volumen montado y que contesta sin rendirse; si
+  falla, GitHub manda un correo. Sin secretos ni infraestructura nueva. Un 429 no
+  cuenta como caída (es la demo protegiéndose); un 200 con "se me ha cruzado algo"
+  dentro, sí.
+- **Aguante ante fallos de fuera**: el modelo tiene 30 s de espera y dos reintentos
+  (la librería traía diez minutos por defecto), y los caminos que antes morían en
+  silencio —respuesta vacía, bucle de herramientas— dejan marca en el log.
+
+**Con esto, el carril 1 del camino está entero.** Lo siguiente ya no es este repo: es
+el kit de visita (huella unificada, manual, precio).
 
 Sigue en pie el modelo de **arquetipo por vertical + huella minada del negocio** (ver
 DECISIONS 2026-07-26) como diferenciador. Lo nuevo es que la huella tiene que ser una
