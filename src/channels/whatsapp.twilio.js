@@ -74,7 +74,7 @@ function router() {
             if (respuesta) await enviarMensaje(from, respuesta);
         } catch (err) {
             console.error('Error en canal Twilio:', err);
-            await enviarMensaje(from, 'Ahora mismo no puedo responder, pruebo de nuevo en unos minutos.');
+            await enviarMensaje(from, 'Perdona, ahora mismo no consigo responderte. Escríbeme otra vez en un momento y lo vemos.');
         }
     });
 

@@ -1,0 +1,37 @@
+# Comprueba cada media hora que el agente desplegado sigue vivo y contestando.
+#
+# Si falla, GitHub manda un correo al dueño del repositorio: ese es el aviso. No hace
+# falta montar nada más —ni servidor, ni cuenta de terceros— y el histórico de
+# ejecuciones queda como registro de disponibilidad, que es justo lo que hará falta
+# enseñar el día que un cliente pregunte "¿y esto se cae?".
+#
+# No usa ningún secreto: solo habla con las URLs públicas del servicio.
+#
+# OJO: GitHub desactiva los cron de repos sin actividad durante 60 días y avisa por
+# correo antes de hacerlo. Si eso pasa, se reactiva desde la pestaña Actions.
+
+name: Vigilancia del agente
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+# Si una ejecución se solapa con la anterior, gana la nueva.
+concurrency:
+  group: vigilancia
+  cancel-in-progress: true
+
+jobs:
+  comprobar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      # Sin `npm ci` a propósito: el vigilante solo usa `fetch`, que ya viene en Node.
+      # Instalar dependencias aquí solo añadiría minutos y formas de fallar.
+      - name: Comprobar que el agente responde
+        run: node scripts/vigilar.js

@@ -52,8 +52,9 @@ async function responder(ctx, mensajeUsuario) {
 
     let message = await llm.chat({ system, messages: mensajes, tools: schemas });
 
+    const MAX_VUELTAS = 5;
     let vueltas = 0;
-    while (message.tool_calls && message.tool_calls.length && vueltas < 5) {
+    while (message.tool_calls && message.tool_calls.length && vueltas < MAX_VUELTAS) {
         vueltas++;
         mensajes.push(message); // copia de trabajo (NO se persiste)
         for (const call of message.tool_calls) {
@@ -70,13 +71,29 @@ async function responder(ctx, mensajeUsuario) {
         message = await llm.chat({ system, messages: mensajes, tools: schemas });
     }
 
+    // El modelo se quedó dando vueltas entre herramientas y se acabó el margen. Antes
+    // esto terminaba en un "Perdona, me lo repites?" indistinguible de cualquier otro
+    // fallo; ahora se ve en el log, que es la única forma de saber si pasa a menudo.
+    if (message.tool_calls && message.tool_calls.length) {
+        console.error('[BUCLE DE HERRAMIENTAS]', ctx.tenantId, ctx.telefono, '| se agotaron las', MAX_VUELTAS, 'vueltas | últimas:', message.tool_calls.map(c => c.function.name).join(', '));
+    }
+
     let texto = limpiarParaWhatsApp((message.content || '').trim());
+
+    // Respuesta vacía: el modelo "piensa" y no escribe nada. Pasa de verdad según el
+    // modelo que haya detrás, y sin este aviso solo se descubre trazando a mano.
+    if (!texto) {
+        console.error('[RESPUESTA VACÍA]', ctx.tenantId, ctx.telefono, '| modelo:', llm.MODEL, '| herramientas en la última vuelta:', (message.tool_calls || []).length);
+    }
+
     const insp = inspeccionarRespuesta(texto);
     if (!insp.seguro) { console.error('[BLOQUEADO POR SEGURIDAD]', ctx.telefono, '| Motivo:', insp.motivo); texto = MENSAJE_SEGURO_FALLBACK; }
     // Antes de que salga: si da la cita por hecha, que la cita exista y sea a la hora
     // que dice. Ver src/confirmacion.js — no es paranoia, es un fallo observado.
     texto = await revisarConfirmacion(runtimeCtx, texto);
-    if (!texto) texto = 'Perdona, me lo repites?';
+    // Última red. No promete un mensaje futuro (no puede enviarlo) ni echa la culpa al
+    // cliente: le pide que lo repita, que es lo único que sí desbloquea la situación.
+    if (!texto) texto = 'Perdona, se me ha cruzado algo y no te he contestado bien. ¿Me lo repites?';
 
     // Persistir SOLO el turno limpio: mensaje del usuario + respuesta final.
     if (!inbound.persisted) await conversations.push(ctx.tenantId, ctx.telefono, { role: 'user', content: mensajeUsuario, provider: ctx.channel });

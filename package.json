@@ -13,6 +13,7 @@
     "test:agent": "node scripts/smoke.js",
     "test:agent:prod": "node scripts/smoke.js --url https://web-production-d722c.up.railway.app",
     "check": "node src/check.js",
+    "vigilar": "node scripts/vigilar.js",
     "check:supabase": "node scripts/check-supabase-schema.js",
     "test": "node --test test/*.test.js",
     "test:supabase": "node --test test/supabase-adapter.test.js test/api-auth.test.js",
