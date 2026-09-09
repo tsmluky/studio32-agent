@@ -26,17 +26,27 @@ Ecosistema completo: **repo `Studio32` → `notes/CONTEXTO.md`**. No duplicar aq
 - Datos: Supabase `studio32-agent-platform` · ref `qtmjtgimrzennkoqrslr` · eu-west-1.
 - Consumidor: `studio32-panel` → `dashboard.studio32.es` (Cloudflare Pages).
 
-## ⚠️ Aviso de seguridad · sin resolver
+## Seguridad de los tenants · resuelto el 2026-09-09 (queda un fleco)
 
-`tenants/*/business.json` **está versionado en git** e incluye `owner.token` y
-`owner.whatsapp`. `gh-dent` lleva datos reales de la clienta (Gabriela, WhatsApp
-personal). El repo es privado, así que el riesgo es medio, no crítico. Pero:
-- Los tokens están en el **historial**, no solo en HEAD. Borrar tenants (como se
-  hizo el 2026-07-25) los quita de HEAD pero **no** del historial.
-- **Pendiente de decisión del usuario:** rotar tokens, sacar `tenants/` del repo
-  (o solo los campos sensibles), y si merece la pena reescribir historial.
-- Mientras tanto: no pegar contenido de esos archivos en chats, issues ni
-  capturas, y no hacer público el repo.
+El repo es **público** desde el 25/08. Lo que se hizo:
+
+- `tenants/*` ya no se versiona. Solo se re-incluyen a mano los ficticios, que
+  tienen que viajar porque Railway los lee del repo y sin ellos se cae la demo de
+  studio32.es. `gh-dent` salió del control de versiones el 08/09 (sigue en disco).
+- Los `owner.token` de `studio32` y `barberia_demo` están **rotados**, y los nuevos
+  salen del entorno: `OWNER_TOKEN_<TENANT>`. El archivo solo manda en los tenants
+  del volumen, que nunca se versionan. Sin variable y sin archivo, no hay modo
+  dueño — fallo seguro. `npm run check` dice de dónde sale el de cada uno.
+
+**Lo que sigue abierto:**
+- Los valores viejos siguen en el historial. Ya no abren nada, pero ahí están.
+  Reescribir el historial es una decisión sin tomar.
+- El `owner.whatsapp` de gh-dent (número personal de la clienta) está en el
+  historial y **eso no se rota**. Si se decide limpiar, es por aquí por donde hay
+  que empezar.
+- En Supabase, dos filas de `agent_configs` conservan el token viejo dentro de
+  `business`. No dan acceso —la comprobación de dueño se hace contra el
+  archivo/entorno, antes de hidratar— pero conviene vaciarlas.
 
 ## Persistencia · volumen montado (2026-07-27)
 

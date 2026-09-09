@@ -386,3 +386,25 @@ explícitos, así que no hay riesgo de pisar otros tenants por descuido.
 Ojo con `business`: se fusiona (`{...archivo, ...supabase}`), no se sustituye.
 Una clave nueva en el archivo sobrevive mientras Supabase no la tenga — pero no
 conviene depender de eso: reimporta.
+
+## 2026-09-09 · El token de dueño vive en el entorno, no en el repo
+
+`tenants/<id>/business.json` llevaba `owner.token` en claro y el repositorio es
+público desde el 25/08. Ese token es lo que se compara para dar permisos de dueño.
+
+**Decisión:** manda `OWNER_TOKEN_<TENANT>` del entorno sobre el archivo, y los
+tenants versionados lo llevan vacío. Los de runtime (volumen, creados desde
+/onboarding) siguen con el suyo en el archivo, que nunca se versiona. Sin ninguno de
+los dos, ese tenant se queda sin modo dueño.
+
+**Por qué así y no otra cosa:** sacar `tenants/` del repo entero no valía —los
+ficticios tienen que viajar o se cae la demo en vivo— y dejar el token en un archivo
+versionado con una nota de "cuidado" ya se probó y no aguantó. Fallar cerrado es
+preferible a heredar un token de un archivo que cualquiera puede leer.
+
+Los de `studio32` y `barberia_demo` están rotados; los viejos siguen en el historial
+pero ya no abren nada. Ojo con dos cosas: hay copias del token viejo dentro de
+`agent_configs.business` en Supabase (no dan acceso, la comprobación se hace antes de
+hidratar, pero conviene vaciarlas), y el `owner.whatsapp` de gh-dent es un número
+personal que el historial conserva y que no se puede rotar.
+
