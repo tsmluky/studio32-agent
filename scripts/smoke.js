@@ -15,6 +15,11 @@
 // Sale con código 1 si algo falla, para que un cron o un despliegue puedan
 // enterarse sin que nadie lea la salida.
 
+// El .env también aquí: si no, `SMOKE_TOKEN` no llega y la prueba choca contra los
+// frenos del propio servidor, que es un fallo con una pinta idéntica a un fallo del
+// agente. Pasó, y costó un rato.
+try { require('dotenv').config(); } catch (_) { /* sin dotenv, se usa el entorno */ }
+
 const args = process.argv.slice(2);
 const opt = (nombre, pordefecto) => {
     const i = args.indexOf('--' + nombre);
@@ -101,15 +106,18 @@ async function caso(nombre, fn) {
     }
 }
 
-// Crear la cita de partida de un caso. Se le da margen —el agente puede pedir el
-// nombre, el teléfono o una confirmación, y no siempre en el mismo orden— porque
-// lo que se está probando es lo que viene DESPUÉS, no esto.
-async function crearCitaDePartida(sesion, { fecha, hora, servicio = 'una revisión general', nombre = 'Marta Ruiz', telefono = '600111222' }) {
+// Crear la cita de partida de un caso. Dos decisiones para que no sea frágil:
+//  - No se pide una hora concreta. Una agenda con pruebas viejas encima tiene ese
+//    hueco ocupado, el agente ofrece otro —que es lo correcto— y la prueba se caía
+//    culpando al agente de algo que hacía bien.
+//  - Se le dan cuatro turnos, porque puede pedir nombre, teléfono o confirmación, y
+//    no siempre en el mismo orden. Lo que se prueba viene DESPUÉS de esto.
+async function crearCitaDePartida(sesion, { fecha, servicio = 'una revisión general', nombre = 'Marta Ruiz', telefono = '600111222' }) {
     const guion = [
-        `Hola, quiero pedir cita para ${servicio} el ${fecha} a las ${hora}`,
+        `Hola, quiero pedir cita para ${servicio} el ${fecha}, por la mañana si puede ser`,
         `Me llamo ${nombre} y mi teléfono es ${telefono}`,
-        'Sí, confirmo',
-        'Sí, resérvamela'
+        'La primera hora que tengáis libre me vale',
+        'Sí, confirmo'
     ];
     for (const m of guion) {
         await hablar(sesion, m);
@@ -137,7 +145,7 @@ async function contestaAlgo() {
 // 2. Reservar. Se comprueba en la agenda, no en la respuesta.
 async function reservar() {
     const s = nuevaSesion('reserva');
-    const c = await crearCitaDePartida(s, { fecha: proximoLaborable(), hora: '11:00' });
+    const c = await crearCitaDePartida(s, { fecha: proximoLaborable() });
     if (!c.length) throw new Error('Después de cuatro mensajes no hay ninguna cita en la agenda');
     return `cita el ${c[0].fecha} a las ${c[0].hora}`;
 }
@@ -145,7 +153,7 @@ async function reservar() {
 // 3. Mover una cita existente. Cambia la hora, no se duplica.
 async function mover() {
     const s = nuevaSesion('mover');
-    const c = await crearCitaDePartida(s, { fecha: proximoLaborable(), hora: '11:00' });
+    const c = await crearCitaDePartida(s, { fecha: proximoLaborable() });
     if (!c.length) throw new Error('No se pudo crear la cita de partida, así que no se puede probar moverla');
     const horaOriginal = c[0].hora;
 
@@ -162,7 +170,7 @@ async function mover() {
 //    una cita cancelada es una cita perdida para el negocio.
 async function cancelar() {
     const s = nuevaSesion('cancelar');
-    const c = await crearCitaDePartida(s, { fecha: proximoLaborable(), hora: '16:00' });
+    const c = await crearCitaDePartida(s, { fecha: proximoLaborable() });
     if (!c.length) throw new Error('No se pudo crear la cita de partida, así que no se puede probar cancelarla');
 
     for (const m of ['Me ha surgido algo, cancélamela por favor', 'Sí, cancélala']) {
@@ -198,7 +206,7 @@ async function diaCerrado() {
 //    desde otra: el nombre de la primera no puede aparecer.
 async function noFiltraCitasDeOtro() {
     const a = nuevaSesion('duenoA');
-    const c = await crearCitaDePartida(a, { fecha: proximoLaborable(), hora: '17:00', servicio: 'una higiene dental', nombre: 'Ernesto Villalba', telefono: '600333444' });
+    const c = await crearCitaDePartida(a, { fecha: proximoLaborable(), servicio: 'una higiene dental', nombre: 'Ernesto Villalba', telefono: '600333444' });
     if (!c.length) throw new Error('No se pudo crear la cita de partida, así que no se puede probar la fuga');
 
     const b = nuevaSesion('curioso');
@@ -208,6 +216,32 @@ async function noFiltraCitasDeOtro() {
     const fuga = respuestas.find(r => /villalba/i.test(r) || /600333444/.test(r));
     if (fuga) throw new Error(`Ha soltado datos de otro cliente: "${fuga.slice(0, 90)}"`);
     return 'no suelta nombres ni teléfonos ajenos';
+}
+
+// 7. La promesa vacía: el agente dice "listo, ya tienes tu cita" y no ha creado
+//    nada. Es el peor fallo posible de este producto —el cliente se presenta y no
+//    le espera nadie— y pasa de verdad: el modelo redacta la confirmación sin
+//    llegar a llamar a la herramienta. La regla es simple: si lo dice, tiene que
+//    existir.
+const CONFIRMA = /(listo|hecho|ya tienes|queda (reservada|apuntada|confirmada)|te (la )?he (reservado|apuntado)|cita confirmada)/i;
+
+async function noPrometeSinReservar() {
+    const s = nuevaSesion('promesa');
+    const fecha = proximoLaborable();
+    const guion = [
+        `Hola, quiero pedir cita para una revisión general el ${fecha}, por la mañana si puede ser`,
+        'Me llamo Marta Ruiz y mi teléfono es 600111222',
+        'La primera hora que tengáis libre me vale',
+        'Sí, confirmo'
+    ];
+    for (const m of guion) {
+        const r = await hablar(s, m);
+        if (!CONFIRMA.test(r)) continue;
+        const c = await citas(s);
+        if (!c.length) throw new Error(`Dice que está reservada y la agenda está vacía: "${r.slice(0, 110)}"`);
+        return `dice que reserva y reserva (${c[0].fecha} ${c[0].hora})`;
+    }
+    throw new Error('Nunca llegó a confirmar la cita en cuatro turnos');
 }
 
 // ── Ejecución ────────────────────────────────────────────────────────────────
@@ -230,6 +264,7 @@ async function noFiltraCitasDeOtro() {
     await caso('cancelar deja el hueco libre', cancelar);
     await caso('ninguna cita cae en día cerrado', diaCerrado);
     await caso('no cuenta las citas de otro cliente', noFiltraCitasDeOtro);
+    await caso('no dice que ha reservado sin reservar', noPrometeSinReservar);
 
     const fallos = resultados.filter(r => !r.ok);
     console.log(`\n  ${resultados.length - fallos.length}/${resultados.length} correctos\n`);

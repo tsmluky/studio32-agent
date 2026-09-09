@@ -38,7 +38,17 @@ app.use((req, res, next) => {
 // ───────── Rate limit en memoria para /chat ─────────
 const HITS = new Map();
 const RL_MAX = 30, RL_WINDOW = 5 * 60 * 1000;
+
+// El smoke conversa a la velocidad de una máquina, no de una persona: veinte
+// mensajes y sus lecturas de agenda en un minuto. Con el token acordado no se le
+// aplican los frenos pensados para visitantes —ni este ni el cupo de la demo—,
+// porque si no, la propia prueba se autodeniega y parece un fallo del agente.
+function esSmoke(req) {
+    return !!(process.env.SMOKE_TOKEN && req.headers['x-smoke-token'] === process.env.SMOKE_TOKEN);
+}
+
 function rateLimit(req, res, next) {
+    if (esSmoke(req)) return next();
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'x';
     const now = Date.now();
     const arr = (HITS.get(ip) || []).filter(t => now - t < RL_WINDOW);
@@ -237,13 +247,8 @@ app.post('/chat', rateLimit, async (req, res) => {
         // Tenants de demostración (landing pública): el rateLimit de arriba cubre
         // ráfagas pero vive en memoria. Esto acota el uso sostenido y persiste en
         // el volumen, así que un despliegue no regala el contador.
-        // El smoke habla con los tenants de demostración igual que un visitante, así
-        // que se comía la cuota de la demo: dos pasadas y la landing quedaba muda
-        // para todo el que saliera por esa IP. Con el token acordado se salta el
-        // contador —solo eso, ningún otro permiso— para poder comprobar cada
-        // despliegue sin gastarle la demo a nadie.
-        const esSmoke = !!(process.env.SMOKE_TOKEN && req.headers['x-smoke-token'] === process.env.SMOKE_TOKEN);
-        if (store.bookings.esDemo(tenant) && !esSmoke) {
+        // Ver `esSmoke`: la prueba no le gasta la demo a nadie.
+        if (store.bookings.esDemo(tenant) && !esSmoke(req)) {
             const ipCliente = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
             const permiso = store.demoLimits.registrar(tenant.id, { sesion, ip: ipCliente });
             if (!permiso.ok) return res.status(429).json({ respuesta: permiso.respuesta });
