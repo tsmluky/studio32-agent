@@ -20,8 +20,12 @@ prompts:
 
 defaultTest:
   options:
-    # Modelo barato para las notas subjetivas. No es el que responde, solo el que corrige.
-    provider: openai:gpt-4o-mini
+    # Quien corrige las notas subjetivas, no quien responde. Va por el mismo endpoint
+    # que el agente (`OPENAI_BASE_URL` del .env), así que hay que nombrar un modelo que
+    # ESE proveedor sirva: con la clave de DeepSeek del portátil, `gpt-4o-mini` devuelve
+    # 400 y tumba las doce pruebas sin que el agente haya hecho nada mal.
+    # Se corrige con el modelo grande, no con el mismo que responde.
+    provider: openai:chat:deepseek-v4-pro
   assert:
     # WhatsApp no renderiza markdown: los asteriscos se ven tal cual y quedan fatal.
     - type: not-regex

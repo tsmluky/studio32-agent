@@ -20,8 +20,8 @@
     "test:supabase": "node --test test/supabase-adapter.test.js test/api-auth.test.js",
     "supabase:import": "node scripts/import-tenants-to-supabase.js",
     "supabase:sync-bookings": "node scripts/sync-bookings-to-supabase.js",
-    "eval": "npx -y promptfoo@latest eval -c evals/promptfooconfig.yaml",
-    "eval:view": "npx -y promptfoo@latest view"
+    "eval": "npx -y promptfoo@0.120.19 eval -c evals/promptfooconfig.yaml",
+    "eval:view": "npx -y promptfoo@0.120.19 view"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.2",
