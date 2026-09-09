@@ -15,6 +15,7 @@ const tools = require('./tools');
 const { conversations, usage } = require('./store');
 const remote = require('./store/supabase');
 const { inspeccionarRespuesta, limpiarParaWhatsApp, MENSAJE_SEGURO_FALLBACK } = require('./safety');
+const { revisarConfirmacion } = require('./confirmacion');
 
 async function responder(ctx, mensajeUsuario) {
     const inbound = await conversations.claimInbound(
@@ -72,6 +73,9 @@ async function responder(ctx, mensajeUsuario) {
     let texto = limpiarParaWhatsApp((message.content || '').trim());
     const insp = inspeccionarRespuesta(texto);
     if (!insp.seguro) { console.error('[BLOQUEADO POR SEGURIDAD]', ctx.telefono, '| Motivo:', insp.motivo); texto = MENSAJE_SEGURO_FALLBACK; }
+    // Antes de que salga: si da la cita por hecha, que la cita exista y sea a la hora
+    // que dice. Ver src/confirmacion.js — no es paranoia, es un fallo observado.
+    texto = await revisarConfirmacion(runtimeCtx, texto);
     if (!texto) texto = 'Perdona, me lo repites?';
 
     // Persistir SOLO el turno limpio: mensaje del usuario + respuesta final.

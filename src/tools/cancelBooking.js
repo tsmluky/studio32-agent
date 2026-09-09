@@ -17,7 +17,7 @@ module.exports = {
                 properties: {
                     fecha: { type: 'string', description: 'Fecha de la cita a cancelar (DD/MM/YYYY), si se conoce.' },
                     hora: { type: 'string', description: 'Hora de la cita (HH:MM), si se conoce.' },
-                    contacto: { type: 'string', description: 'Teléfono o email con el que reservó, si el canal no lo aporta.' }
+                    contacto: { type: 'string', description: 'Contacto de la cita, SOLO para distinguir entre varias citas suyas. No sirve para acceder a la cita de otra persona.' }
                 }
             }
         }
@@ -27,7 +27,7 @@ module.exports = {
         if (args.fecha) candidatas = candidatas.filter(r => r.fecha === args.fecha);
         if (args.hora) candidatas = candidatas.filter(r => r.hora === args.hora);
 
-        if (candidatas.length === 0) return 'ERROR: no encuentro ninguna cita activa con esos datos. Pide al cliente la fecha de su cita.';
+        if (candidatas.length === 0) return 'ERROR: no encuentro ninguna cita activa a nombre de este número. Pregúntale la fecha por si la tiene en otro; si insiste en que la tiene, usa handoffHuman para que lo mire una persona. No busques por el teléfono de otra persona.';
         if (candidatas.length > 1) {
             return 'VARIAS: hay varias citas: ' + candidatas.map(r => `${r.fecha} ${r.hora} (${r.servicio})`).join('; ') + '. Pregunta al cliente cuál quiere cancelar.';
         }

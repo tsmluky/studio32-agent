@@ -144,12 +144,24 @@ async function listarJSONPorFecha(tenantId, fecha) {
     return db.leer(tenantId, FILE, []).filter(r => r.fecha === fecha);
 }
 
-// Citas activas (confirmadas) de un cliente, por teléfono o contacto.
+// Citas activas (confirmadas) de un cliente.
+//
+// El teléfono del canal manda, y el `contacto` solo puede ESTRECHAR la búsqueda,
+// nunca ampliarla. Antes era un OR, y eso abría un agujero serio: cancelBooking y
+// rescheduleBooking le pasan un `contacto` que dice el cliente por chat, así que
+// cualquiera podía escribir desde su WhatsApp, dar el teléfono de otra persona y
+// ver o cancelar la cita de esa persona. En una clínica eso es un paciente que se
+// queda sin su hora y no se entera hasta que se planta en la puerta.
+//
+// Si desde el número de quien escribe no hay ninguna cita, la respuesta correcta no
+// es buscar por otro camino: es pasarlo a una persona del equipo.
 async function activasDeCliente(tenant, { telefono, contacto }) {
     const tel = (telefono || '').replace('whatsapp:', '');
+    if (!tel && !contacto) return [];
     return db.leer(tenant.id, FILE, []).filter(r =>
         r.estado === 'confirmada' &&
-        ((tel && r.telefono_cliente === tel) || (contacto && r.contacto === contacto))
+        (!tel || r.telefono_cliente === tel) &&
+        (!contacto || r.contacto === contacto)
     );
 }
 

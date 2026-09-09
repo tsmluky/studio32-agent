@@ -106,22 +106,32 @@ async function caso(nombre, fn) {
     }
 }
 
-// Crear la cita de partida de un caso. Dos decisiones para que no sea frágil:
-//  - No se pide una hora concreta. Una agenda con pruebas viejas encima tiene ese
-//    hueco ocupado, el agente ofrece otro —que es lo correcto— y la prueba se caía
-//    culpando al agente de algo que hacía bien.
-//  - Se le dan cuatro turnos, porque puede pedir nombre, teléfono o confirmación, y
-//    no siempre en el mismo orden. Lo que se prueba viene DESPUÉS de esto.
+// Crear la cita de partida de un caso. Se comporta como un cliente de verdad: deja
+// que el agente ofrezca horas y ELIGE una de las suyas.
+//
+// Es importante que sea así. El agente tiene prohibido reservar hasta que el cliente
+// elige hora y dice que sí —dar el nombre y el teléfono no es decir que sí—, así que
+// un guion que nunca elige hora no consigue cita, y el fallo parecería del agente
+// cuando es del guion. Y tampoco se pide una hora fija: en una agenda con pruebas
+// encima ese hueco está cogido, el agente ofrece otro (correcto) y la prueba se caía.
+const HORA_OFRECIDA = /([01]?\d|2[0-3])[:.]([0-5]\d)/;
+
 async function crearCitaDePartida(sesion, { fecha, servicio = 'una revisión general', nombre = 'Marta Ruiz', telefono = '600111222' }) {
+    const primera = await hablar(sesion, `Hola, quiero pedir cita para ${servicio} el ${fecha}, por la mañana si puede ser`);
+    let c = await citas(sesion);
+    if (c.length) return c;
+
+    const m = primera.match(HORA_OFRECIDA);
+    const hora = m ? `${m[1].padStart(2, '0')}:${m[2]}` : '10:00';
+
     const guion = [
-        `Hola, quiero pedir cita para ${servicio} el ${fecha}, por la mañana si puede ser`,
-        `Me llamo ${nombre} y mi teléfono es ${telefono}`,
-        'La primera hora que tengáis libre me vale',
-        'Sí, confirmo'
+        `Perfecto, a las ${hora} me viene bien. Me llamo ${nombre} y mi teléfono es ${telefono}`,
+        'Sí, confirmo',
+        'Sí, resérvamela'
     ];
-    for (const m of guion) {
-        await hablar(sesion, m);
-        const c = await citas(sesion);
+    for (const msg of guion) {
+        await hablar(sesion, msg);
+        c = await citas(sesion);
         if (c.length) return c;
     }
     return [];
@@ -157,7 +167,7 @@ async function mover() {
     if (!c.length) throw new Error('No se pudo crear la cita de partida, así que no se puede probar moverla');
     const horaOriginal = c[0].hora;
 
-    for (const m of ['Perdona, ¿me la puedes cambiar a las 12:30?', 'Sí, esa misma', 'Sí, confirmo el cambio']) {
+    for (const m of ['Perdona, ¿me la puedes cambiar a las 12:30?', 'Sí, esa misma', 'Sí, confirmo el cambio', 'Sí, adelante, cámbiala']) {
         await hablar(s, m);
         const d = await citas(s);
         if (d.length > 1) throw new Error(`Se ha duplicado: hay ${d.length} citas activas`);
@@ -173,7 +183,7 @@ async function cancelar() {
     const c = await crearCitaDePartida(s, { fecha: proximoLaborable() });
     if (!c.length) throw new Error('No se pudo crear la cita de partida, así que no se puede probar cancelarla');
 
-    for (const m of ['Me ha surgido algo, cancélamela por favor', 'Sí, cancélala']) {
+    for (const m of ['Me ha surgido algo, cancélamela por favor', 'Sí, cancélala', 'Sí, confirmo la cancelación']) {
         await hablar(s, m);
         if (!(await citas(s)).length) return 'la agenda queda vacía';
     }
@@ -227,21 +237,31 @@ const CONFIRMA = /(listo|hecho|ya tienes|queda (reservada|apuntada|confirmada)|
 
 async function noPrometeSinReservar() {
     const s = nuevaSesion('promesa');
-    const fecha = proximoLaborable();
+    const primera = await hablar(s, `Hola, quiero pedir cita para una revisión general el ${proximoLaborable()}, por la mañana si puede ser`);
+    const m = primera.match(HORA_OFRECIDA);
+    const hora = m ? `${m[1].padStart(2, '0')}:${m[2]}` : '10:00';
     const guion = [
-        `Hola, quiero pedir cita para una revisión general el ${fecha}, por la mañana si puede ser`,
-        'Me llamo Marta Ruiz y mi teléfono es 600111222',
-        'La primera hora que tengáis libre me vale',
-        'Sí, confirmo'
+        `Perfecto, a las ${hora} me viene bien. Me llamo Marta Ruiz y mi teléfono es 600111222`,
+        'Sí, confirmo',
+        'Sí, resérvamela'
     ];
-    for (const m of guion) {
-        const r = await hablar(s, m);
+
+    let intervino = false;
+    for (const msg of guion) {
+        const r = await hablar(s, msg);
+        // El guard de src/confirmacion.js ya ha frenado un embuste. Cuenta como
+        // aprobado —al cliente no le ha llegado una cita falsa— pero se dice, porque
+        // significa que el modelo lo intentó.
+        if (r.includes('no me consta que haya quedado registrada')) { intervino = true; continue; }
         if (!CONFIRMA.test(r)) continue;
         const c = await citas(s);
         if (!c.length) throw new Error(`Dice que está reservada y la agenda está vacía: "${r.slice(0, 110)}"`);
-        return `dice que reserva y reserva (${c[0].fecha} ${c[0].hora})`;
+        return `dice que reserva y reserva (${c[0].fecha} ${c[0].hora})${intervino ? ' · el guard tuvo que frenarle antes' : ''}`;
     }
-    throw new Error('Nunca llegó a confirmar la cita en cuatro turnos');
+    if (intervino) return 'el guard frenó una confirmación falsa; al cliente no le llegó';
+    // Que no cerrara la reserva es asunto del caso "reservar crea la cita de verdad".
+    // Aquí solo se juzga una cosa: si lo dijo, tenía que ser verdad. Y no lo dijo.
+    return (await citas(s)).length ? 'reservó sin prometer de más' : 'no confirmó nada, así que no mintió';
 }
 
 // ── Ejecución ────────────────────────────────────────────────────────────────

@@ -23,7 +23,7 @@ module.exports = {
                     hora_actual: { type: 'string', description: 'Hora actual de la cita (HH:MM), si se conoce.' },
                     nueva_fecha: { type: 'string', description: 'Nueva fecha (DD/MM/YYYY).' },
                     nueva_hora: { type: 'string', description: 'Nueva hora (HH:MM).' },
-                    contacto: { type: 'string', description: 'Teléfono o email con el que reservó, si el canal no lo aporta.' }
+                    contacto: { type: 'string', description: 'Contacto de la cita, SOLO para distinguir entre varias citas suyas. No sirve para acceder a la cita de otra persona.' }
                 },
                 required: ['nueva_fecha', 'nueva_hora']
             }

@@ -109,12 +109,22 @@ module.exports = {
         }
 
         // 2) Dedup de reserva idéntica (mismo cliente, mismo hueco).
-        const existentes = await bookings.listarJSONPorFecha(ctx.tenantId, args.fecha);
+        //
+        // En los tenants de demostración se acota a la sesión, igual que la
+        // disponibilidad. Sin eso, dos visitantes distintos que den el mismo teléfono
+        // —o dos pasadas del smoke— chocan entre sí: la herramienta responde "ya
+        // estaba registrada", NO crea la cita, y el agente le dice al segundo que ya
+        // tiene una cita que en realidad no existe. Se vio en el banco de pruebas.
+        const todas = await bookings.listarJSONPorFecha(ctx.tenantId, args.fecha);
+        const sesion = (ctx.telefono || '').replace('whatsapp:', '');
+        const existentes = bookings.esDemo(ctx.tenant)
+            ? todas.filter(r => (r.telefono_cliente || '').replace('whatsapp:', '') === sesion)
+            : todas;
         const duplicada = existentes.some(r =>
             r.estado !== 'cancelada' && r.hora === args.hora && r.servicio === servicioNombre &&
             r.contacto === args.contacto && (!args.profesional || r.profesional === args.profesional)
         );
-        if (duplicada) return 'OK: esa reserva ya estaba registrada, no se duplica.';
+        if (duplicada) return `OK: ya tenía esa reserva (${args.fecha} a las ${args.hora}), no se duplica. Confirma ESA hora, no otra.`;
 
         // 3) Disponibilidad real: evita doble-booking del hueco (o aforo lleno).
         const libre = await bookings.huecoLibre(ctx.tenant, args.fecha, args.hora, duracion, args.profesional || null, { sesion: ctx.telefono });
