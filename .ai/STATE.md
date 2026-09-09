@@ -44,9 +44,8 @@ El repo es **público** desde el 25/08. Lo que se hizo:
 - El `owner.whatsapp` de gh-dent (número personal de la clienta) está en el
   historial y **eso no se rota**. Si se decide limpiar, es por aquí por donde hay
   que empezar.
-- En Supabase, dos filas de `agent_configs` conservan el token viejo dentro de
-  `business`. No dan acceso —la comprobación de dueño se hace contra el
-  archivo/entorno, antes de hidratar— pero conviene vaciarlas.
+- ~~En Supabase quedaban copias del token viejo dentro de `agent_configs.business`~~
+  → vaciadas el 09/09.
 
 ## Persistencia · volumen montado (2026-07-27)
 
@@ -84,11 +83,12 @@ cliente que entre**, sea quien sea. Ahora mismo el orden de trabajo lo manda el 
 4. `handoff.json` apunta a `soporte.studio32@gmail.com` (pruebas) → restaurar
    `gabriela@ghdent.es` al go-live.
 
-## Tenants · 4 (limpieza hecha el 2026-07-25)
+## Tenants · 6 versionados
 
-Solo quedan los vivos: `gh-dent` (cliente), `studio32` (propio), `clinica-cobalto`
-(demo comercial, ver abajo) y `barberia_demo` (demo por defecto / `DEFAULT_TENANT`
-del webchat). Los 10 de demo/QA se borraron (ver `DECISIONS.md` 2026-07-25).
+`studio32` (propio), `clinica-cobalto` (demo comercial, ver abajo), `barberia_demo`,
+`restaurante-demo`, `servicios-demo` y `estetica-demo`. Los cinco de demostración
+tienen que seguir versionados: Railway los lee del repo y sin ellos se cae la demo en
+vivo de studio32.es. `gh-dent` sigue en disco pero fuera del control de versiones.
 
 ### `clinica-cobalto` · tenant de demostración
 
@@ -103,8 +103,13 @@ antes de presentar.
 
 **WhatsApp de la demo:** el sandbox de Twilio (`+14155238886`) no coincide con el
 `whatsapp_number` de ningún tenant, así que cae en `DEFAULT_TENANT` (variable de
-Railway). Apuntándola a `clinica-cobalto`, WhatsApp y dashboard van coordinados.
-**Valor original: `gh-dent`** — devolverlo ahí al retomar su go-live.
+Railway), hoy `clinica-cobalto`: WhatsApp y dashboard van coordinados.
+
+Estuvo apuntando a `gh-dent` hasta el 09/09, y al sacar ese tenant del repo dejó de
+existir en el contenedor: **cualquier mensaje al sandbox reventaba**, en silencio y
+solo en producción. Ya no puede repetirse —`tenantPorDefecto()` cae en un tenant de
+demostración y avisa por consola— pero la lección es que esa variable apunte siempre a
+algo versionado.
 
 ## Onboarding · funcional (arreglado el 2026-07-25)
 
