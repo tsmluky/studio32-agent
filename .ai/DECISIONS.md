@@ -408,3 +408,37 @@ pero ya no abren nada. Ojo con dos cosas: hay copias del token viejo dentro de
 hidratar, pero conviene vaciarlas), y el `owner.whatsapp` de gh-dent es un número
 personal que el historial conserva y que no se puede rotar.
 
+## 2026-09-09 · El agente no puede confirmar lo que no ha reservado
+
+**Decisión:** un guard en código (`src/confirmacion.js`), después del modelo y antes
+del cliente. Si el mensaje da la cita por hecha, se comprueba contra la agenda: si no
+existe, no sale; si dice una hora distinta de la guardada, se sustituye por la buena.
+
+**Por qué en código y no en el prompt:** el prompt ya lo prohibía ("no confirmes una
+cita sin haberla creado con la herramienta") y el modelo lo hizo igual —"Listo, Marta:
+ya tienes tu cita el jueves a las 09:30" con la agenda vacía—. Una instrucción es una
+probabilidad; un guard es una garantía. Es el mismo criterio que ya se aplicó con el
+filtro de seguridad y con la validación de createBooking.
+
+El detector pide dos partes (verbo de cierre + objeto, hora o día) para no tocar
+respuestas correctas: "hoy ya no queda hueco" y "de hecho, mañana tenemos sitio" no
+son confirmaciones. Trece frases fijadas en `test/confirmacion.test.js`.
+
+## 2026-09-09 · El teléfono del canal manda sobre el contacto que dicta el cliente
+
+`activasDeCliente` buscaba por teléfono O por contacto, y cancelBooking y
+rescheduleBooking le pasaban el `contacto` que el cliente escribe por chat: bastaba
+con dar el teléfono de otra persona para ver y cancelar su cita.
+
+**Decisión:** el número del canal manda; el contacto solo puede estrechar la búsqueda,
+nunca ampliarla. Sin ninguna identidad, no devuelve nada. Si desde su número no hay
+cita, el agente lo pasa a una persona en vez de buscar por otro camino.
+
+**Coste asumido:** quien escriba desde un número distinto del que usó para reservar ya
+no puede cancelar solo por decir su teléfono. Es una fricción pequeña frente a que un
+tercero pueda dejar sin cita a un paciente.
+
+Además, el dedup de `createBooking` se acota a la sesión en tenants de demostración:
+dos visitantes con el mismo teléfono chocaban, y al segundo se le decía que ya tenía
+una cita que no existía.
+

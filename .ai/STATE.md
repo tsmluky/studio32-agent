@@ -147,16 +147,27 @@ Rama: `main`. Se trabaja desde portátil y sobremesa.
 ## Foco actual (2026-09-09)
 
 **Que el producto aguante.** El plan entero vive en el repo `Studio32` →
-`notes/CAMINO.md`; aquí solo lo que toca a este repo:
+`notes/CAMINO.md`. Lo que ya está hecho en este repo:
 
-- `evals/` (promptfoo, 08/09) comprueba el criterio del agente, pero sus doce casos
-  están escritos contra `gh-dent`, que ya no es cliente. Reapuntarlos a los
-  arquetipos por vertical.
-- `package.json` declara `test:agent`, `test:qa`, `test:sec` y `test:llm` apuntando a
-  archivos que **no existen ni existieron nunca** (`test-cli.js`, `test-qa.js`,
-  `test-security.js`, `test-llm.js`). El smoke del agente es una entrada en un JSON.
-  Se escribe de verdad o se borran, pero no se deja mintiendo.
-- Nadie comprueba nunca que **lo desplegado** responde, ni avisa si deja de hacerlo.
+- **`npm run test:agent`** existe de verdad (`scripts/smoke.js`): habla con el agente
+  como un cliente y comprueba EFECTOS —que la cita esté en la agenda—, no frases.
+  Siete casos, verde en local y contra Railway (`test:agent:prod`). Con `SMOKE_TOKEN`
+  no gasta el cupo de la demo.
+- **`npm run eval`**: quince casos de criterio contra `clinica-cobalto` (no contra
+  `gh-dent`, que ya no está versionado). Estable en tres pasadas seguidas.
+- **`npm test`**: 26 pruebas unitarias, incluidas las del guard de confirmación y las
+  de identidad de citas.
+- **`/health`**: dice si está vivo, con qué modelo corre, cuántos tenants ve y si el
+  volumen se puede escribir. Sin secretos.
+- **Guard de confirmación** (`src/confirmacion.js`): el agente no puede dar por hecha
+  una cita que no existe, ni decir una hora distinta de la guardada.
+
+**Lo que el smoke encontró el primer día** (todo arreglado, ver DECISIONS 2026-09-09):
+confirmaba citas inexistentes, el dedup de reservas no miraba la sesión en las demos,
+y cualquiera podía cancelar la cita de otro dando su teléfono por chat.
+
+**Lo que sigue verde:** nadie vigila que producción siga respondiendo. `/health` ya
+existe, pero no hay nada que lo mire cada X minutos y avise.
 
 Sigue en pie el modelo de **arquetipo por vertical + huella minada del negocio** (ver
 DECISIONS 2026-07-26) como diferenciador. Lo nuevo es que la huella tiene que ser una
