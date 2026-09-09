@@ -61,6 +61,13 @@ for (const id of dirs) {
     line(has(business.whatsapp_number) && !business.whatsapp_number.includes('600000000'), '  whatsapp_number', business.whatsapp_number || 'sin definir');
     line(has(calId), '  calendar_id', has(calId) ? 'puesto' : 'vacío → reservas en JSON');
     line(has(handoff.email) || has(handoff.whatsapp), '  destino de avisos (handoff)', (handoff.email || handoff.whatsapp || 'sin definir'));
+    // De dónde sale el token de dueño. En un tenant versionado tiene que venir del
+    // entorno: el repositorio es público. Que salga del archivo solo es correcto en
+    // los del volumen, creados desde /onboarding.
+    const tkEntorno = has(process.env['OWNER_TOKEN_' + id.toUpperCase().replace(/[^A-Z0-9]+/g, '_')]);
+    const tkArchivo = has(business.owner && business.owner.token) && business.owner.token !== 'demo-no-usar';
+    line(tkEntorno || tkArchivo, '  token de dueño',
+        tkEntorno ? 'del entorno' : (tkArchivo ? 'del archivo (solo válido si NO se versiona)' : 'sin modo dueño'));
 }
 
 console.log('\nResumen');

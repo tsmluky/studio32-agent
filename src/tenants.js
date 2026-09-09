@@ -42,6 +42,25 @@ function listarTenantIds() {
     return [...ids];
 }
 
+// Nombre de la variable de entorno con el token de dueño de un tenant:
+// `barberia_demo` → OWNER_TOKEN_BARBERIA_DEMO.
+function varDeToken(tenantId) {
+    return 'OWNER_TOKEN_' + String(tenantId).toUpperCase().replace(/[^A-Z0-9]+/g, '_');
+}
+
+// El token de dueño NO vive en business.json cuando el tenant está versionado: este
+// repositorio es público y ese token da permisos de dueño (ver la agenda completa,
+// entre otras cosas). Manda el entorno; el archivo solo se usa para los tenants del
+// volumen, que se crean en caliente desde /onboarding y nunca se versionan.
+// Si no hay ni lo uno ni lo otro, el tenant se queda sin modo dueño, que es el fallo
+// seguro: nadie entra, en vez de entrar cualquiera.
+function aplicarTokenDeDueno(tenantId, business) {
+    const delEntorno = process.env[varDeToken(tenantId)];
+    if (!delEntorno) return;
+    business.owner = business.owner || {};
+    business.owner.token = delEntorno;
+}
+
 function cargarTenant(tenantId) {
     if (cache.has(tenantId)) return cache.get(tenantId);
     const dir = dirDeTenant(tenantId);
@@ -57,6 +76,7 @@ function cargarTenant(tenantId) {
         policies: leerTexto(path.join(dir, 'policies.md')),
         tone: leerTexto(path.join(dir, 'tone.md'))
     };
+    aplicarTokenDeDueno(tenantId, tenant.business);
     cache.set(tenantId, tenant);
     return tenant;
 }
