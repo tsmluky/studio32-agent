@@ -1,0 +1,12 @@
+{
+  "servicios": [
+    { "nombre": "Primera visita (gratuita)", "precio_eur": 0, "duracion_min": 30 },
+    { "nombre": "Higiene dental", "precio_eur": 45, "duracion_min": 40 },
+    { "nombre": "Revisión general", "precio_eur": null, "duracion_min": 30 },
+    { "nombre": "Ortodoncia invisible", "precio_eur": null, "duracion_min": 45 },
+    { "nombre": "Implantes", "precio_eur": null, "duracion_min": 60 },
+    { "nombre": "Blanqueamiento", "precio_eur": 279, "duracion_min": 45 },
+    { "nombre": "Endodoncia", "precio_eur": null, "duracion_min": 60 },
+    { "nombre": "Odontopediatría", "precio_eur": null, "duracion_min": 30 }
+  ]
+}

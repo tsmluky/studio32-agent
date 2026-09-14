@@ -17,6 +17,7 @@ tenants/*
 !tenants/.gitkeep
 !tenants/barberia_demo/
 !tenants/clinica-cobalto/
+!tenants/cobalto-ensayo/
 !tenants/estetica-demo/
 !tenants/restaurante-demo/
 !tenants/servicios-demo/
