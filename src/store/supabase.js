@@ -94,7 +94,24 @@ async function conversationForPhone(tenantId, phone, options = {}) {
     return { db, organization, contact, conversation: result.data };
 }
 
-function mergeRuntimeTenant(tenant, services, config) {
+// Calendario conectado por la clínica desde el dashboard. Manda sobre cualquier
+// calendar_id puesto a mano en archivo o en agent_configs. En la config del negocio
+// solo viaja a qué organización pertenece: el acceso de Google no entra nunca en el
+// objeto del tenant (llega hasta el prompt y los logs), se pide aparte cuando hace
+// falta (integrations/googleCalendar).
+function calendarioConectado(integration, organizationId, base) {
+    const config = (integration && integration.config) || {};
+    if (!integration || !['active', 'error'].includes(integration.status) || !config.calendar_id) return null;
+    return {
+        ...(base || {}),
+        calendar_id: config.calendar_id,
+        timezone: config.timezone || (base && base.timezone) || 'Europe/Madrid',
+        provider: 'google_oauth',
+        organization_id: organizationId
+    };
+}
+
+function mergeRuntimeTenant(tenant, services, config, calendarIntegration = null, organizationId = null) {
     const mappedServices = (services || []).map(service => ({
         ...(service.settings || {}),
         id: service.external_key || service.id,
@@ -104,9 +121,12 @@ function mergeRuntimeTenant(tenant, services, config) {
         precio_eur: service.price_amount === null ? null : Number(service.price_amount),
         activo: service.active
     })).filter(service => service.activo !== false);
+    const business = { ...(tenant.business || {}), ...(config?.business || {}) };
+    const conectado = calendarioConectado(calendarIntegration, organizationId, business.calendar);
+    if (conectado) business.calendar = conectado;
     return {
         ...tenant,
-        business: { ...(tenant.business || {}), ...(config?.business || {}) },
+        business,
         services: mappedServices.length ? { servicios: mappedServices } : tenant.services,
         faq: config?.faq ?? tenant.faq,
         policies: config?.policies ?? tenant.policies,
@@ -119,13 +139,15 @@ async function hydrateTenant(tenant) {
     if (!enabled()) return tenant;
     try {
         const organization = await organizationForTenant(tenant.id);
-        const [services, config] = await Promise.all([
+        const [services, config, calendar] = await Promise.all([
             getClient().from('services').select('*').eq('organization_id', organization.id).order('name'),
-            getClient().from('agent_configs').select('business,faq,policies,tone,handoff_config').eq('organization_id', organization.id).eq('status', 'active').order('version', { ascending: false }).limit(1).maybeSingle()
+            getClient().from('agent_configs').select('business,faq,policies,tone,handoff_config').eq('organization_id', organization.id).eq('status', 'active').order('version', { ascending: false }).limit(1).maybeSingle(),
+            getClient().from('integrations').select('status,config').eq('organization_id', organization.id).eq('provider', 'google_calendar').maybeSingle()
         ]);
         if (services.error) throw services.error;
         if (config.error) throw config.error;
-        return mergeRuntimeTenant(tenant, services.data || [], config.data || null);
+        if (calendar.error) throw calendar.error;
+        return mergeRuntimeTenant(tenant, services.data || [], config.data || null, calendar.data || null, organization.id);
     } catch (error) {
         report(error, 'hydrate tenant configuration; using files');
         return tenant;

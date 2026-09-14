@@ -15,7 +15,7 @@ async function agendaDeGoogle(cfg, tenantId, desde, hasta) {
     const tz = cfg.timezone || 'Europe/Madrid';
     const fin = new Date(hasta); fin.setDate(fin.getDate() + 1);
     const inicio = new Date(desde); inicio.setDate(inicio.getDate() - 1);
-    const eventos = await gcal.listEvents(cfg.calendar_id, inicio.toISOString(), fin.toISOString());
+    const eventos = await gcal.listEvents(cfg, inicio.toISOString(), fin.toISOString());
     const reservas = new Map((await bookings.listar(tenantId)).filter(r => r.calendar_event_id).map(r => [r.calendar_event_id, r]));
     const citas = [];
     for (const ev of eventos) {

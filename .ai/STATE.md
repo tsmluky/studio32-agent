@@ -79,12 +79,19 @@ cliente que entre**, sea quien sea. Ahora mismo el orden de trabajo lo manda el 
    Cuenta de servicio `studio32@studio32-agent.iam.gserviceaccount.com` (proyecto
    `studio32-agent`, cuenta `soporte.studio32@gmail.com`). Calendario de pruebas:
    "Cobalto · pruebas". Local conectado (`GOOGLE_CREDENTIALS_FILE`, fuera del repo).
-   **Falta:** (a) un tenant NO demo para ensayar el cliente real con dashboard y
-   login propios; (b) `GOOGLE_CREDENTIALS_JSON` en Railway; (c) escribir el alta de
-   una clínica. **Ojo:** el `calendar_id` va en `agent_configs` de la organización —
-   si solo está en `business.json`, la configuración de Supabase lo pisa.
-   Con cada cliente real, **confirmar antes dónde lleva su agenda hoy**: si ya usa
-   Google, nos comparte su calendario; si no, se lo creamos y compartimos.
+   **"Conectar Google Calendar" en el dashboard (14/09, noche):** la clínica autoriza
+   con su cuenta (OAuth). Código, pruebas y tabla `integration_credentials` (aplicada
+   en Supabase) hechos; detalle en `DECISIONS.md`. **Falta, por orden:**
+   (a) cliente OAuth creado en Google Cloud (Pancho) y sus variables en local y
+   Railway: `GOOGLE_OAUTH_CLIENT_JSON`, `GOOGLE_OAUTH_REDIRECT_URI`, `PANEL_URL`,
+   `INTEGRATION_SECRET_KEY` (la MISMA en los dos);
+   (b) un tenant NO demo para ensayar, con login propio en el dashboard;
+   (c) verificación de Google (sin ella el acceso caduca a los 7 días: no vale para un
+   cliente real) — pide política de privacidad en studio32.es y dominio verificado;
+   (d) rotar `INTEGRATION_SECRET_KEY` antes del primer cliente real.
+   **Ojo:** un `calendar_id` puesto a mano va en `agent_configs`, no solo en
+   `business.json`, que la configuración de Supabase lo pisa; una conexión OAuth manda
+   sobre ambos.
 3. ~~Horario de viernes~~ → resuelto (`franjas_por_dia`).
 4. `handoff.json` apunta a `soporte.studio32@gmail.com` (pruebas) → restaurar el
    correo del cliente real al go-live.

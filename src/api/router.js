@@ -189,7 +189,7 @@ function createRouter() {
                 const legacyId = metadata.legacy_id;
                 const reserva = legacyId ? await bookings.cancelar(await remote.hydrateTenant(tenant), legacyId, { estricto: true }) : null;
                 if (reserva) metadata = { ...metadata, ...reserva };
-                else await gcal.deleteEvent(cal.calendar_id, eventId);
+                else await gcal.deleteEvent(cal, eventId);
             } catch (err) {
                 console.error('[API] Cancelar en Google Calendar falló:', err.message);
                 return res.status(502).json({ error: 'No se ha podido cancelar en Google Calendar, así que la cita sigue activa. Vuelve a intentarlo en unos segundos.' });
@@ -201,6 +201,8 @@ function createRouter() {
         await context.db.from('audit_logs').insert({ organization_id: context.entity.organization_id, actor_user_id: req.apiAuth.user.id, actor_type: 'user', action: 'appointment.cancel', entity_type: 'appointment', entity_id: context.entity.id, data: { google_calendar: Boolean(cal) } });
         res.json({ appointment: result.data });
     }));
+
+    require('./googleCalendarRoutes').montar(router, { requireOrganization });
 
     router.get('/services', asyncRoute(async (req, res) => {
         const scope = requireOrganization(req, res);

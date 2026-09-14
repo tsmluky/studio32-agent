@@ -232,6 +232,10 @@ app.use('/whatsapp/meta', whatsappMeta.router());  // Meta Cloud API: /whatsapp/
 app.use('/whatsapp', whatsapp.router());           // Twilio (BSP):    /whatsapp/webhook
 
 // Authenticated API consumed by the independent Studio32 panel.
+// Vuelta de Google al conectar el calendario desde el dashboard. Va fuera de /api
+// porque la hace el navegador sin la sesión del panel: la identidad viaja firmada.
+app.get('/google/callback', require('./api/googleCalendarRoutes').callback);
+
 app.use('/api', api.createRouter());
 
 // Canal web / pruebas (JSON). Body: { tenant, sesion, mensaje, ownerToken }

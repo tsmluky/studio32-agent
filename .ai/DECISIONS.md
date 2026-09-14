@@ -539,3 +539,58 @@ hora nueva, y cancelar en estricto que la quita de Google.
 (`studio32@studio32-agent`, 14/09) y la del calendario del equipo en el Hub
 (`studio32-agent@studio32-500714`, 20/07). Mismo patrón, credenciales separadas.
 Unificarlas en un solo proyecto de Google Cloud queda para cuando se trabaje el Hub.
+
+## 2026-09-14 (noche) · "Conectar Google Calendar": cada clínica conecta su cuenta
+
+**Decisión:** el camino del producto para el calendario es que la clínica pulse
+"Conectar Google Calendar" en el dashboard y autorice con su propia cuenta (OAuth). La
+cuenta de servicio con calendarios compartidos a mano se queda para calendarios propios
+y pruebas. Encaja con el modelo del dashboard: cada correo entra a su negocio, y el
+negocio trae su Google.
+
+**Por qué no compartir a mano:** pedirle a un dueño que abra la configuración de su
+calendario, busque un correo `…iam.gserviceaccount.com` y le dé permisos es fricción y
+fuente de errores, justo en el alta. Con OAuth es un botón y Google enseña qué se pide.
+
+**Cómo está hecho:**
+- **Permisos mínimos** (`googleOAuth.SCOPES`): `openid`, `email`,
+  `calendar.calendarlist.readonly` (elegir calendario) y `calendar.events.owned` (ver,
+  crear, mover y cancelar citas solo en calendarios propios). Cada permiso hay que
+  justificarlo en la verificación de Google; no se amplían sin escribir el motivo aquí.
+  Si una clínica lleva la agenda en un calendario que no es suyo, `events.owned` no
+  basta: se decidirá cuando pase, no antes.
+- **Dónde vive cada cosa:** `integrations` (provider `google_calendar`) guarda lo
+  visible —cuenta, calendario, estado— y la lee el dashboard. El refresh token va en
+  `integration_credentials` (migración 0005): RLS sin políticas y `revoke` a `anon` y
+  `authenticated`, así que solo lo lee el servidor; y además cifrado con AES-256-GCM
+  (`secretBox`, clave `INTEGRATION_SECRET_KEY`). El contrato de esquema
+  (`check:supabase`) falla si alguien le añade una política.
+- **El acceso nunca entra en el objeto del tenant.** `hydrateTenant` solo añade a
+  `business.calendar` el `calendar_id`, `provider: 'google_oauth'` y el
+  `organization_id`; `googleCalendar.js` pide el token aparte. El tenant llega al
+  prompt y a los logs.
+- **La vuelta de Google** (`GET /google/callback`, fuera de `/api` porque no trae
+  sesión) solo se cree un `state` firmado con HMAC y con caducidad de 10 minutos, y
+  vuelve a comprobar que quien lo pidió sigue siendo dueño o admin. Si la clínica
+  desmarca un permiso necesario, se revoca y no se guarda un acceso a medias. Si ya
+  había otra cuenta conectada, se revoca la anterior.
+- **Si Google deja de aceptar el acceso** (`invalid_grant`: la clínica lo retiró, o
+  caducó), la integración pasa a `error` y el dashboard pide reconectar. El agente no
+  cae a la copia: falla, como con cualquier lectura de Google (entrada anterior).
+- Solo **dueño o admin** conecta, cambia de calendario o desconecta. Las demos no
+  pueden conectarse (y la tarjeta ni aparece).
+
+**Lo que Google exige y no es código** (comprobado en su documentación el 14/09):
+- Los permisos de eventos de Calendar son **sensibles**: para abrir la app a clínicas
+  hay que pasar la **verificación** (política de privacidad en el mismo dominio que la
+  web, dominio verificado en Search Console, vídeo del flujo y justificación por
+  permiso; suele tardar 3–5 días laborables).
+- En estado **"Testing"** con público externo, **el refresh token caduca a los 7
+  días**. Vale para ensayar con usuarios de prueba; **no para un cliente real**.
+- Límite de 100 refresh tokens por cuenta de Google por cliente OAuth (se invalida el
+  más viejo sin avisar). No afecta a un negocio con una conexión.
+
+**`INTEGRATION_SECRET_KEY` es una sola para local y Railway**: comparten Supabase, y un
+acceso cifrado con una clave no se abre con otra. La primera se generó en una sesión en
+la que quedó visible: **rotarla antes de conectar el primer cliente real** (todas las
+conexiones de prueba tendrán que reconectarse, que es lo esperado).

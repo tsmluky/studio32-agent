@@ -9,7 +9,7 @@ const sql = migrations.map(name => fs.readFileSync(path.join(migrationsDir, name
 const requiredTables = [
     'organizations', 'profiles', 'organization_members', 'channel_accounts',
     'contacts', 'conversations', 'messages', 'services', 'appointments', 'leads',
-    'agent_configs', 'handoffs', 'integrations', 'audit_logs'
+    'agent_configs', 'handoffs', 'integrations', 'audit_logs', 'integration_credentials'
 ];
 
 const failures = [];
@@ -23,6 +23,15 @@ for (const fragment of ['control_mode', 'provider_message_id', 'external_calenda
 for (const fragment of ['conversations_contact_same_org', 'messages_conversation_same_org', 'appointments_service_same_org', 'handoffs_conversation_same_org']) {
     if (!sql.includes(fragment)) failures.push(`missing tenant-integrity constraint: ${fragment}`);
 }
+// Los accesos a Google de las clínicas: solo el servidor. Una política para usuarios
+// en esta tabla los expondría al navegador.
+if (/create policy[^;]+on public\.integration_credentials/i.test(sql)) {
+    failures.push('integration_credentials must have no RLS policies (server only)');
+}
+if (!/revoke all on public\.integration_credentials from anon, authenticated/i.test(sql)) {
+    failures.push('integration_credentials must revoke anon and authenticated');
+}
+
 if (!sql.includes('grant all privileges on all tables in schema public to service_role')) {
     failures.push('missing explicit server Data API grants');
 }

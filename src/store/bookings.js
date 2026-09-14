@@ -95,7 +95,7 @@ async function updateMirroredAppointment(tenant, legacyId, changes) {
 function calCfg(tenant) {
     if (esDemo(tenant)) return null;
     const c = (tenant.business && tenant.business.calendar) || null;
-    return (c && c.calendar_id && gcal.disponible()) ? c : null;
+    return (c && c.calendar_id && gcal.disponible(c)) ? c : null;
 }
 
 // Fecha y hora locales (DD/MM/YYYY, HH:MM) y duración de un evento de Google.
@@ -143,7 +143,7 @@ async function busyIntervals(tenant, fecha, opts = {}) {
         // en Google, así que devolver esa lista como si fuera completa puede dar
         // una hora libre que en realidad ya está cogida. Mejor que el agente diga
         // que no puede consultar la agenda ahora mismo a que dé una hora en falso.
-        return gcal.busyIntervalsForDate(cfg.calendar_id, fecha, cfg.timezone || 'Europe/Madrid');
+        return gcal.busyIntervalsForDate(cfg, fecha, cfg.timezone || 'Europe/Madrid');
     }
     const servicios = (tenant.services && tenant.services.servicios) || [];
     const soloSesion = esDemo(tenant) ? normalizarSesion(opts.sesion) : '';
@@ -209,7 +209,7 @@ async function reconciliarConCalendar(tenant, reservas) {
     for (const r of reservas) {
         const guardada = all.find(x => x.id === r.id) || r;
         if (!r.calendar_event_id) { vivas.push(guardada); continue; }
-        const ev = await gcal.getEvent(cfg.calendar_id, r.calendar_event_id);
+        const ev = await gcal.getEvent(cfg, r.calendar_event_id);
         if (!ev) {
             Object.assign(guardada, { estado: 'cancelada', cancelada: ahora, cancelada_por: 'calendar' });
             espejos.push([guardada.id, { status: 'cancelled', metadata: guardada }]);
@@ -248,7 +248,7 @@ async function crear(tenant, datos) {
         // arreglado una vez, de decir "ya tienes tu cita" sin que exista de
         // verdad donde el negocio mira. Se deja que falle: el agente lo cuenta
         // como error, no como reserva hecha.
-        calendar = await gcal.createEvent(cfg.calendar_id, {
+        calendar = await gcal.createEvent(cfg, {
             summary: `${datos.servicio} · ${datos.nombre}${datos.comensales ? ` · ${datos.comensales} pax` : ''}`,
             description: `Reserva vía WhatsApp (Studio32 Agent)\nCliente: ${datos.nombre}\nContacto: ${datos.contacto}\nWhatsApp: ${datos.telefono_cliente || '-'}\nComensales: ${datos.comensales || '-'}\nProfesional: ${datos.profesional || '-'}${datos.notas ? `\nNotas: ${datos.notas}` : ''}`,
             fecha: datos.fecha, hora: datos.hora, duracion_min: datos.duracion_min || 60,
@@ -274,7 +274,7 @@ async function cancelar(tenant, id, opts = {}) {
     if (!r) return null;
     const cfg = calCfg(tenant);
     if (cfg && r.calendar_event_id) {
-        try { await gcal.deleteEvent(cfg.calendar_id, r.calendar_event_id); }
+        try { await gcal.deleteEvent(cfg, r.calendar_event_id); }
         catch (err) {
             if (opts.estricto) throw err;
             console.error('Baja en Calendar falló:', err.message);
@@ -293,7 +293,7 @@ async function reprogramar(tenant, id, nuevaFecha, nuevaHora) {
     if (!r) return null;
     const cfg = calCfg(tenant);
     if (cfg && r.calendar_event_id) {
-        try { await gcal.updateEvent(cfg.calendar_id, r.calendar_event_id, { fecha: nuevaFecha, hora: nuevaHora, duracion_min: r.duracion_min || 60, timezone: cfg.timezone || 'Europe/Madrid' }); }
+        try { await gcal.updateEvent(cfg, r.calendar_event_id, { fecha: nuevaFecha, hora: nuevaHora, duracion_min: r.duracion_min || 60, timezone: cfg.timezone || 'Europe/Madrid' }); }
         catch (err) { console.error('Mover en Calendar falló:', err.message); }
     }
     r.fecha_anterior = r.fecha; r.hora_anterior = r.hora;

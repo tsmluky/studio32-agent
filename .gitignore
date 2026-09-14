@@ -38,3 +38,6 @@ tenants/*
 .eval-data/
 # Resultados y cache de promptfoo
 .promptfoo/
+
+# Estado local de la CLI de Supabase (proyecto enlazado, versión)
+supabase/.temp/

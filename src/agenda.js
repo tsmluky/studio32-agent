@@ -155,7 +155,7 @@ async function agendaDeOrganizacion({ organizationId, slug, from, to, status, li
     const timeMin = from || new Date(Date.now() - 86_400_000).toISOString();
     const timeMax = to || new Date(Date.now() + 60 * 86_400_000).toISOString();
     let events;
-    try { events = await gcal.listEvents(cal.calendar_id, timeMin, timeMax); }
+    try { events = await gcal.listEvents(cal, timeMin, timeMax); }
     catch (err) {
         console.error('[Agenda] Lectura de Google Calendar falló:', err.message);
         throw new AgendaError('No se ha podido leer Google Calendar ahora mismo. Vuelve a intentarlo en unos segundos.');
@@ -178,7 +178,7 @@ async function agendaDeOrganizacion({ organizationId, slug, from, to, status, li
     for (const row of rows) {
         const id = row.external_calendar_event_id;
         if (!id || enIntervalo.has(id) || row.status === 'cancelled') continue;
-        try { if (!(await gcal.getEvent(cal.calendar_id, id))) eventosAusentes.add(id); }
+        try { if (!(await gcal.getEvent(cal, id))) eventosAusentes.add(id); }
         catch (err) { console.error('[Agenda] No se pudo comprobar un evento:', err.message); }
     }
 
