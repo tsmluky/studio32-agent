@@ -485,3 +485,57 @@ cuadra con lo que ve el negocio.
 falle la escritura en Calendar. Ahí el riesgo va al revés (dejar una cita fantasma
 colgada en Google, no confirmar algo que no existe), y bloquear una cancelación porque
 Calendar tuvo un hipo es peor para el cliente que arreglarlo luego a mano.
+
+## 2026-09-14 (tarde) · Google Calendar ES la agenda, también para el dashboard
+
+**Corrección de la entrada anterior:** decía que `npm run test:agent` había pasado por
+Google. No es cierto. `hydrateTenant` mezcla la configuración de `agent_configs` sobre
+la de archivo, y la de `clinica-cobalto` en Supabase lleva `calendar.calendar_id: ""`,
+que pisa la del archivo. Lo único que tocó Google aquella tarde fue un script directo
+contra el store. **Si se conecta un calendario a un tenant, hay que ponerlo donde
+manda: en `agent_configs` de su organización**, no solo en `business.json`.
+
+**Qué se quería desde el principio:** que la agenda del dashboard y la del móvil del
+dueño sean la misma, no una simulación. Hasta hoy el dashboard leía `appointments`
+de Supabase, que solo contiene lo que creó el agente: lo que la clínica apuntaba en su
+móvil no aparecía, lo que movía o borraba allí seguía viejo en el dashboard, y
+**cancelar desde el dashboard no tocaba Google** (la cita seguía en el móvil y el
+hueco, bloqueado).
+
+**Decisión:** Google Calendar es la agenda. Nadie guarda su propia copia como verdad;
+todo se lee y se escribe a través de Google, siempre desde el servidor.
+
+- **Dashboard** (`src/agenda.js`, rutas `/api/appointments` y `/api/summary`): lee
+  Google en directo a través del agente y cruza cada evento con su ficha de Supabase
+  por `external_calendar_event_id`. Tres orígenes, cada uno enseñado tal cual:
+  `agent` (con paciente y servicio), `calendar` (la apuntó la clínica, id
+  `gcal:<evento>`) y `panel_only` (solo existe en la copia; se enseña marcada, no se
+  esconde). Si Google no responde, error claro, no la copia.
+- **Cancelar desde el dashboard** borra primero en Google (`cancelar` con
+  `{ estricto: true }`); si falla, no se toca nada y se dice. Las citas `calendar` no
+  se cancelan desde el panel: se cambian donde se crearon, para que el panel nunca
+  borre un evento propio del dueño.
+- **El agente contrasta con Google** antes de enseñar, mover o cancelar las citas de
+  un cliente (`reconciliarConCalendar`): si el evento ya no está, la da por cancelada;
+  si cambió de hora, toma la de Google. `getAgenda` (el dueño por chat) también lee
+  Google.
+- **Los tenants de demostración nunca usan Google**, aunque tengan `calendar_id`.
+  `clinica-cobalto` es la demo pública de studio32.es y lo que vigila `vigilar.js`: un
+  calendario real es uno para todos, así que mezclaría citas de visitantes, llenaría
+  el calendario de pruebas y haría depender la web de Google. El ensayo del cliente
+  real va en un tenant **no** demo.
+- **El dashboard vuelve a mirar Google cada minuto** mientras está visible, y al volver
+  a la pestaña. Los cambios del móvil no avisan a nadie; los del agente y del panel sí
+  llegan al momento por la suscripción de Supabase. Si algún día hace falta al
+  segundo, el siguiente paso son las notificaciones push de Calendar (canales que
+  caducan y hay que renovar); hoy no compensa.
+
+**Probado** con 14 pruebas nuevas sin red (`test/agenda-google.test.js`) y contra el
+calendario real "Cobalto · pruebas": cita apuntada "desde el móvil" que el agente no
+ofrece y el dashboard enseña, cita del agente que la clínica mueve y ambos ven a la
+hora nueva, y cancelar en estricto que la quita de Google.
+
+**Dos cuentas de servicio distintas, a propósito por ahora:** la del agente
+(`studio32@studio32-agent`, 14/09) y la del calendario del equipo en el Hub
+(`studio32-agent@studio32-500714`, 20/07). Mismo patrón, credenciales separadas.
+Unificarlas en un solo proyecto de Google Cloud queda para cuando se trabaje el Hub.

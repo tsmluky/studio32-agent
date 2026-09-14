@@ -86,9 +86,31 @@ async function updateMirroredAppointment(tenant, legacyId, changes) {
     } catch (error) { remote.report(error, 'update appointment; JSON retained'); }
 }
 
+// Calendario de Google del negocio, si lo tiene y hay credenciales.
+//
+// Los tenants de demostración NUNCA usan Google, aunque tengan calendar_id. La demo
+// pública de la web separa la agenda por visitante (ver esDemo); un calendario real
+// es uno solo para todos, así que conectarlo mezclaría las citas de desconocidos,
+// llenaría ese calendario de pruebas y haría depender la web de que Google responda.
 function calCfg(tenant) {
+    if (esDemo(tenant)) return null;
     const c = (tenant.business && tenant.business.calendar) || null;
     return (c && c.calendar_id && gcal.disponible()) ? c : null;
+}
+
+// Fecha y hora locales (DD/MM/YYYY, HH:MM) y duración de un evento de Google.
+// null si es de día completo: eso no es una cita con hora.
+function fechaHoraDeEvento(ev, timeZone) {
+    if (!ev || !ev.start || !ev.start.dateTime) return null;
+    const ini = new Date(ev.start.dateTime), fin = new Date(ev.end.dateTime);
+    const partes = Object.fromEntries(new Intl.DateTimeFormat('en-GB', {
+        timeZone, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+    }).formatToParts(ini).filter(p => p.type !== 'literal').map(p => [p.type, p.value]));
+    return {
+        fecha: `${partes.day}/${partes.month}/${partes.year}`,
+        hora: `${partes.hour}:${partes.minute}`,
+        duracion_min: Math.round((fin - ini) / 60000)
+    };
 }
 
 // Modo AFORO (restaurantes): si business.capacidad.mesas > 0, un hueco admite
@@ -162,11 +184,57 @@ async function listarJSONPorFecha(tenantId, fecha) {
 async function activasDeCliente(tenant, { telefono, contacto }) {
     const tel = (telefono || '').replace('whatsapp:', '');
     if (!tel && !contacto) return [];
-    return db.leer(tenant.id, FILE, []).filter(r =>
+    const propias = db.leer(tenant.id, FILE, []).filter(r =>
         r.estado === 'confirmada' &&
         (!tel || r.telefono_cliente === tel) &&
         (!contacto || r.contacto === contacto)
     );
+    return reconciliarConCalendar(tenant, propias);
+}
+
+// El dueño puede mover o borrar una cita desde su móvil, y eso no pasa por aquí.
+// Antes de enseñar, mover o cancelar las citas de alguien, se contrastan con Google:
+// si el evento ya no está, la cita se da por cancelada; si cambió de hora, se toma
+// la de Google. Sin esto el agente le diría a un paciente "tu cita del jueves" cuando
+// la clínica ya la pasó al viernes. Si Google no responde, falla: igual que al
+// consultar huecos, mejor no poder contestar que contestar algo que no es.
+async function reconciliarConCalendar(tenant, reservas) {
+    const cfg = calCfg(tenant);
+    if (!cfg || !reservas.some(r => r.calendar_event_id)) return reservas;
+    const tz = cfg.timezone || 'Europe/Madrid';
+    const all = db.leer(tenant.id, FILE, []);
+    const vivas = [];
+    const espejos = [];
+    const ahora = new Date().toISOString();
+    for (const r of reservas) {
+        const guardada = all.find(x => x.id === r.id) || r;
+        if (!r.calendar_event_id) { vivas.push(guardada); continue; }
+        const ev = await gcal.getEvent(cfg.calendar_id, r.calendar_event_id);
+        if (!ev) {
+            Object.assign(guardada, { estado: 'cancelada', cancelada: ahora, cancelada_por: 'calendar' });
+            espejos.push([guardada.id, { status: 'cancelled', metadata: guardada }]);
+            continue;
+        }
+        const enGoogle = fechaHoraDeEvento(ev, tz);
+        if (enGoogle && (enGoogle.fecha !== guardada.fecha || enGoogle.hora !== guardada.hora || enGoogle.duracion_min !== (guardada.duracion_min || 60))) {
+            Object.assign(guardada, {
+                fecha_anterior: guardada.fecha, hora_anterior: guardada.hora,
+                ...enGoogle, reprogramada: ahora, reprogramada_por: 'calendar'
+            });
+            const startsAt = zonedDateTimeToIso(guardada.fecha, guardada.hora, tz);
+            espejos.push([guardada.id, {
+                starts_at: startsAt,
+                ends_at: new Date(new Date(startsAt).getTime() + guardada.duracion_min * 60000).toISOString(),
+                metadata: guardada
+            }]);
+        }
+        vivas.push(guardada);
+    }
+    if (espejos.length) {
+        db.escribir(tenant.id, FILE, all);
+        for (const [id, cambios] of espejos) await updateMirroredAppointment(tenant, id, cambios);
+    }
+    return vivas;
 }
 
 async function crear(tenant, datos) {
@@ -195,14 +263,22 @@ async function crear(tenant, datos) {
     return reserva;
 }
 
-async function cancelar(tenant, id) {
+// opts.estricto: si no se puede borrar en Google, no se cancela nada y se lanza el
+// error. Lo usa el dashboard: ahí quien cancela es la clínica, y ver "cancelada" en
+// la pantalla mientras sigue en su móvil es justo el desajuste que no puede pasar.
+// El agente cancela sin estricto (DECISIONS 14/09): a un paciente no se le bloquea
+// la cancelación por un fallo momentáneo de Google.
+async function cancelar(tenant, id, opts = {}) {
     const all = db.leer(tenant.id, FILE, []);
     const r = all.find(x => x.id === id);
     if (!r) return null;
     const cfg = calCfg(tenant);
     if (cfg && r.calendar_event_id) {
         try { await gcal.deleteEvent(cfg.calendar_id, r.calendar_event_id); }
-        catch (err) { console.error('Baja en Calendar falló:', err.message); }
+        catch (err) {
+            if (opts.estricto) throw err;
+            console.error('Baja en Calendar falló:', err.message);
+        }
     }
     r.estado = 'cancelada';
     r.cancelada = new Date().toISOString();
@@ -251,4 +327,4 @@ async function purgarDemo(tenant, horas = 48) {
     return all.length - vivas.length;
 }
 
-module.exports = { busyIntervals, huecoLibre, capacidadDe, listarJSONPorFecha, activasDeCliente, crear, cancelar, reprogramar, listar, zonedDateTimeToIso, mirrorAppointment, esDemo, purgarDemo };
+module.exports = { busyIntervals, huecoLibre, capacidadDe, listarJSONPorFecha, activasDeCliente, crear, cancelar, reprogramar, listar, zonedDateTimeToIso, mirrorAppointment, updateMirroredAppointment, esDemo, purgarDemo, calCfg, fechaHoraDeEvento };

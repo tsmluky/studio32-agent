@@ -104,10 +104,49 @@ async function updateEvent(calendarId, eventId, datos) {
     });
 }
 
+// Borrar algo que ya no está (el dueño lo quitó desde el móvil) no es un fallo:
+// el resultado que se buscaba ya se cumple.
 async function deleteEvent(calendarId, eventId) {
     const cal = getCalendar();
     if (!cal) return;
-    await cal.events.delete({ calendarId, eventId });
+    try { await cal.events.delete({ calendarId, eventId }); }
+    catch (err) { if (!yaNoExiste(err)) throw err; }
 }
 
-module.exports = { disponible, busyIntervalsForDate, createEvent, updateEvent, deleteEvent };
+function yaNoExiste(err) {
+    const code = err && (err.code || (err.response && err.response.status));
+    return code === 404 || code === 410;
+}
+
+// Eventos del calendario en un intervalo, tal cual los ve el dueño en su móvil.
+// Es la lectura que usa el dashboard: Google es la agenda, no una copia.
+async function listEvents(calendarId, timeMin, timeMax) {
+    const cal = getCalendar();
+    if (!cal) throw new Error('Google Calendar no configurado.');
+    const items = [];
+    let pageToken;
+    do {
+        const res = await cal.events.list({
+            calendarId, timeMin, timeMax, singleEvents: true, orderBy: 'startTime',
+            maxResults: 2500, pageToken
+        });
+        items.push(...(res.data.items || []));
+        pageToken = res.data.nextPageToken;
+    } while (pageToken);
+    return items.filter(ev => ev.status !== 'cancelled' && ev.start);
+}
+
+// Un evento concreto, o null si ya no existe o está cancelado.
+async function getEvent(calendarId, eventId) {
+    const cal = getCalendar();
+    if (!cal) throw new Error('Google Calendar no configurado.');
+    try {
+        const res = await cal.events.get({ calendarId, eventId });
+        return res.data && res.data.status !== 'cancelled' ? res.data : null;
+    } catch (err) {
+        if (yaNoExiste(err)) return null;
+        throw err;
+    }
+}
+
+module.exports = { disponible, busyIntervalsForDate, createEvent, updateEvent, deleteEvent, listEvents, getEvent };

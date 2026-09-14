@@ -2,7 +2,7 @@
 
 > **Se sobrescribe, no se acumula.** Refleja dónde está el repo AHORA.
 > Lo histórico va a `DECISIONS.md`. Tope: ~100 líneas.
-> Última actualización: **2026-09-09**
+> Última actualización: **2026-09-14**
 
 ## Qué es este repo
 
@@ -72,18 +72,19 @@ cliente que entre**, sea quien sea. Ahora mismo el orden de trabajo lo manda el 
 **Lo que hará falta para cualquier go-live:**
 1. Verificar el número en **Meta** (tarea principal pendiente; plazo incierto,
    empezar cuanto antes).
-2. ~~Google Calendar sin configurar~~ → **RESUELTO el 14/09.** Cuenta de servicio
-   creada (`studio32@studio32-agent.iam.gserviceaccount.com`, proyecto
-   `studio32-agent` en Google Cloud bajo `soporte.studio32@gmail.com`), probada de
-   principio a fin con `clinica-cobalto`: reservar, mover y cancelar se ven de
-   verdad en Google. Local ya conectado (`GOOGLE_CREDENTIALS_FILE`, fuera del repo);
-   **falta ponerlo en Railway** (`GOOGLE_CREDENTIALS_JSON`, el JSON completo en una
-   variable) antes de que sirva en producción. De paso se arreglaron tres fallos
-   del mismo tipo que los del 09/09 — detalle en `DECISIONS.md`, entrada del 14/09.
-   Con el próximo cliente real: crear SU calendario (no reusar el de pruebas),
-   compartirlo con la cuenta de servicio, y **confirmar antes dónde lleva su agenda
-   hoy** — el agente consulta un solo calendario, así que las citas que entren por
-   teléfono tienen que caer ahí o habrá doble reserva.
+2. **Google Calendar es la agenda (14/09)**, también para el dashboard: lo lee en
+   directo a través del agente (`src/agenda.js`), cancelar desde el panel borra en
+   Google, y el agente contrasta con Google antes de mover o cancelar. Los tenants
+   demo nunca usan Google. Detalle y porqué en `DECISIONS.md`, dos entradas del 14/09.
+   Cuenta de servicio `studio32@studio32-agent.iam.gserviceaccount.com` (proyecto
+   `studio32-agent`, cuenta `soporte.studio32@gmail.com`). Calendario de pruebas:
+   "Cobalto · pruebas". Local conectado (`GOOGLE_CREDENTIALS_FILE`, fuera del repo).
+   **Falta:** (a) un tenant NO demo para ensayar el cliente real con dashboard y
+   login propios; (b) `GOOGLE_CREDENTIALS_JSON` en Railway; (c) escribir el alta de
+   una clínica. **Ojo:** el `calendar_id` va en `agent_configs` de la organización —
+   si solo está en `business.json`, la configuración de Supabase lo pisa.
+   Con cada cliente real, **confirmar antes dónde lleva su agenda hoy**: si ya usa
+   Google, nos comparte su calendario; si no, se lo creamos y compartimos.
 3. ~~Horario de viernes~~ → resuelto (`franjas_por_dia`).
 4. `handoff.json` apunta a `soporte.studio32@gmail.com` (pruebas) → restaurar el
    correo del cliente real al go-live.

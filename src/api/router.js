@@ -5,6 +5,10 @@ const remote = require('../store/supabase');
 const auth = require('./auth');
 const twilio = require('../channels/whatsapp.twilio');
 const meta = require('../channels/whatsapp.meta');
+const bookings = require('../store/bookings');
+const gcal = require('../integrations/googleCalendar');
+const { cargarTenant } = require('../tenants');
+const { agendaDeOrganizacion, calendarioDeOrganizacion } = require('../agenda');
 
 const WRITE_ROLES = ['owner', 'admin', 'operator'];
 
@@ -54,6 +58,13 @@ async function serviceMap(db, organizationId, ids) {
     const result = await db.from('services').select('id,name,duration_minutes,price_amount,currency').eq('organization_id', organizationId).in('id', ids);
     if (result.error) throw result.error;
     return new Map((result.data || []).map(row => [row.id, row]));
+}
+
+// La organización y el tenant del agente comparten identificador: el slug.
+async function slugDeOrganizacion(db, organizationId) {
+    const result = await db.from('organizations').select('slug').eq('id', organizationId).maybeSingle();
+    if (result.error) throw result.error;
+    return result.data ? result.data.slug : null;
 }
 
 async function entityForMember(req, res, table, allowedRoles = null) {
@@ -121,10 +132,25 @@ function createRouter() {
         ]);
         const failed = [open, human, handoffs, appointments, nextAppointments].find(item => item.error);
         if (failed) throw failed.error;
+        const metrics = { open_conversations: open.count || 0, human_conversations: human.count || 0, pending_handoffs: handoffs.count || 0, appointments_today: appointments.count || 0 };
+
+        // Con Google Calendar conectado, las citas de hoy y las próximas salen de la
+        // agenda real, no de la copia: incluye lo que la clínica apunta en su móvil.
+        const slug = await slugDeOrganizacion(db, scope.organizationId);
+        if (await calendarioDeOrganizacion(slug)) {
+            const vista = await agendaDeOrganizacion({ organizationId: scope.organizationId, slug, from: dayStart, to: new Date(now.getTime() + 60 * 86_400_000).toISOString() });
+            const activas = vista.appointments.filter(item => item.status !== 'cancelled' && item.source !== 'panel_only');
+            const ahora = now.toISOString();
+            return res.json({
+                metrics: { ...metrics, appointments_today: activas.filter(item => item.starts_at >= dayStart && item.starts_at < dayEnd).length },
+                next_appointments: activas.filter(item => item.starts_at >= ahora).slice(0, 5)
+            });
+        }
+
         const contacts = await contactMap(db, scope.organizationId, [...new Set((nextAppointments.data || []).map(row => row.contact_id))]);
         const services = await serviceMap(db, scope.organizationId, [...new Set((nextAppointments.data || []).map(row => row.service_id).filter(Boolean))]);
         res.json({
-            metrics: { open_conversations: open.count || 0, human_conversations: human.count || 0, pending_handoffs: handoffs.count || 0, appointments_today: appointments.count || 0 },
+            metrics,
             next_appointments: (nextAppointments.data || []).map(row => ({ ...row, contact: contacts.get(row.contact_id) || null, service: services.get(row.service_id) || null }))
         });
     }));
@@ -132,29 +158,47 @@ function createRouter() {
     router.get('/appointments', asyncRoute(async (req, res) => {
         const scope = requireOrganization(req, res);
         if (!scope) return;
-        const db = remote.getClient();
-        let query = db.from('appointments')
-            .select('id,contact_id,conversation_id,service_id,status,starts_at,ends_at,resource_name,notes,metadata,external_calendar_event_id,created_at,updated_at')
-            .eq('organization_id', scope.organizationId)
-            .order('starts_at')
-            .limit(Math.min(Number(req.query.limit) || 100, 250));
-        if (req.query.from) query = query.gte('starts_at', req.query.from);
-        if (req.query.to) query = query.lt('starts_at', req.query.to);
-        if (req.query.status) query = query.eq('status', req.query.status);
-        const result = await query;
-        if (result.error) throw result.error;
-        const contacts = await contactMap(db, scope.organizationId, [...new Set((result.data || []).map(row => row.contact_id))]);
-        const services = await serviceMap(db, scope.organizationId, [...new Set((result.data || []).map(row => row.service_id).filter(Boolean))]);
-        res.json({ appointments: (result.data || []).map(row => ({ ...row, contact: contacts.get(row.contact_id) || null, service: services.get(row.service_id) || null })) });
+        const slug = await slugDeOrganizacion(remote.getClient(), scope.organizationId);
+        res.json(await agendaDeOrganizacion({
+            organizationId: scope.organizationId, slug,
+            from: req.query.from, to: req.query.to, status: req.query.status, limit: req.query.limit
+        }));
     }));
 
     router.post('/appointments/:id/cancel', asyncRoute(async (req, res) => {
+        // Las que la clínica apuntó directamente en Google no tienen ficha: se
+        // gestionan donde se crearon. Así el dashboard nunca borra un evento propio
+        // del dueño (una comida, unas vacaciones) por un toque despistado.
+        if (String(req.params.id).startsWith('gcal:')) {
+            return res.status(409).json({ error: 'Esta cita se apuntó directamente en Google Calendar. Cámbiala o bórrala desde allí y aquí se verá al momento.' });
+        }
         const context = await entityForMember(req, res, 'appointments', WRITE_ROLES);
         if (!context) return;
         if (context.entity.status === 'cancelled') return res.json({ appointment: context.entity });
-        const result = await context.db.from('appointments').update({ status: 'cancelled', metadata: { ...(context.entity.metadata || {}), cancelled_by: 'panel', cancelled_at: new Date().toISOString() } }).eq('id', context.entity.id).select('*').single();
+
+        // Cancelar tiene que quitarla del móvil de la clínica, no solo de esta
+        // pantalla. Si el negocio tiene Google conectado, se borra primero allí y, si
+        // eso falla, no se toca nada más.
+        const eventId = context.entity.external_calendar_event_id;
+        const slug = await slugDeOrganizacion(context.db, context.entity.organization_id);
+        const cal = eventId ? await calendarioDeOrganizacion(slug) : null;
+        let metadata = context.entity.metadata || {};
+        if (cal) {
+            try {
+                const tenant = cargarTenant(slug);
+                const legacyId = metadata.legacy_id;
+                const reserva = legacyId ? await bookings.cancelar(await remote.hydrateTenant(tenant), legacyId, { estricto: true }) : null;
+                if (reserva) metadata = { ...metadata, ...reserva };
+                else await gcal.deleteEvent(cal.calendar_id, eventId);
+            } catch (err) {
+                console.error('[API] Cancelar en Google Calendar falló:', err.message);
+                return res.status(502).json({ error: 'No se ha podido cancelar en Google Calendar, así que la cita sigue activa. Vuelve a intentarlo en unos segundos.' });
+            }
+        }
+
+        const result = await context.db.from('appointments').update({ status: 'cancelled', metadata: { ...metadata, estado: 'cancelada', cancelled_by: 'panel', cancelled_at: new Date().toISOString() } }).eq('id', context.entity.id).select('*').single();
         if (result.error) throw result.error;
-        await context.db.from('audit_logs').insert({ organization_id: context.entity.organization_id, actor_user_id: req.apiAuth.user.id, actor_type: 'user', action: 'appointment.cancel', entity_type: 'appointment', entity_id: context.entity.id });
+        await context.db.from('audit_logs').insert({ organization_id: context.entity.organization_id, actor_user_id: req.apiAuth.user.id, actor_type: 'user', action: 'appointment.cancel', entity_type: 'appointment', entity_id: context.entity.id, data: { google_calendar: Boolean(cal) } });
         res.json({ appointment: result.data });
     }));
 
@@ -301,6 +345,9 @@ function createRouter() {
 
     router.use((error, _req, res, _next) => {
         console.error('[API]', error.message || error);
+        // Errores preparados para la clínica (p. ej. Google no responde) salen con su
+        // mensaje; el resto, genéricos, para no filtrar detalles internos.
+        if (error.publicMessage) return res.status(error.status || 500).json({ error: error.publicMessage });
         res.status(500).json({ error: 'Internal API error.' });
     });
     return router;
