@@ -442,3 +442,46 @@ Además, el dedup de `createBooking` se acota a la sesión en tenants de demostr
 dos visitantes con el mismo teléfono chocaban, y al segundo se le decía que ya tenía
 una cita que no existía.
 
+
+## 2026-09-14 · Google Calendar conectado, y tres fallos que el código escondía
+
+Se montó por primera vez de principio a fin, con `clinica-cobalto` como calendario de
+prueba: cuenta de servicio en un proyecto de Google Cloud propio
+(`studio32@studio32-agent.iam.gserviceaccount.com`, credenciales en el escritorio,
+fuera del repo), calendario compartido con permiso "Hacer cambios en eventos". Probado
+por CLI y con `npm run test:agent` completo contra el servidor local: reservar, mover
+y cancelar se ven de verdad en Google, no solo en el JSON de respaldo.
+
+Al montarlo aparecieron tres fallos del mismo tipo que los que ya mordieron el 09/09
+(el agente confirmando algo que no existe donde el negocio mira):
+
+1. **`bookings.crear` guardaba en JSON aunque `createEvent` fallara**, y aun así
+   devolvía la reserva como hecha. El negocio real consulta Google, no nuestro JSON:
+   una cita que solo vive en el JSON es una cita que nadie del negocio ve, y el
+   cliente se queda con la confirmación de que la tiene.
+   **Decisión:** si el tenant tiene calendario configurado, un fallo al escribir en
+   Calendar ya NO se disimula con el JSON — se deja que falle. El orquestador ya
+   convertía cualquier excepción de una tool en `ERROR: no se pudo completar.`
+   (`orchestrator.js`), así que el agente no confirma nada y puede pasarlo a una
+   persona en vez de inventar que está resuelto.
+2. **`bookings.busyIntervals` caía al JSON si fallaba la lectura de Calendar.** El
+   JSON no ve las citas que el negocio metió por teléfono directamente en Google, así
+   que una lista "de respaldo" podía decir libre una hora que en realidad estaba
+   cogida. Mismo criterio: se deja fallar en vez de dar una disponibilidad que podría
+   ser mentira.
+3. **Los eventos de día completo no bloqueaban nada.** Un "cerrado por vacaciones"
+   puesto como evento de todo el día en Google se ignoraba porque el código solo
+   miraba `start.dateTime`, no `start.date`. Arreglado en
+   `integrations/googleCalendar.js`: un evento de día completo bloquea el día entero,
+   para cualquier profesional.
+
+**Coste asumido del punto 1 y 2:** si Google Calendar está caído, con un tenant que lo
+tiene configurado el agente deja de poder consultar u ofrecer horas por completo — no
+hay bajada a "modo JSON" silencioso. Es a propósito: preferimos que el agente diga que
+no puede consultar la agenda ahora mismo a que ofrezca o confirme algo que luego no
+cuadra con lo que ve el negocio.
+
+**No tocado a propósito:** que `cancelar`/`reprogramar` sigan guardando en JSON aunque
+falle la escritura en Calendar. Ahí el riesgo va al revés (dejar una cita fantasma
+colgada en Google, no confirmar algo que no existe), y bloquear una cancelación porque
+Calendar tuvo un hipo es peor para el cliente que arreglarlo luego a mano.

@@ -56,7 +56,18 @@ async function busyIntervalsForDate(calendarId, fechaStr, timezone) {
     const target = `${y}-${pad(m)}-${pad(d)}`;
     const out = [];
     for (const ev of items) {
-        if (!ev.start || !ev.start.dateTime) continue;
+        if (!ev.start) continue;
+        // Evento de día completo ("cerrado por vacaciones", "formación del equipo"):
+        // no tiene dateTime, tiene date (y end.date es EXCLUSIVO, tal cual lo da la
+        // API). Antes se ignoraba sin más, así que un día marcado cerrado en Google
+        // seguía dando horas — el agente citaba sobre un día en el que el negocio no
+        // abría. Bloquea el día entero, para cualquier profesional.
+        if (!ev.start.dateTime) {
+            if (ev.start.date && ev.end && ev.end.date && ev.start.date <= target && target < ev.end.date) {
+                out.push({ ini: 0, fin: 24 * 60, profesional: null });
+            }
+            continue;
+        }
         const s = new Date(ev.start.dateTime), e = new Date(ev.end.dateTime);
         if (fmtDate.format(s) !== target) continue;
         const [sh, sm] = fmtTime.format(s).split(':').map(Number);

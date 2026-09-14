@@ -116,8 +116,12 @@ function normalizarSesion(valor) {
 async function busyIntervals(tenant, fecha, opts = {}) {
     const cfg = calCfg(tenant);
     if (cfg) {
-        try { return await gcal.busyIntervalsForDate(cfg.calendar_id, fecha, cfg.timezone || 'Europe/Madrid'); }
-        catch (err) { console.error('Lectura de Calendar falló, uso JSON:', err.message); }
+        // Si el calendario manda, un fallo de lectura NO se disimula con el JSON:
+        // el JSON no ve las citas que el negocio apuntó por teléfono directamente
+        // en Google, así que devolver esa lista como si fuera completa puede dar
+        // una hora libre que en realidad ya está cogida. Mejor que el agente diga
+        // que no puede consultar la agenda ahora mismo a que dé una hora en falso.
+        return gcal.busyIntervalsForDate(cfg.calendar_id, fecha, cfg.timezone || 'Europe/Madrid');
     }
     const servicios = (tenant.services && tenant.services.servicios) || [];
     const soloSesion = esDemo(tenant) ? normalizarSesion(opts.sesion) : '';
@@ -169,14 +173,19 @@ async function crear(tenant, datos) {
     const cfg = calCfg(tenant);
     let calendar = null;
     if (cfg) {
-        try {
-            calendar = await gcal.createEvent(cfg.calendar_id, {
-                summary: `${datos.servicio} · ${datos.nombre}${datos.comensales ? ` · ${datos.comensales} pax` : ''}`,
-                description: `Reserva vía WhatsApp (Studio32 Agent)\nCliente: ${datos.nombre}\nContacto: ${datos.contacto}\nWhatsApp: ${datos.telefono_cliente || '-'}\nComensales: ${datos.comensales || '-'}\nProfesional: ${datos.profesional || '-'}${datos.notas ? `\nNotas: ${datos.notas}` : ''}`,
-                fecha: datos.fecha, hora: datos.hora, duracion_min: datos.duracion_min || 60,
-                timezone: cfg.timezone || 'Europe/Madrid', profesional: datos.profesional, contacto: datos.contacto, tenantId: tenant.id
-            });
-        } catch (err) { console.error('Alta en Calendar falló, guardo solo JSON:', err.message); }
+        // Si el calendario manda, una reserva que no llega a Calendar NO se guarda
+        // solo en el JSON: el negocio mira Google, no nuestro JSON, así que una
+        // cita que solo existe aquí es una cita que nadie del negocio ve. Antes
+        // esto se tragaba el error y confirmaba igual — el mismo fallo, ya
+        // arreglado una vez, de decir "ya tienes tu cita" sin que exista de
+        // verdad donde el negocio mira. Se deja que falle: el agente lo cuenta
+        // como error, no como reserva hecha.
+        calendar = await gcal.createEvent(cfg.calendar_id, {
+            summary: `${datos.servicio} · ${datos.nombre}${datos.comensales ? ` · ${datos.comensales} pax` : ''}`,
+            description: `Reserva vía WhatsApp (Studio32 Agent)\nCliente: ${datos.nombre}\nContacto: ${datos.contacto}\nWhatsApp: ${datos.telefono_cliente || '-'}\nComensales: ${datos.comensales || '-'}\nProfesional: ${datos.profesional || '-'}${datos.notas ? `\nNotas: ${datos.notas}` : ''}`,
+            fecha: datos.fecha, hora: datos.hora, duracion_min: datos.duracion_min || 60,
+            timezone: cfg.timezone || 'Europe/Madrid', profesional: datos.profesional, contacto: datos.contacto, tenantId: tenant.id
+        });
     }
     const all = db.leer(tenant.id, FILE, []);
     const reserva = { id: db.id(), creada: new Date().toISOString(), estado: 'confirmada', calendar_event_id: calendar ? calendar.id : null, calendar_link: calendar ? calendar.htmlLink : null, ...datos };

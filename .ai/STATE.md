@@ -72,16 +72,21 @@ cliente que entre**, sea quien sea. Ahora mismo el orden de trabajo lo manda el 
 **Lo que hará falta para cualquier go-live:**
 1. Verificar el número en **Meta** (tarea principal pendiente; plazo incierto,
    empezar cuanto antes).
-2. **Google Calendar sin configurar del todo**: no hay service account creada
-   (`GOOGLE_CREDENTIALS_JSON` no existe en Railway) NI `calendar.calendar_id`.
-   Plan acordado: el calendario lo crea Studio32 desde `soporte.studio32@gmail.com`
-   (uno por cliente) y se invita a los correos de la clínica → menos fricción.
-   **Antes de montarlo hay que confirmar dónde lleva GH Dent su agenda hoy**: el
-   agente consulta UN solo calendario, así que las citas por teléfono tienen que
-   caer ahí o habrá doble reserva.
+2. ~~Google Calendar sin configurar~~ → **RESUELTO el 14/09.** Cuenta de servicio
+   creada (`studio32@studio32-agent.iam.gserviceaccount.com`, proyecto
+   `studio32-agent` en Google Cloud bajo `soporte.studio32@gmail.com`), probada de
+   principio a fin con `clinica-cobalto`: reservar, mover y cancelar se ven de
+   verdad en Google. Local ya conectado (`GOOGLE_CREDENTIALS_FILE`, fuera del repo);
+   **falta ponerlo en Railway** (`GOOGLE_CREDENTIALS_JSON`, el JSON completo en una
+   variable) antes de que sirva en producción. De paso se arreglaron tres fallos
+   del mismo tipo que los del 09/09 — detalle en `DECISIONS.md`, entrada del 14/09.
+   Con el próximo cliente real: crear SU calendario (no reusar el de pruebas),
+   compartirlo con la cuenta de servicio, y **confirmar antes dónde lleva su agenda
+   hoy** — el agente consulta un solo calendario, así que las citas que entren por
+   teléfono tienen que caer ahí o habrá doble reserva.
 3. ~~Horario de viernes~~ → resuelto (`franjas_por_dia`).
-4. `handoff.json` apunta a `soporte.studio32@gmail.com` (pruebas) → restaurar
-   `gabriela@ghdent.es` al go-live.
+4. `handoff.json` apunta a `soporte.studio32@gmail.com` (pruebas) → restaurar el
+   correo del cliente real al go-live.
 
 ## Tenants · 6 versionados
 
