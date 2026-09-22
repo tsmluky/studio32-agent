@@ -6,11 +6,22 @@ Supabase is the shared data layer for the agent and the future independent Studi
 
 Hosted project:
 
-- Name: `studio32-agent-platform`
-- Project ref: `qtmjtgimrzennkoqrslr`
+- Name: `studio32-hub` (the project's own dashboard name — historical, see incident below)
+- Project ref: `wwhinwxedcvpxprmcsta`
 - Region: `eu-west-1`
-- URL: `https://qtmjtgimrzennkoqrslr.supabase.co`
+- URL: `https://wwhinwxedcvpxprmcsta.supabase.co`
 - Schema applied and verified: 11 July 2026
+
+**Incident, 22/09/2026:** the original project (`studio32-agent-platform`,
+`qtmjtgimrzennkoqrslr`) was permanently deleted by mistake, two days after the
+Hub's own database was merged into it. Nothing in this project depends solely on
+Supabase — every write goes through a JSON-file fallback on the Railway volume
+(conversations, bookings) or an external system of record (Google Calendar), so
+the deletion did not lose live business data; see `.ai/DECISIONS.md`. What was
+genuinely lost: the three Auth users, `audit_logs`, and any Hub outreach activity
+between 20/09 and 22/09. The schema was reapplied here, on `studio32-hub`, which
+is now the **single permanent Supabase project for the whole ecosystem** — agent,
+panel and Hub together. There is no other project to fail over to a second time.
 
 The unit of isolation is `organization_id`. A Studio32 client is an organization, the current tenant folder slug maps to `organizations.slug`, and every operational record belongs to that organization.
 

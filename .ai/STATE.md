@@ -23,7 +23,11 @@ Ecosistema completo: **repo `Studio32` → `notes/CONTEXTO.md`**. No duplicar aq
 - Sirve: webhook de WhatsApp, API del panel, `widget.js` embebido en studio32.es
   (`data-tenant="studio32"`) y el onboarding (`/onboarding`).
 - **No tiene dominio propio**: el panel lo consume por la URL cruda de Railway.
-- Datos: Supabase `studio32-agent-platform` · ref `qtmjtgimrzennkoqrslr` · eu-west-1.
+- Datos: Supabase, proyecto `studio32-hub` · ref `wwhinwxedcvpxprmcsta` · eu-west-1.
+  **Es el único proyecto Supabase de todo el ecosistema (22/09)**: agente, panel y
+  Hub comparten esta misma base. El proyecto anterior (`studio32-agent-platform`)
+  se borró por error el 21/09 y no existe ya ninguna copia de repuesto: si este se
+  borra, no hay a dónde volver. Detalle del incidente en `DECISIONS.md`.
 - Consumidor: `studio32-panel` → `dashboard.studio32.es` (Cloudflare Pages).
 
 ## Seguridad de los tenants · resuelto el 2026-09-09 (queda un fleco)

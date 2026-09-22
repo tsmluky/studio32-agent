@@ -594,3 +594,29 @@ fuente de errores, justo en el alta. Con OAuth es un botón y Google enseña qu�
 acceso cifrado con una clave no se abre con otra. La primera se generó en una sesión en
 la que quedó visible: **rotarla antes de conectar el primer cliente real** (todas las
 conexiones de prueba tendrán que reconectarse, que es lo esperado).
+
+## 2026-09-22 · Se borró `studio32-agent-platform`; ahora vivimos en `studio32-hub`
+
+El 20/09 se fusionó la base del Hub dentro de `studio32-agent-platform`, pensando
+en cerrar el proyecto sobrante. El 21/09 por la noche se borró por error el
+proyecto equivocado: no el que sobraba, sino `studio32-agent-platform` mismo —
+justo el que acababa de recibir al Hub y donde vivían las 3 organizaciones reales
+del agente (`studio32`, `gh-dent`, `clinica-cobalto`).
+
+**Por qué no fue un desastre.** Cada escritura a Supabase en `store/bookings.js` y
+`store/conversations.js` está envuelta en `try/catch` con el comentario textual
+`JSON retained`: si Supabase falla, sigue funcionando con el fichero del volumen
+de Railway. La agenda real es Google Calendar, no la tabla `appointments`
+(decisión del 14/09). Confirmado en vivo: con la base borrada, el agente seguía
+respondiendo sin caerse, solo fallaba (y seguía) la escritura a Supabase.
+
+**Lo que sí se perdió, sin vuelta atrás:** los usuarios de Supabase Auth
+(recreados a mano), `audit_logs`, y la actividad del Hub entre el 20/09 y el
+21/09 (no tenía JSON de respaldo, era la única pieza que dependía solo de
+Supabase).
+
+**Decisión:** el esquema del agente se reaplicó sobre `studio32-hub`
+(`wwhinwxedcvpxprmcsta`), que pasa a ser el **único** proyecto Supabase del
+ecosistema — agente, panel y Hub juntos. Ya no hay un "proyecto de repuesto": si
+este se borra, no hay a dónde volver. Detalle completo en
+`Studio32/reportes/2026-09-22-incidente-supabase.md`.
