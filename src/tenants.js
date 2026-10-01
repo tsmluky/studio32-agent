@@ -23,6 +23,9 @@ function leerTexto(p) {
 // prioridad sobre el repo, para poder corregir en caliente un tenant de demo sin
 // desplegar. Devuelve null si no existe en ninguna de las dos raíces.
 function dirDeTenant(tenantId) {
+    if (typeof tenantId !== 'string' || !/^[a-zA-Z0-9_-]{1,100}$/.test(tenantId)) {
+        throw new Error('Identificador de tenant no válido.');
+    }
     for (const raiz of [PATHS.tenantsRuntime, PATHS.tenants]) {
         const dir = path.join(raiz, tenantId);
         if (fs.existsSync(dir)) return dir;
@@ -81,8 +84,8 @@ function cargarTenant(tenantId) {
     return tenant;
 }
 
-// Tenant al que caen los mensajes que no se pueden atribuir a nadie (por ejemplo,
-// los del sandbox de Twilio, cuyo número no es de ningún negocio).
+// Tenant por defecto para CLI/utilidades. Los webhooks no usan este fallback:
+// un destino desconocido debe descartarse, sin atenderlo como otro negocio.
 //
 // Antes esto era `cargarTenant(process.env.DEFAULT_TENANT)` a pelo, y si esa
 // variable apuntaba a un tenant que ya no existe —pasó: quedó apuntando a un
@@ -108,16 +111,21 @@ function tenantPorDefecto() {
 
 // Resuelve el tenant por el número de WhatsApp del NEGOCIO (el "To" del webhook).
 // Así un mismo backend atiende a varios clientes. Si no encuentra, devuelve null
-// y el canal usa DEFAULT_TENANT.
+// El canal descarta números no asignados o ambiguos.
 function resolverTenantPorNumero(numeroDestino) {
     if (!numeroDestino) return null;
-    const objetivo = numeroDestino.replace('whatsapp:', '');
+    const objetivo = String(numeroDestino).replace(/[^0-9]/g, '');
+    if (!objetivo) return null;
+    let encontrado = null;
     for (const id of listarTenantIds()) {
         const t = cargarTenant(id);
-        const num = (t.business.whatsapp_number || '').replace('whatsapp:', '');
-        if (num && objetivo.includes(num)) return t;
+        const num = String(t.business.whatsapp_number || '').replace(/[^0-9]/g, '');
+        if (num && objetivo === num) {
+            if (encontrado) return null; // Configuración ambigua: no elegir una clínica arbitraria.
+            encontrado = t;
+        }
     }
-    return null;
+    return encontrado;
 }
 
 module.exports = { cargarTenant, resolverTenantPorNumero, listarTenantIds, dirDeTenant, tenantPorDefecto };

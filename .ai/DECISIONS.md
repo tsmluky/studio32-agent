@@ -638,3 +638,22 @@ confirmación, dar respuesta sin confirmar; preservar mensajes de cancelación.
 No cambia el contrato de control humano ni las firmas del store. La cancelación
 no estricta ante fallo de Calendar, concurrencia y fallbacks operativos siguen
 pendientes. Preparación en rama separada, sin despliegue ni migración de producción.
+
+## 2026-10-01 · S1: identidad por canal y webhooks cerrados
+
+Meta POST requiere HMAC del cuerpo original y META_APP_SECRET; GET usa token
+separado. Twilio requiere firma del SDK, formulario y TWILIO_WEBHOOK_URL exacta
+configurada, nunca una URL reconstruida desde Host/proxy. Sin configuración,
+503; sin firma válida, 403. No existe bypass de firma para túneles.
+
+Las clínicas no demo no aceptan chat público sin ownerToken o SMOKE_TOKEN.
+El widget comercial studio32 permanece público; sus sesiones tienen namespace
+web:, para que un visitante no pueda adoptar la identidad WhatsApp de una cita.
+Las demos mantienen sus sesiones para conservar el panel de demostración.
+No enlazar automáticamente historiales web antiguos con teléfonos reales.
+
+Enrutamiento telefónico exacto y único: no usar tenant por defecto ante número
+no asignado o duplicado. Twilio sandbox permite un tenant demo explícito para
+el número configurado; no una clínica real. Alta interna exige token y los
+identificadores no permiten traversal. 12 regresiones HTTP pasan sin proveedores.
+Requiere configurar/verificar proveedores antes de desplegar; S2 es lo siguiente.

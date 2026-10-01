@@ -47,9 +47,12 @@ H3 puede investigarse mientras se corrigen H1/H2. Ninguno de esos hitos está ce
   no reservar servicios inactivos o profesionales inventados; no resucitar el
   catálogo del archivo; un fallo de mover en Calendar no modifica la copia;
   el guard no confunde una cancelación con una reserva y falla sin confirmar.
-- Validación local: `npm test` 62/62; `npm run test:supabase` 9/9;
+- S1 implementado: firmas obligatorias Meta/Twilio, chat de clínica autorizado,
+  identidad web separada, alta interna cerrada, rutas sin traversal y números
+  exactos/únicos; sandbox explícito solo demo. 12 regresiones HTTP sin servicios externos.
+- Validación local: `npm test` 74/74; `npm run test:supabase` 9/9;
   `npm run check:supabase` contrato de 5 migraciones / 15 tablas.
-- Pendientes importantes: autenticación de webhooks y chat, control humano ante
+- Pendientes importantes: configuración y validación real de webhooks, control humano ante
   fallos, concurrencia, cancelación ante fallo de Google, recordatorios y reconciliación.
 
 ## Producto y límites del piloto
@@ -81,7 +84,9 @@ Ante incidente de agenda, pausar reservas automáticas y pasar a solicitudes hum
 Cada tarea incluye estado, dependencias, criterio y evidencia. Para cerrarla se
 actualizan código y pruebas, luego el JSON, este documento y el HTML generado.
 Las notas del navegador son personales y no cambian el estado técnico del proyecto.
-El siguiente trabajo es S1: cerrar la entrada pública y validar webhooks.
+El siguiente trabajo es S2: controlar la respuesta durante takeover y fallos,
+y probar aislamiento con dos usuarios. S1 está verificado localmente, pendiente
+de configurar secretos y validar el proveedor en despliegue; ver `docs/SEGURIDAD_ENTRADAS.md`.
 El flujo editable está en `docs/roadmap-flujo.archify.json`. Generación:
 
 ```text

@@ -1,10 +1,10 @@
 {
   "updated": "2026-10-01",
   "goal": "Una clínica usa WhatsApp y una agenda fiable durante un piloto medido de 14 días",
-  "next": "S1",
+  "next": "S2",
   "tasks": [
     {"id":"B1","phase":"Base","title":"Reutilizar agente y panel","status":"existente","deps":[],"accept":"Conservar API, login, inbox, agenda y servicios; verificar el recorrido con usuario real.","evidence":"Backend modular; panel 10/10 y build verificados en la auditoría. No hay operación real validada."},
-    {"id":"S1","phase":"H1","title":"Autenticar entradas","status":"pendiente","deps":["B1"],"accept":"Webhooks falsificados rechazados. Chat público no puede adoptar identidad telefónica ni operar sobre clínicas reales.","evidence":"Auditoría: /chat permite elegir sesión; POST de proveedores carece de validación de firma."},
+    {"id":"S1","phase":"H1","title":"Autenticar entradas","status":"local","deps":["B1"],"accept":"Webhooks falsificados rechazados. Chat público no puede adoptar identidad telefónica ni operar sobre clínicas reales.","evidence":"12 pruebas HTTP nuevas: firmas Meta/Twilio, payload manipulado, identidad web, cancelación ajena impedida, routing exacto y único, sandbox solo demo, onboarding cerrado y traversal rechazado. Sin desplegar: configurar META_APP_SECRET / TWILIO_WEBHOOK_URL y probar proveedores reales."},
     {"id":"S2","phase":"H1","title":"Aislamiento y control humano","status":"pendiente","deps":["S1"],"accept":"Dos usuarios/organizaciones no cruzan datos. Fallo de control o takeover durante generación impide herramientas y respuesta del agente.","evidence":"RLS en 15 tablas y 9 constraints verificados. Falta prueba con dos JWT; controlMode devuelve agent ante error."},
     {"id":"S3","phase":"H1","title":"Persistencia y concurrencia","status":"pendiente","deps":["S1"],"accept":"Reserva concurrente y reinicio no pierden ni duplican citas. Restauración ensayada; definir fuente operativa para varias réplicas.","evidence":"Reproducida doble reserva simultánea. JSON sigue siendo operativo; Supabase es espejo en varias operaciones."},
     {"id":"A1","phase":"H2","title":"Reglas de reserva coherentes","status":"local","deps":["B1"],"accept":"Consulta, alta y cambio respetan horario por día, fecha/hora válidas y catálogo activo.","evidence":"booking-rules.test.js y supabase-adapter.test.js: regresiones nuevas pasan. No desplegado."},

@@ -10,11 +10,12 @@
 //   META_PHONE_NUMBER_ID (id del número, NO el número en sí)
 //   META_GRAPH_VERSION  (opcional, p. ej. v22.0)
 //
-// Es el único canal de WhatsApp del proyecto (Twilio se retiró).
+// META_APP_SECRET valida la firma del POST; VERIFY_TOKEN solo valida el reto GET.
 
 const express = require('express');
 const { responder } = require('../orchestrator');
-const { resolverTenantPorNumero, cargarTenant, tenantPorDefecto } = require('../tenants');
+const { resolverTenantPorNumero } = require('../tenants');
+const { verificarMeta, secretoIgual } = require('../entrySecurity');
 
 const GRAPH = process.env.META_GRAPH_VERSION || 'v22.0';
 
@@ -59,17 +60,18 @@ function router() {
         const mode = req.query['hub.mode'];
         const token = req.query['hub.verify_token'];
         const challenge = req.query['hub.challenge'];
-        if (mode === 'subscribe' && token === process.env.META_VERIFY_TOKEN) return res.status(200).send(challenge);
+        if (mode === 'subscribe' && typeof challenge === 'string' && secretoIgual(token, process.env.META_VERIFY_TOKEN)) return res.status(200).send(challenge);
         return res.sendStatus(403);
     });
 
     // Mensajes entrantes
-    r.post('/webhook', async (req, res) => {
-        res.sendStatus(200); // a Meta SIEMPRE se le responde 200 rápido
+    r.post('/webhook', verificarMeta, async (req, res) => {
+        res.sendStatus(200); // Solo se aceptan eventos autenticados.
         const entrante = parseEntrante(req.body);
         if (!entrante) return;
         try {
-            const tenant = resolverTenantPorNumero(entrante.displayNumber) || tenantPorDefecto();
+            const tenant = resolverTenantPorNumero(entrante.displayNumber);
+            if (!tenant) { console.error('Meta: destino sin tenant inequívoco; evento descartado.'); return; }
             const ownerCfg = tenant.business.owner || {};
             const ownerNum = (ownerCfg.whatsapp || '').replace(/[^0-9]/g, '');
             const fromNum = (entrante.from || '').replace(/[^0-9]/g, '');

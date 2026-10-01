@@ -15,10 +15,11 @@ const { cargarTenant, listarTenantIds, dirDeTenant } = require('./tenants');
 const onboarding = require('./onboarding');
 const store = require('./store');
 const api = require('./api/router');
+const { secretoIgual, identidadWeb } = require('./entrySecurity');
 
 const app = express();
 app.use(express.urlencoded({ extended: false }));
-app.use(express.json());
+app.use(express.json({ verify: (req, _res, buffer) => { req.rawBody = Buffer.from(buffer); } }));
 
 const PUBLIC = path.join(__dirname, '..', 'public');
 const MAX_MENSAJE = 1000;
@@ -148,7 +149,8 @@ app.get('/onboarding/api/plantilla/:vertical', (req, res) => {
 });
 app.post('/onboarding/api/crear', (req, res) => {
     const token = process.env.ONBOARDING_TOKEN;
-    if (token && req.body.token !== token) return res.status(401).json({ error: 'Token de onboarding no válido.' });
+    if (!token) return res.status(503).json({ error: 'Alta interna no configurada.' });
+    if (!secretoIgual(req.body.token, token)) return res.status(401).json({ error: 'Token de onboarding no válido.' });
     try {
         const r = onboarding.crearTenant(req.body);
         res.json({
@@ -242,11 +244,15 @@ app.use('/api', api.createRouter());
 app.post('/chat', rateLimit, async (req, res) => {
     try {
         const tenantId = req.body.tenant || cfg.DEFAULT_TENANT || 'barberia_demo';
+        if (typeof tenantId !== 'string' || !/^[a-zA-Z0-9_-]{1,100}$/.test(tenantId)) return res.status(400).json({ error: 'Tenant no válido.' });
         const { sesion, ownerToken } = req.body;
         let mensaje = req.body.mensaje;
         if (!sesion || !mensaje) return res.status(400).json({ error: 'Faltan los campos sesion y mensaje.' });
         mensaje = String(mensaje).slice(0, MAX_MENSAJE);
         const tenant = cargarTenant(tenantId);
+
+        const identidad = identidadWeb(tenant, sesion, ownerToken, req.headers['x-smoke-token']);
+        if (identidad.error) return res.status(identidad.status).json({ error: identidad.error });
 
         // Tenants de demostración (landing pública): el rateLimit de arriba cubre
         // ráfagas pero vive en memoria. Esto acota el uso sostenido y persiste en
@@ -259,9 +265,7 @@ app.post('/chat', rateLimit, async (req, res) => {
             store.bookings.purgarDemo(tenant).catch(err => console.error('Purga de demo falló:', err.message));
         }
 
-        const ownerCfg = tenant.business.owner || {};
-        const esOwner = !!(ownerToken && ownerCfg.token && ownerToken === ownerCfg.token);
-        const ctx = { tenant, tenantId: tenant.id, telefono: String(sesion), esOwner, channel: 'web' };
+        const ctx = { tenant, tenantId: tenant.id, telefono: identidad.telefono, esOwner: identidad.esOwner, channel: 'web' };
         const respuesta = await responder(ctx, mensaje);
         res.json({ respuesta });
     } catch (err) {
@@ -270,7 +274,7 @@ app.post('/chat', rateLimit, async (req, res) => {
     }
 });
 
-app.listen(cfg.PORT, () => {
+if (require.main === module) app.listen(cfg.PORT, () => {
     console.log(`Studio32 Agent escuchando en el puerto ${cfg.PORT}`);
     console.log(`LLM: ${llm.MODEL} (${llm.PROVIDER})`);
     console.log(`Webchat: /demo · Widget: /widget-demo · Onboarding: /onboarding · Panel: /panel`);
@@ -278,3 +282,5 @@ app.listen(cfg.PORT, () => {
         require('./reminders').iniciar(Number(process.env.RECORDATORIOS_MIN) || 10);
     }
 });
+
+module.exports = { app };

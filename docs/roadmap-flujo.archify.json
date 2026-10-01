@@ -15,7 +15,7 @@
     {"id":"h3","lane":"camino","col":3,"type":"messagebus","label":"H3 WhatsApp","sublabel":"Coexistencia + audio","tag":"Cuenta externa","width":150},
     {"id":"h4","lane":"camino","col":4,"type":"backend","label":"H4 Operación","sublabel":"Clínica autónoma","tag":"Pendiente","width":150},
     {"id":"h5","lane":"camino","col":5,"type":"external","label":"H5 Piloto","sublabel":"14 días propuestos","tag":"Medir utilidad","width":150},
-    {"id":"seguridad","lane":"trabajo","col":1,"type":"security","label":"S1 · S2 · S3","sublabel":"Entradas + concurrencia","width":150},
+    {"id":"seguridad","lane":"trabajo","col":1,"type":"security","label":"S1 · S2 · S3","sublabel":"S1 local · faltan S2/S3","width":150},
     {"id":"agenda","lane":"trabajo","col":2,"type":"database","label":"A1 → A4","sublabel":"Reglas + Calendar real","width":150},
     {"id":"canal","lane":"trabajo","col":3,"type":"cloud","label":"W1 → W3","sublabel":"360dialog + notas de voz","width":150},
     {"id":"operacion","lane":"trabajo","col":4,"type":"backend","label":"O1 · O2","sublabel":"Alta + recuperación","width":150},
@@ -36,8 +36,8 @@
   ],
   "cards":[
     {"dot":"cyan","title":"Objetivo y foco","items":["Una clínica utiliza su WhatsApp habitual y una agenda fiable en un piloto medido.","Plan propuesto: pasar los criterios de cada hito antes de abrir el piloto.","W1 se puede investigar mientras corregimos H1/H2; las flechas muestran puertas de salida, no un bloqueo de toda investigación."]},
-    {"dot":"emerald","title":"Verificado en local · 01/10/2026","items":["A1: horario por día, catálogo activo, fechas y horas válidas.","A2: mover en Calendar falla sin modificar la copia; confirmación segura y cancelación sin falso positivo.","Backend 62/62; Supabase 9/9 y contrato de 15 tablas. Estos cambios aún no están desplegados."]},
-    {"dot":"rose","title":"Bloqueos actuales","items":["S1: entradas públicas y firmas de proveedores.","S2/S3: control humano ante fallos, aislamiento con dos usuarios, concurrencia y persistencia operativa.","A3/A4: cancelar sin falsas confirmaciones y recorrido con Calendar real.","W1/W2: cuenta elegible y conector de coexistencia; todavía no hay cuentas de canal activas."]},
+    {"dot":"emerald","title":"Verificado en local · 01/10/2026","items":["S1: firmas de proveedores, identidad web separada, acceso de clínica autorizado y alta interna cerrada. 12 pruebas HTTP.","A1: horario por día, catálogo activo, fechas y horas válidas.","A2: mover en Calendar falla sin modificar la copia; confirmación segura y cancelación sin falso positivo.","Backend 74/74; Supabase 9/9 y contrato de 15 tablas. Estos cambios aún no están desplegados."]},
+    {"dot":"rose","title":"Bloqueos actuales","items":["S1: configurar secretos/URL y comprobar proveedores reales antes del despliegue.","S2/S3: control humano ante fallos, aislamiento con dos usuarios, concurrencia y persistencia operativa.","A3/A4: cancelar sin falsas confirmaciones y recorrido con Calendar real.","W1/W2: cuenta elegible y conector de coexistencia; todavía no hay cuentas de canal activas."]},
     {"dot":"amber","title":"Venta y validación","items":["SaaS existente con alta asistida; no empezar otro producto.","Precio pendiente: 300 EUR alta / 150 EUR mes es una hipótesis que requiere calcular costes y soporte.","Primer piloto gratuito limitado: volumen, duración y revisión con recepción. Llamadas atendidas por humanos inicialmente."]}
   ]
 }

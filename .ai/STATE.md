@@ -42,14 +42,16 @@ Rama de trabajo: fix/preparacion-piloto-clinicas; cambios locales no desplegados
 - Guard: cancelación no se confunde con alta; agenda inaccesible produce
   una respuesta sin confirmación de cita.
 - Roadmap HTML reproducible desde JSON y flujo Archify con criterios por tarea.
+- S1: firmas Meta/Twilio obligatorias, separación web/teléfono, autorización
+  de chat de clínica, alta interna cerrada y routing exacto/único. 12 pruebas HTTP.
 
-Validación: npm test 62/62; npm run test:supabase 9/9;
+Validación: npm test 74/74; npm run test:supabase 9/9;
 npm run check:supabase: 5 migraciones / 15 tablas.
 Panel: 10/10 y build verificados en auditoría; no cambiado en esta rama.
 
 ## Próximo trabajo y puertas de salida
 
-1. S1: autenticación de webhooks y acceso público /chat; mantener demo/widget.
+1. S1 local: configurar secretos/URL y comprobar proveedor antes de desplegar.
 2. S2/S3: control humano ante fallos y durante generación; concurrencia y
    persistencia durable con recuperación. No vender escalado horizontal todavía.
 3. A3/A4: cancelación coherente y Calendar real conectado desde panel.

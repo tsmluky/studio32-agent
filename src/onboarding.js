@@ -25,6 +25,7 @@ function listarVerticales() {
 
 // Carga una plantilla completa (para prerrellenar el formulario).
 function cargarPlantilla(vertical) {
+    if (typeof vertical !== 'string' || !/^[a-zA-Z0-9_-]{1,100}$/.test(vertical)) throw new Error('Vertical no válido.');
     const dir = path.join(TEMPLATES, vertical);
     if (!fs.existsSync(dir)) throw new Error(`Vertical desconocido: ${vertical}`);
     return {
