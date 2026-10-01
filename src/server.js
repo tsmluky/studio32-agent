@@ -9,16 +9,19 @@ const express = require('express');
 const cfg = require('./config');
 const llm = require('./llm');
 const whatsappMeta = require('./channels/whatsapp.meta');
+const whatsapp360 = require('./channels/whatsapp.360dialog');
 const whatsapp = require('./channels/whatsapp.twilio');
 const { responder } = require('./orchestrator');
 const { cargarTenant, listarTenantIds, dirDeTenant } = require('./tenants');
 const onboarding = require('./onboarding');
 const store = require('./store');
 const api = require('./api/router');
+const { secretoIgual, identidadWeb } = require('./entrySecurity');
+const { puedeResponder } = require('./controlGuard');
 
 const app = express();
 app.use(express.urlencoded({ extended: false }));
-app.use(express.json());
+app.use(express.json({ verify: (req, _res, buffer) => { req.rawBody = Buffer.from(buffer); } }));
 
 const PUBLIC = path.join(__dirname, '..', 'public');
 const MAX_MENSAJE = 1000;
@@ -148,7 +151,8 @@ app.get('/onboarding/api/plantilla/:vertical', (req, res) => {
 });
 app.post('/onboarding/api/crear', (req, res) => {
     const token = process.env.ONBOARDING_TOKEN;
-    if (token && req.body.token !== token) return res.status(401).json({ error: 'Token de onboarding no válido.' });
+    if (!token) return res.status(503).json({ error: 'Alta interna no configurada.' });
+    if (!secretoIgual(req.body.token, token)) return res.status(401).json({ error: 'Token de onboarding no válido.' });
     try {
         const r = onboarding.crearTenant(req.body);
         res.json({
@@ -229,6 +233,7 @@ app.post('/panel/api/agente/:id', panelAuth, (req, res) => {
 
 // Canales WhatsApp. Meta primero para que /whatsapp/meta no lo capture Twilio.
 app.use('/whatsapp/meta', whatsappMeta.router());  // Meta Cloud API: /whatsapp/meta/webhook
+app.use('/whatsapp/360dialog', whatsapp360.router());
 app.use('/whatsapp', whatsapp.router());           // Twilio (BSP):    /whatsapp/webhook
 
 // Authenticated API consumed by the independent Studio32 panel.
@@ -242,11 +247,15 @@ app.use('/api', api.createRouter());
 app.post('/chat', rateLimit, async (req, res) => {
     try {
         const tenantId = req.body.tenant || cfg.DEFAULT_TENANT || 'barberia_demo';
+        if (typeof tenantId !== 'string' || !/^[a-zA-Z0-9_-]{1,100}$/.test(tenantId)) return res.status(400).json({ error: 'Tenant no válido.' });
         const { sesion, ownerToken } = req.body;
         let mensaje = req.body.mensaje;
         if (!sesion || !mensaje) return res.status(400).json({ error: 'Faltan los campos sesion y mensaje.' });
         mensaje = String(mensaje).slice(0, MAX_MENSAJE);
         const tenant = cargarTenant(tenantId);
+
+        const identidad = identidadWeb(tenant, sesion, ownerToken, req.headers['x-smoke-token']);
+        if (identidad.error) return res.status(identidad.status).json({ error: identidad.error });
 
         // Tenants de demostración (landing pública): el rateLimit de arriba cubre
         // ráfagas pero vive en memoria. Esto acota el uso sostenido y persiste en
@@ -259,18 +268,17 @@ app.post('/chat', rateLimit, async (req, res) => {
             store.bookings.purgarDemo(tenant).catch(err => console.error('Purga de demo falló:', err.message));
         }
 
-        const ownerCfg = tenant.business.owner || {};
-        const esOwner = !!(ownerToken && ownerCfg.token && ownerToken === ownerCfg.token);
-        const ctx = { tenant, tenantId: tenant.id, telefono: String(sesion), esOwner, channel: 'web' };
+        const ctx = { tenant, tenantId: tenant.id, telefono: identidad.telefono, esOwner: identidad.esOwner, channel: 'web' };
         const respuesta = await responder(ctx, mensaje);
-        res.json({ respuesta });
+        res.json({ respuesta: respuesta && await puedeResponder(ctx) ? respuesta : null });
     } catch (err) {
         console.error('Error en /chat | status:', err.status, '| code:', err.code || (err.error && err.error.code), '| message:', err.message);
         res.status(500).json({ respuesta: 'Uf, se me ha cruzado algo. Me lo repites?' });
     }
 });
 
-app.listen(cfg.PORT, () => {
+if (require.main === module) app.listen(cfg.PORT, () => {
+    whatsapp360.iniciar();
     console.log(`Studio32 Agent escuchando en el puerto ${cfg.PORT}`);
     console.log(`LLM: ${llm.MODEL} (${llm.PROVIDER})`);
     console.log(`Webchat: /demo · Widget: /widget-demo · Onboarding: /onboarding · Panel: /panel`);
@@ -278,3 +286,5 @@ app.listen(cfg.PORT, () => {
         require('./reminders').iniciar(Number(process.env.RECORDATORIOS_MIN) || 10);
     }
 });
+
+module.exports = { app };

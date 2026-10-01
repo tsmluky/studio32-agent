@@ -10,12 +10,14 @@
 // Config (.env): TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_NUMBER
 // (formato whatsapp:+34XXXXXXXXX; en pruebas el sandbox whatsapp:+14155238886).
 //
-// Seguridad (producción): conviene validar la firma X-Twilio-Signature del webhook.
-// Se deja anotado; no se fuerza para no romper pruebas tras un túnel (ngrok).
+// Firma obligatoria con TWILIO_AUTH_TOKEN y TWILIO_WEBHOOK_URL exacta, también
+// durante pruebas con túnel. Sandbox: configurar TWILIO_SANDBOX_TENANT explícito.
 
 const express = require('express');
 const { responder } = require('../orchestrator');
-const { resolverTenantPorNumero, cargarTenant, tenantPorDefecto } = require('../tenants');
+const { resolverTenantPorNumero, cargarTenant } = require('../tenants');
+const { verificarTwilio } = require('../entrySecurity');
+const { puedeResponder } = require('../controlGuard');
 
 let _twilio = null;
 function lib() { if (!_twilio) _twilio = require('twilio'); return _twilio; }
@@ -46,7 +48,7 @@ async function enviarMensaje(to, texto) {
 function router() {
     const r = express.Router();
 
-    r.post('/webhook', async (req, res) => {
+    r.post('/webhook', verificarTwilio, async (req, res) => {
         const from = req.body.From;            // cliente:  "whatsapp:+34..."
         const to = req.body.To;                // negocio:  "whatsapp:+..."  -> tenant
         const body = (req.body.Body || '').trim();
@@ -56,13 +58,20 @@ function router() {
         res.send(new (lib().twiml.MessagingResponse)().toString());
 
         if (!from || !body) return;
+        let tenant;
+        let ctx;
         try {
-            const tenant = resolverTenantPorNumero(to) || tenantPorDefecto();
+            tenant = resolverTenantPorNumero(to);
+            if (!tenant && process.env.TWILIO_SANDBOX_TENANT && to === process.env.TWILIO_WHATSAPP_NUMBER) {
+                const demo = cargarTenant(process.env.TWILIO_SANDBOX_TENANT);
+                if (demo.business.demo === true) tenant = demo;
+            }
+            if (!tenant) { console.error('Twilio: destino sin tenant inequívoco; evento descartado.'); return; }
             const ownerCfg = tenant.business.owner || {};
             const ownerNum = (ownerCfg.whatsapp || '').replace(/[^0-9]/g, '');
             const fromNum = (from || '').replace(/[^0-9]/g, '');
             const esOwner = !!(ownerNum && fromNum === ownerNum); // match EXACTO, nunca subcadena
-            const ctx = {
+            ctx = {
                 tenant,
                 tenantId: tenant.id,
                 telefono: from,
@@ -71,10 +80,10 @@ function router() {
                 providerMessageId: req.body.MessageSid || req.body.SmsMessageSid || null
             };
             const respuesta = await responder(ctx, body);
-            if (respuesta) await enviarMensaje(from, respuesta);
+            if (respuesta && await puedeResponder(ctx)) await enviarMensaje(from, respuesta);
         } catch (err) {
             console.error('Error en canal Twilio:', err);
-            await enviarMensaje(from, 'Perdona, ahora mismo no consigo responderte. Escríbeme otra vez en un momento y lo vemos.');
+            if (ctx && await puedeResponder(ctx)) await enviarMensaje(from, 'Perdona, ahora mismo no consigo responderte. Escríbeme otra vez en un momento y lo vemos.');
         }
     });
 

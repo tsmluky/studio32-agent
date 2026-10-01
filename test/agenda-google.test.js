@@ -56,6 +56,14 @@ const EVENTO_AGENTE = { id: 'ev-agente', summary: 'Revisión · Marta', start: {
 const EVENTO_CLINICA = { id: 'ev-clinica', summary: 'Paciente llamó por teléfono', start: { dateTime: '2026-09-17T16:00:00+02:00' }, end: { dateTime: '2026-09-17T16:30:00+02:00' } };
 const FICHA = { id: 'row-1', status: 'confirmed', starts_at: '2026-09-17T08:00:00.000Z', ends_at: '2026-09-17T08:30:00.000Z', external_calendar_event_id: 'ev-agente', contact: { name: 'Marta' }, service: { name: 'Revisión' } };
 
+test('si Google rechaza mover la cita, no se cambia la copia ni se informa éxito', async () => {
+    escribirReservas([{ id: 'movimiento', fecha: '17/09/2026', hora: '10:00', estado: 'confirmada', calendar_event_id: 'evento', duracion_min: 30 }]);
+    gcal.updateEvent = async () => { throw new Error('Calendar no disponible'); };
+    await assert.rejects(bookings.reprogramar(tenant(), 'movimiento', '18/09/2026', '11:00'), /Calendar no disponible/);
+    assert.equal(leerReservas()[0].fecha, '17/09/2026');
+    assert.equal(leerReservas()[0].hora, '10:00');
+});
+
 test('una cita apuntada en el móvil aparece en el dashboard', () => {
     const vista = combinar([EVENTO_CLINICA], []);
     assert.equal(vista.length, 1);
@@ -141,11 +149,18 @@ test('cancelar desde el dashboard (estricto) no cancela nada si Google falla', a
     assert.equal(leerReservas()[0].estado, 'confirmada', 'sigue activa: no se puede enseñar cancelada lo que sigue en el móvil');
 });
 
-test('cancelar desde el agente sigue adelante aunque Google falle', async () => {
+test('cancelar desde el agente no informa éxito ni cambia la copia si Google falla', async () => {
     escribirReservas([RESERVA]);
     gcal.deleteEvent = async () => { throw new Error('Google caído'); };
-    const r = await bookings.cancelar(tenant(), 'r1');
-    assert.equal(r.estado, 'cancelada');
+    await assert.rejects(bookings.cancelar(tenant(), 'r1'), /Google caído/);
+    assert.equal(leerReservas()[0].estado, 'confirmada');
+});
+
+test('Calendar configurado sin acceso no se sustituye por una agenda JSON vacía', async () => {
+    gcal.disponible = () => false;
+    assert.throws(() => bookings.calCfg(tenant()), /no disponible/);
+    assert.equal(bookings.calCfg(tenant({ demo:true })), null);
+    assert.equal(bookings.calCfg(tenant({ calendar:{} })), null);
 });
 
 // ─── Días cerrados en Google ───

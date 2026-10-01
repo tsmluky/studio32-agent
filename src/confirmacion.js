@@ -52,6 +52,7 @@ function frasesAfirmativas(texto) {
 // reserva con un escueto "Hecho, Marta: el jueves a las 10:00", sin decir "cita".
 function daLaCitaPorHecha(texto) {
     return frasesAfirmativas(texto).some(f => {
+        if (/\b(cancelad[ao]|anulad[ao]|cancelado|anulado)\b/i.test(f)) return false;
         if (!VERBO.test(f)) return false;
         HORA.lastIndex = 0;
         return OBJETO.test(f) || HORA.test(f) || CUANDO.test(f);
@@ -70,7 +71,7 @@ function confirmacionCorrecta(cita) {
 }
 
 // Devuelve el texto tal cual, o uno corregido. Nunca lanza: un fallo aquí no puede
-// dejar al cliente sin respuesta, así que ante la duda pasa el original.
+// dejar al cliente sin respuesta; si la agenda falla no se confirma una cita.
 async function revisarConfirmacion(ctx, texto) {
     try {
         if (!texto || !daLaCitaPorHecha(texto)) return texto;
@@ -91,7 +92,7 @@ async function revisarConfirmacion(ctx, texto) {
         return confirmacionCorrecta(activas[activas.length - 1]);
     } catch (err) {
         console.error('[GUARD RESERVA] no se pudo comprobar:', err.message);
-        return texto;
+        return 'No puedo comprobar ahora que la cita esté registrada. El equipo debe verificarla antes de darla por confirmada.';
     }
 }
 

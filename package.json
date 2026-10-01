@@ -16,7 +16,7 @@
     "vigilar": "node scripts/vigilar.js",
     "check:supabase": "node scripts/check-supabase-schema.js",
     "test": "node --test test/*.test.js",
-    "test:supabase": "node --test test/supabase-adapter.test.js test/api-auth.test.js",
+    "test:supabase": "node --test test/supabase-adapter.test.js test/api-auth.test.js test/api-isolation.test.js test/control-guard.test.js test/human-echo.test.js",
     "supabase:import": "node scripts/import-tenants-to-supabase.js",
     "supabase:sync-bookings": "node scripts/sync-bookings-to-supabase.js",
     "eval": "npx -y promptfoo@0.120.19 eval -c evals/promptfooconfig.yaml",

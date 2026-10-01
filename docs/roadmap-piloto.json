@@ -1,0 +1,203 @@
+{
+  "updated": "2026-10-01",
+  "goal": "Una clínica usa WhatsApp y una agenda fiable durante un piloto medido de 14 días",
+  "next": "W2",
+  "tasks": [
+    {
+      "id": "B1",
+      "phase": "Base",
+      "title": "Reutilizar agente y panel",
+      "status": "existente",
+      "deps": [],
+      "accept": "Conservar API, login, inbox, agenda y servicios; verificar el recorrido con usuario real.",
+      "evidence": "Backend modular; panel 10/10 y build verificados en la auditoría. No hay operación real validada."
+    },
+    {
+      "id": "S1",
+      "phase": "H1",
+      "title": "Autenticar entradas",
+      "status": "local",
+      "deps": [
+        "B1"
+      ],
+      "accept": "Webhooks falsificados rechazados. Chat público no puede adoptar identidad telefónica ni operar sobre clínicas reales.",
+      "evidence": "12 pruebas HTTP nuevas: firmas Meta/Twilio, payload manipulado, identidad web, cancelación ajena impedida, routing exacto y único, sandbox solo demo, onboarding cerrado y traversal rechazado. Sin desplegar: configurar META_APP_SECRET / TWILIO_WEBHOOK_URL y probar proveedores reales."
+    },
+    {
+      "id": "S2",
+      "phase": "H1",
+      "title": "Aislamiento y control humano",
+      "status": "parcial",
+      "deps": [
+        "S1"
+      ],
+      "accept": "Dos usuarios/organizaciones no cruzan datos. Fallo de control o takeover durante generación impide herramientas y respuesta del agente.",
+      "evidence": "Control fail-closed y takeover durante modelo/herramientas/entrega cubiertos. API con dos sesiones simuladas niega cruces; resolve no libera. Falta verificar dos JWT/RLS reales y operaciones ya iniciadas."
+    },
+    {
+      "id": "S3",
+      "phase": "H1",
+      "title": "Persistencia y concurrencia",
+      "status": "parcial",
+      "deps": [
+        "S1"
+      ],
+      "accept": "Reserva concurrente y reinicio no pierden ni duplican citas. Restauración ensayada; definir fuente operativa para varias réplicas.",
+      "evidence": "Mutex por tenant en un proceso evita doble reserva; JSON atómico y corrupción falla. Snapshot/restauración sintética pasan. Falta fuente DB transaccional y coordinación entre réplicas; Supabase sigue siendo espejo."
+    },
+    {
+      "id": "A1",
+      "phase": "H2",
+      "title": "Reglas de reserva coherentes",
+      "status": "local",
+      "deps": [
+        "B1"
+      ],
+      "accept": "Consulta, alta y cambio respetan horario por día, fecha/hora válidas y catálogo activo.",
+      "evidence": "booking-rules.test.js y supabase-adapter.test.js: regresiones nuevas pasan. No desplegado."
+    },
+    {
+      "id": "A2",
+      "phase": "H2",
+      "title": "Confirmaciones y cambios fiables",
+      "status": "local",
+      "deps": [
+        "B1"
+      ],
+      "accept": "Movimiento rechazado por Google no cambia la copia. No confirmar si la agenda falla; preservar mensajes de cancelación.",
+      "evidence": "agenda-google.test.js y confirmacion.test.js pasan. Cancelar ante fallo de Google sigue pendiente en A3."
+    },
+    {
+      "id": "A3",
+      "phase": "H2",
+      "title": "Cancelación y reconciliación",
+      "status": "parcial",
+      "deps": [
+        "A1",
+        "A2",
+        "S3"
+      ],
+      "accept": "Cancelar desde panel y agente mantiene Calendar, JSON y Supabase coherentes; no afirma éxito ante rechazo.",
+      "evidence": "Google rechaza cancelación: agente/panel no cambian copia ni confirman. Panel sin Calendar cancela legacyId JSON. Calendar configurado inaccesible falla cerrado. Falta reconciliar caída del espejo Supabase y Calendar real."
+    },
+    {
+      "id": "A4",
+      "phase": "H2",
+      "title": "Agenda real punta a punta",
+      "status": "externo",
+      "deps": [
+        "S2",
+        "S3",
+        "A3"
+      ],
+      "accept": "Clínica no demo conecta Google; reserva/mueve/cancela y verifica desde panel y calendario, incluidos fallos de red.",
+      "evidence": "0 integration_credentials en Supabase. Configuración y autorización real pendientes."
+    },
+    {
+      "id": "W1",
+      "phase": "H3",
+      "title": "Probar elegibilidad de coexistencia",
+      "status": "externo",
+      "deps": [
+        "B1"
+      ],
+      "accept": "Confirmar en 360dialog cuenta Business elegible, número y costes; documentar alta conservando aplicación.",
+      "evidence": "Usuario confirmó: sin cuenta 360dialog ni número Business elegible; preparar código local. No contratar ni asumir coexistencia habilitada."
+    },
+    {
+      "id": "W2",
+      "phase": "H3",
+      "title": "Conector 360dialog",
+      "status": "parcial",
+      "deps": [
+        "S1",
+        "W1"
+      ],
+      "accept": "Texto, estados, duplicados, reintentos y ecos humanos resueltos; respuesta humana detiene agente.",
+      "evidence": "Conector autenticado por clínica, lotes, deduplicación en disco, ecos humanos y envío desde panel. Persistencia antes del ACK, queued recuperable y envíos ambiguos requieren revisión sin repetir herramientas. 12 pruebas proveedor/eco y ruta panel local pasan. Falta outbox/estados panel, retención, latencia real, channel_accounts y prueba de coexistencia."
+    },
+    {
+      "id": "W3",
+      "phase": "H3",
+      "title": "Notas de voz",
+      "status": "pendiente",
+      "deps": [
+        "W2"
+      ],
+      "accept": "Obtener audio autorizado, transcribir, pedir aclaración si incierto; no reservar por transcripción ambigua.",
+      "evidence": "Parser Meta procesa texto; audio sin recorrido E2E implementado."
+    },
+    {
+      "id": "O1",
+      "phase": "H4",
+      "title": "Alta asistida y panel",
+      "status": "pendiente",
+      "deps": [
+        "S2",
+        "A4",
+        "W2"
+      ],
+      "accept": "Repetir alta sin código específico por cliente; permisos, servicios, takeover/release y configuración comprobados.",
+      "evidence": "Panel y borrador de onboarding existen; activación manual e integración por cerrar."
+    },
+    {
+      "id": "O2",
+      "phase": "H4",
+      "title": "Recordatorios y recuperación",
+      "status": "parcial",
+      "deps": [
+        "S3",
+        "A3",
+        "W2"
+      ],
+      "accept": "No marcar envío exitoso si falla; no perder escrituras concurrentes; alerta y procedimiento de pausa/recuperación ensayados.",
+      "evidence": "Recordatorios opt-in por emisor, marcar solo tras aceptación y preservar escrituras concurrentes; zona horaria e identidad/control verificados. Snapshot privado y restauración sintética. Faltan outbox/plantillas, alertas y backup Supabase."
+    },
+    {
+      "id": "P1",
+      "phase": "H5",
+      "title": "Clínica piloto y demostración",
+      "status": "pendiente",
+      "deps": [
+        "O1",
+        "O2",
+        "W3"
+      ],
+      "accept": "Una clínica acepta alcance, duración gratuita limitada y medición; demo con su proceso y recepción.",
+      "evidence": "Sin cliente activo confirmado. Oferta inicial y límites pendientes."
+    },
+    {
+      "id": "P2",
+      "phase": "H5",
+      "title": "Validar utilidad y margen",
+      "status": "pendiente",
+      "deps": [
+        "P1"
+      ],
+      "accept": "Revisión de 14 días: incidencias, ahorro reconocido, soporte y costes. Decidir continuar, ajustar o parar.",
+      "evidence": "Precio 300/150 EUR provisional. Sin métricas de piloto ni margen calculado."
+    },
+    {
+      "id": "L1",
+      "phase": "Después",
+      "title": "Llamadas con agente",
+      "status": "despues",
+      "deps": [
+        "P2"
+      ],
+      "accept": "Evaluar desvío/SIP del número habitual y prueba separada; no requisito del piloto WhatsApp.",
+      "evidence": "Recepción atiende llamadas ordinarias inicialmente."
+    },
+    {
+      "id": "L2",
+      "phase": "Después",
+      "title": "Cobro y alta autoservicio",
+      "status": "despues",
+      "deps": [
+        "P2"
+      ],
+      "accept": "Automatizar cuando el alta y soporte sean repetibles y exista demanda pagada.",
+      "evidence": "No bloquear la primera venta por construir checkout o autoservicio."
+    }
+  ]
+}

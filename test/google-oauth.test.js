@@ -93,7 +93,7 @@ test('un calendario conectado solo se usa si el servidor tiene cliente OAuth y c
     const fichero = process.env.GOOGLE_OAUTH_CLIENT_FILE;
     delete process.env.GOOGLE_OAUTH_CLIENT_FILE;
     try {
-        assert.equal(bookings.calCfg(tenant), null, 'sin cliente OAuth no se intenta');
+        assert.throws(() => bookings.calCfg(tenant), /no disponible/, 'sin cliente OAuth no se sustituye la agenda conectada por JSON');
         process.env.GOOGLE_OAUTH_CLIENT_JSON = JSON.stringify({ web: { client_id: 'id', client_secret: 'secret' } });
         oauth._resetForTests();
         assert.equal(bookings.calCfg(tenant), cal);

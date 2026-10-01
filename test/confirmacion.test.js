@@ -72,10 +72,21 @@ test('si dice una hora que no es la reservada, la corrige con la de verdad', asy
     assert.doesNotMatch(salida, /09:30/);
 });
 
-test('si la agenda no se puede leer, deja pasar el mensaje original', async (t) => {
+test('si la agenda no se puede leer, responde sin confirmar la cita', async (t) => {
     const bookings = require('../src/store/bookings');
     const original = 'Listo, tu cita el jueves a las 10:00.';
     t.mock.method(bookings, 'activasDeCliente', async () => { throw new Error('disco caído'); });
-    // Un fallo del guard no puede dejar al cliente sin respuesta.
-    assert.equal(await revisarConfirmacion(ctxCon([]), original), original);
+    // Un fallo del guard debe dar respuesta sin prometer una cita no verificada.
+    const salida = await revisarConfirmacion(ctxCon([]), original);
+    assert.notEqual(salida, original);
+    assert.match(salida, /No puedo comprobar/);
+});
+
+test('una cancelación no se transforma en una falsa petición de reservar', async (t) => {
+    const bookings = require('../src/store/bookings');
+    t.mock.method(bookings, 'activasDeCliente', async () => { throw new Error('no debe consultar'); });
+    const texto = 'Hecho, tu cita está cancelada.';
+    assert.equal(daLaCitaPorHecha(texto), false);
+    assert.equal(await revisarConfirmacion(ctxCon([]), texto), texto);
+    assert.equal(daLaCitaPorHecha('Tu cita está cancelada. Ya tienes una nueva cita el jueves a las 10:00.'), true);
 });

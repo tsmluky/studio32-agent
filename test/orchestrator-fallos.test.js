@@ -31,6 +31,7 @@ function ctx() {
 // Deja el andamiaje en pie: conversación aceptada, agente al mando, nada que
 // persistir de verdad y sin Supabase.
 function andamio(t) {
+    t.mock.method(conversations, 'controlMode', async () => 'agent');
     t.mock.method(conversations, 'claimInbound', async () => ({ accepted: true, controlMode: 'agent', persisted: false }));
     t.mock.method(conversations, 'get', async () => []);
     t.mock.method(conversations, 'push', async () => {});

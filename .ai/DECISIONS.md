@@ -620,3 +620,67 @@ Supabase).
 ecosistema — agente, panel y Hub juntos. Ya no hay un "proyecto de repuesto": si
 este se borra, no hay a dónde volver. Detalle completo en
 `Studio32/reportes/2026-09-22-incidente-supabase.md`.
+
+## 2026-10-01 · Piloto por hitos y confirmación verificable
+
+Reutilizar agente y panel como SaaS con alta asistida. El plan vivo pasa a
+`docs/PILOTO.md` y `docs/roadmap-piloto.json`, con dependencias y criterios de
+aceptación, sin exigir una matriz de 64 acciones. El HTML se genera con Archify
+para el flujo y `scripts/render-roadmap.cjs` para fichas, filtros y notas locales.
+Ningún hito cerrado; precio 300/150 es hipótesis pendiente de coste y piloto.
+
+Compartir reglas entre disponibilidad y escrituras: horario por día, fecha/hora
+válidas y catálogo activo. No sustituir un catálogo vacío de Supabase por el
+archivo, porque reactivaba servicios deshabilitados. Si mover en Calendar falla,
+propagar el error antes de cambiar JSON. Si la agenda no permite verificar una
+confirmación, dar respuesta sin confirmar; preservar mensajes de cancelación.
+
+No cambia el contrato de control humano ni las firmas del store. La cancelación
+no estricta ante fallo de Calendar, concurrencia y fallbacks operativos siguen
+pendientes. Preparación en rama separada, sin despliegue ni migración de producción.
+
+## 2026-10-01 · S1: identidad por canal y webhooks cerrados
+
+Meta POST requiere HMAC del cuerpo original y META_APP_SECRET; GET usa token
+separado. Twilio requiere firma del SDK, formulario y TWILIO_WEBHOOK_URL exacta
+configurada, nunca una URL reconstruida desde Host/proxy. Sin configuración,
+503; sin firma válida, 403. No existe bypass de firma para túneles.
+
+Las clínicas no demo no aceptan chat público sin ownerToken o SMOKE_TOKEN.
+El widget comercial studio32 permanece público; sus sesiones tienen namespace
+web:, para que un visitante no pueda adoptar la identidad WhatsApp de una cita.
+Las demos mantienen sus sesiones para conservar el panel de demostración.
+No enlazar automáticamente historiales web antiguos con teléfonos reales.
+
+Enrutamiento telefónico exacto y único: no usar tenant por defecto ante número
+no asignado o duplicado. Twilio sandbox permite un tenant demo explícito para
+el número configurado; no una clínica real. Alta interna exige token y los
+identificadores no permiten traversal. 12 regresiones HTTP pasan sin proveedores.
+Requiere configurar/verificar proveedores antes de desplegar; S2 es lo siguiente.
+
+## 2026-10-01 · Control, agenda local y preparación 360dialog
+
+Control remoto ilegible/ausente detiene agente; se vuelve a consultar durante
+modelo, herramientas y entrega. handoff termina turno. No hay rollback de una
+operación que ya comenzó. API con sesiones simuladas no sustituye dos JWT/RLS.
+
+Mutex reentrante por tenant protege tools+store en UN proceso. JSON usa temporal,
+fsync y rename; corrupción no retorna fallback vacío. Supabase sigue siendo
+espejo, sin garantía entre réplicas. Snapshot privado con hash/restauración
+sintética no cubre Supabase ni Calendar.
+
+Cancelar siempre exige éxito Google antes de cambiar copia, incluso desde
+agente (el comportamiento permisivo anterior podía confirmar cancelación falsa).
+Firma opts se conserva. Calendar configurado inaccesible falla cerrado. Panel
+sin Calendar cancela JSON legacy además de DB; reconciliación queda pendiente.
+
+Recordatorios opt-in por clínica/emisor; flag solo tras aceptación y relectura
+bajo mutex. No habilitar producción sin plantillas/outbox y entrega comprobada.
+
+Usuario confirmó sin cuenta 360dialog: integración/pruebas locales autorizadas.
+Conector desactivado, Basic Auth por slug y routing número exacto. Inbox antes
+del ACK, duplicados persistentes, ecos control human y respuesta panel por org.
+queued recupera; processing/sending/entrega incierta requieren reconciliar,
+nunca repetir herramientas automáticamente. IDs de audio conservados, sin
+transcripción. Límite 5000 eventos; retención/estados/outbox siguen en W2.
+No cuentas externas, migraciones, mensajes reales ni despliegues ejecutados.

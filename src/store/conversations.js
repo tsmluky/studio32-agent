@@ -51,11 +51,34 @@ async function controlMode(tenantId, telefono) {
     if (!remote.enabled()) return 'agent';
     try {
         const ctx = await remote.conversationForPhone(tenantId, telefono);
-        return ctx.conversation.control_mode || 'agent';
+        const mode = ctx.conversation.control_mode;
+        return ['agent', 'human', 'paused'].includes(mode) ? mode : 'paused';
     } catch (error) {
         remote.report(error, 'read conversation control mode');
-        return 'agent';
+        return 'paused';
     }
+}
+
+// Un eco de la aplicación es una respuesta humana, nunca un nuevo paciente.
+// Sin BD de control no es seguro activar coexistencia.
+async function humanEcho(tenantId, telefono, body, providerMessageId) {
+    if (!remote.enabled()) throw new Error('Coexistencia requiere persistencia de control.');
+    const ctx = await remote.conversationForPhone(tenantId, telefono);
+    const existing = await ctx.db.from('messages').select('id').eq('organization_id', ctx.organization.id)
+        .eq('provider_message_id', providerMessageId).limit(1).maybeSingle();
+    if (existing.error) throw existing.error;
+    if (existing.data) return false; // Un reintento viejo no deshace release.
+    const now = new Date().toISOString();
+    const paused = await ctx.db.from('conversations').update({ control_mode: 'human', agent_paused_at: now, last_message_at: now }).eq('id', ctx.conversation.id);
+    if (paused.error) throw paused.error;
+    const text = typeof body === 'string' && body ? body : '[Mensaje humano no textual]';
+    const result = await ctx.db.from('messages').insert({ organization_id: ctx.organization.id,
+        conversation_id: ctx.conversation.id, provider_message_id: providerMessageId,
+        direction: 'outbound', sender_type: 'human', body: text,
+        payload: { provider: 'whatsapp_360dialog', source: 'business_app' }, status: 'sent', occurred_at: now });
+    if (result.error && result.error.code !== '23505') throw result.error;
+    if (!result.error) appendJson(tenantId, telefono, { role: 'assistant', content: text });
+    return !result.error;
 }
 
 async function get(tenantId, telefono) {
@@ -65,7 +88,7 @@ async function get(tenantId, telefono) {
             const result = await ctx.db.from('messages')
                 .select('sender_type, body, occurred_at')
                 .eq('conversation_id', ctx.conversation.id)
-                .in('sender_type', ['contact', 'agent'])
+                .in('sender_type', ['contact', 'agent', 'human'])
                 .order('occurred_at', { ascending: false })
                 .limit(MAX_HISTORIAL);
             if (result.error) throw result.error;
@@ -111,4 +134,4 @@ async function push(tenantId, telefono, mensaje) {
     return h;
 }
 
-module.exports = { get, push, claimInbound, controlMode };
+module.exports = { get, push, claimInbound, controlMode, humanEcho };

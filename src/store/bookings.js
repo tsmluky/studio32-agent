@@ -95,7 +95,14 @@ async function updateMirroredAppointment(tenant, legacyId, changes) {
 function calCfg(tenant) {
     if (esDemo(tenant)) return null;
     const c = (tenant.business && tenant.business.calendar) || null;
-    return (c && c.calendar_id && gcal.disponible(c)) ? c : null;
+    if (!c?.calendar_id) return null;
+    if (!gcal.disponible(c)) {
+        const error = new Error('Calendar configurado pero no disponible.');
+        error.status = 503;
+        error.publicMessage = 'No se puede comprobar la agenda conectada. El equipo debe revisar la conexión antes de gestionar citas.';
+        throw error;
+    }
+    return c;
 }
 
 // Fecha y hora locales (DD/MM/YYYY, HH:MM) y duración de un evento de Google.
@@ -263,22 +270,15 @@ async function crear(tenant, datos) {
     return reserva;
 }
 
-// opts.estricto: si no se puede borrar en Google, no se cancela nada y se lanza el
-// error. Lo usa el dashboard: ahí quien cancela es la clínica, y ver "cancelada" en
-// la pantalla mientras sigue en su móvil es justo el desajuste que no puede pasar.
-// El agente cancela sin estricto (DECISIONS 14/09): a un paciente no se le bloquea
-// la cancelación por un fallo momentáneo de Google.
+// Calendar debe aceptar la baja antes de cambiar la copia. opts se conserva por
+// compatibilidad; agente y panel comparten la misma garantía ante fallo.
 async function cancelar(tenant, id, opts = {}) {
     const all = db.leer(tenant.id, FILE, []);
     const r = all.find(x => x.id === id);
     if (!r) return null;
     const cfg = calCfg(tenant);
     if (cfg && r.calendar_event_id) {
-        try { await gcal.deleteEvent(cfg, r.calendar_event_id); }
-        catch (err) {
-            if (opts.estricto) throw err;
-            console.error('Baja en Calendar falló:', err.message);
-        }
+        await gcal.deleteEvent(cfg, r.calendar_event_id);
     }
     r.estado = 'cancelada';
     r.cancelada = new Date().toISOString();
@@ -293,8 +293,7 @@ async function reprogramar(tenant, id, nuevaFecha, nuevaHora) {
     if (!r) return null;
     const cfg = calCfg(tenant);
     if (cfg && r.calendar_event_id) {
-        try { await gcal.updateEvent(cfg, r.calendar_event_id, { fecha: nuevaFecha, hora: nuevaHora, duracion_min: r.duracion_min || 60, timezone: cfg.timezone || 'Europe/Madrid' }); }
-        catch (err) { console.error('Mover en Calendar falló:', err.message); }
+        await gcal.updateEvent(cfg, r.calendar_event_id, { fecha: nuevaFecha, hora: nuevaHora, duracion_min: r.duracion_min || 60, timezone: cfg.timezone || 'Europe/Madrid' });
     }
     r.fecha_anterior = r.fecha; r.hora_anterior = r.hora;
     r.fecha = nuevaFecha; r.hora = nuevaHora; r.reprogramada = new Date().toISOString();
@@ -328,3 +327,9 @@ async function purgarDemo(tenant, horas = 48) {
 }
 
 module.exports = { busyIntervals, huecoLibre, capacidadDe, listarJSONPorFecha, activasDeCliente, crear, cancelar, reprogramar, listar, zonedDateTimeToIso, mirrorAppointment, updateMirroredAppointment, esDemo, purgarDemo, calCfg, fechaHoraDeEvento };
+
+// Lecturas con reconciliación y mutaciones comparten el lock con las tools y API.
+for (const name of ['busyIntervals', 'activasDeCliente', 'crear', 'cancelar', 'reprogramar', 'purgarDemo']) {
+    const operation = module.exports[name];
+    module.exports[name] = (tenant, ...args) => require('../bookingLock').serializar(tenant.id, () => operation(tenant, ...args));
+}

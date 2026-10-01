@@ -11,9 +11,8 @@ const { compararConHoy, minutosAhora } = require('../fechas');
 // Antelación mínima para una cita de HOY: no ofrecer una hora que empieza ya.
 const MARGEN_HOY_MIN = 60;
 
-function horaAMin(h) { const [a, b] = h.split(':').map(Number); return a * 60 + (b || 0); }
+const { parsearFecha: parsear, franjasDelDia, serviciosActivos } = require('../bookingRules');
 function minAHora(m) { const h = Math.floor(m / 60), x = m % 60; return `${String(h).padStart(2, '0')}:${String(x).padStart(2, '0')}`; }
-function parsear(s) { const [d, m, y] = s.split('/').map(Number); return new Date(y, m - 1, d); }
 function fmt(d) { const p = n => String(n).padStart(2, '0'); return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()}`; }
 
 // Modo aforo: si el servicio se llama Comida/Cena, solo valen las franjas de su
@@ -48,7 +47,7 @@ module.exports = {
     },
     async run(args, ctx) {
         const b = ctx.tenant.business || {};
-        const servicios = ctx.tenant.services.servicios || [];
+        const servicios = serviciosActivos(ctx.tenant);
         const svc = servicios.find(s => s.nombre.toLowerCase() === String(args.servicio || '').toLowerCase());
         if (!svc) {
             return JSON.stringify({ error: `Servicio no reconocido. Disponibles: ${servicios.map(s => s.nombre).join(', ')}` });
@@ -60,7 +59,7 @@ module.exports = {
         const profesionales = b.profesionales || [];
 
         let prof = args.profesional;
-        if (prof && profesionales.length && !profesionales.some(p => p.toLowerCase() === prof.toLowerCase())) {
+        if (prof && !profesionales.some(p => p.toLowerCase() === prof.toLowerCase())) {
             return JSON.stringify({ error: `Profesional no reconocido. Disponibles: ${profesionales.join(', ')}` });
         }
 
@@ -89,9 +88,7 @@ module.exports = {
         // Franjas del día. Si el negocio define un horario distinto por día de la
         // semana (p.ej. el viernes solo por la mañana) en horario.franjas_por_dia
         // ({ "5": [...] }), se usan esas; si no, las franjas base para todos.
-        const dow = fecha.getDay();
-        const franjasDia = (horario.franjas_por_dia && horario.franjas_por_dia[dow]) || horario.franjas || [];
-        const franjas = franjasDia.map(f => ({ inicio: horaAMin(f.inicio), fin: horaAMin(f.fin) }));
+        const franjas = franjasDelDia(horario, fecha);
 
         const intervals = await bookings.busyIntervals(ctx.tenant, args.fecha, { sesion: ctx.telefono });
         const PASO = 30;

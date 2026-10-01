@@ -6,9 +6,9 @@
 
 const { bookings } = require('../store');
 const { notificarReprogramacion } = require('../notify');
+const { compararConHoy, minutosAhora } = require('../fechas');
 
-function horaAMin(h) { const [a, b] = h.split(':').map(Number); return a * 60 + (b || 0); }
-function parsear(s) { const [d, m, y] = s.split('/').map(Number); return new Date(y, m - 1, d); }
+const { horaAMin, parsearFecha: parsear, franjasDelDia } = require('../bookingRules');
 
 module.exports = {
     schema: {
@@ -46,15 +46,18 @@ module.exports = {
         const diasLab = horario.dias_laborables || [1, 2, 3, 4, 5];
         const fechaObj = parsear(args.nueva_fecha);
         if (isNaN(fechaObj.getTime())) return 'ERROR: nueva fecha no válida (DD/MM/YYYY).';
-        const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
-        if (fechaObj < hoy || !diasLab.includes(fechaObj.getDay())) {
+        const tz = b.calendar?.timezone || 'Europe/Madrid';
+        const rel = compararConHoy(args.nueva_fecha, tz);
+        if (rel === -1 || !diasLab.includes(fechaObj.getDay())) {
             return 'CERRADO: ese día no abrimos o ya pasó. Ofrece consultar disponibilidad con checkAvailability.';
         }
         const dur = r.duracion_min || 60;
         const ini = horaAMin(args.nueva_hora), fin = ini + dur;
-        const franjas = (horario.franjas || []).map(f => ({ inicio: horaAMin(f.inicio), fin: horaAMin(f.fin) }));
+        if (!Number.isFinite(ini)) return 'ERROR: hora no válida (usa HH:MM).';
+        if (rel === 0 && ini < minutosAhora(tz) + 60) return 'HORA_PASADA: necesitamos al menos una hora de antelación.';
+        const franjas = franjasDelDia(horario, fechaObj);
         const dentro = franjas.some(f => ini >= f.inicio && fin <= f.fin);
-        if (franjas.length && !dentro) return 'FUERA_HORARIO: esa hora está fuera del horario. Ofrece otra con checkAvailability.';
+        if (!dentro) return 'FUERA_HORARIO: esa hora está fuera del horario. Ofrece otra con checkAvailability.';
 
         const libre = await bookings.huecoLibre(ctx.tenant, args.nueva_fecha, args.nueva_hora, dur, r.profesional, { sesion: ctx.telefono });
         if (!libre) return 'OCUPADO: esa nueva hora no está libre. Ofrece otras con checkAvailability.';
@@ -64,3 +67,5 @@ module.exports = {
         return `OK: cita movida de ${updated.fecha_anterior} ${updated.hora_anterior} a ${updated.fecha} ${updated.hora}.`;
     }
 };
+
+module.exports.run = require('../bookingLock').proteger(module.exports.run);
