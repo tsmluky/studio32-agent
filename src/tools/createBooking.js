@@ -159,3 +159,5 @@ module.exports = {
             : `OK: reserva creada (id ${reserva.id}).`;
     }
 };
+
+module.exports.run = require('../bookingLock').proteger(module.exports.run);

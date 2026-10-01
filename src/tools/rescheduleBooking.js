@@ -67,3 +67,5 @@ module.exports = {
         return `OK: cita movida de ${updated.fecha_anterior} ${updated.hora_anterior} a ${updated.fecha} ${updated.hora}.`;
     }
 };
+
+module.exports.run = require('../bookingLock').proteger(module.exports.run);

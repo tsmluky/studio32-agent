@@ -16,6 +16,7 @@ const express = require('express');
 const { responder } = require('../orchestrator');
 const { resolverTenantPorNumero } = require('../tenants');
 const { verificarMeta, secretoIgual } = require('../entrySecurity');
+const { puedeResponder } = require('../controlGuard');
 
 const GRAPH = process.env.META_GRAPH_VERSION || 'v22.0';
 
@@ -85,7 +86,7 @@ function router() {
                 providerMessageId: entrante.id || null
             };
             const respuesta = await responder(ctx, entrante.body);
-            if (respuesta) await enviarMensaje(entrante.from, respuesta);
+            if (respuesta && await puedeResponder(ctx)) await enviarMensaje(entrante.from, respuesta);
         } catch (err) { console.error('Meta webhook error:', err); }
     });
 

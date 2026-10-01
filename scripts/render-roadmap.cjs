@@ -23,13 +23,13 @@ const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta n
 <h2>Camino y ramas · Archify</h2><p class="muted">Las flechas entre hitos indican puertas de salida. La investigación de proveedores puede avanzar mientras corregimos el núcleo.</p>
 <iframe title="Flujo de hitos Studio32 generado y validado con Archify" sandbox="allow-scripts allow-same-origin allow-downloads" srcdoc="${escape(diagram)}"></iframe>
 <h2>Tareas y criterios de cierre</h2><p class="muted">Existente: código inspeccionado. Local: corrección probada, sin desplegar. Externo: requiere cuenta o conexión real. Ningún hito está cerrado.</p>
-<div class="controls"><label>Hito<select id="phase"><option value="">Todos los hitos</option></select></label><label>Estado<select id="status"><option value="">Todos los estados</option><option value="existente">Existente</option><option value="local">Verificado local</option><option value="pendiente">Pendiente</option><option value="externo">Dependencia externa</option><option value="despues">Después del piloto</option></select></label><label>Buscar<input id="query" type="search" placeholder="Tarea, criterio o evidencia"></label><button id="reset" type="button">Ver todo</button></div>
+<div class="controls"><label>Hito<select id="phase"><option value="">Todos los hitos</option></select></label><label>Estado<select id="status"><option value="">Todos los estados</option><option value="existente">Existente</option><option value="local">Verificado local</option><option value="parcial">Avance parcial</option><option value="pendiente">Pendiente</option><option value="externo">Dependencia externa</option><option value="despues">Después del piloto</option></select></label><label>Buscar<input id="query" type="search" placeholder="Tarea, criterio o evidencia"></label><button id="reset" type="button">Ver todo</button></div>
 <p id="count" class="muted" aria-live="polite"></p><div id="tasks" class="grid"></div>
 <footer>Fuente versionada: docs/roadmap-piloto.json. Las notas se guardan solo en este navegador; no cambian el estado técnico ni se sincronizan. Precio pendiente: 300 € alta / 150 € mes es una hipótesis. No incluye datos de pacientes ni credenciales.</footer>
 </main><script>
 const roadmap=${data};
 const byId=id=>document.getElementById(id);
-const labels={existente:'Existente',local:'Verificado local · sin desplegar',pendiente:'Pendiente',externo:'Dependencia externa',despues:'Después del piloto'};
+const labels={existente:'Existente',local:'Verificado local · sin desplegar',parcial:'Avance parcial · quedan criterios',pendiente:'Pendiente',externo:'Dependencia externa',despues:'Después del piloto'};
 const text=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 for(const phase of [...new Set(roadmap.tasks.map(t=>t.phase))]){const option=document.createElement('option');option.value=phase;option.textContent=phase;byId('phase').append(option)}
 function note(id){try{return localStorage.getItem('studio32-roadmap-note-'+id)||''}catch{return ''}}

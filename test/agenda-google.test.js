@@ -149,11 +149,18 @@ test('cancelar desde el dashboard (estricto) no cancela nada si Google falla', a
     assert.equal(leerReservas()[0].estado, 'confirmada', 'sigue activa: no se puede enseñar cancelada lo que sigue en el móvil');
 });
 
-test('cancelar desde el agente sigue adelante aunque Google falle', async () => {
+test('cancelar desde el agente no informa éxito ni cambia la copia si Google falla', async () => {
     escribirReservas([RESERVA]);
     gcal.deleteEvent = async () => { throw new Error('Google caído'); };
-    const r = await bookings.cancelar(tenant(), 'r1');
-    assert.equal(r.estado, 'cancelada');
+    await assert.rejects(bookings.cancelar(tenant(), 'r1'), /Google caído/);
+    assert.equal(leerReservas()[0].estado, 'confirmada');
+});
+
+test('Calendar configurado sin acceso no se sustituye por una agenda JSON vacía', async () => {
+    gcal.disponible = () => false;
+    assert.throws(() => bookings.calCfg(tenant()), /no disponible/);
+    assert.equal(bookings.calCfg(tenant({ demo:true })), null);
+    assert.equal(bookings.calCfg(tenant({ calendar:{} })), null);
 });
 
 // ─── Días cerrados en Google ───

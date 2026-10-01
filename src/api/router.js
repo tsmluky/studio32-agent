@@ -5,6 +5,7 @@ const remote = require('../store/supabase');
 const auth = require('./auth');
 const twilio = require('../channels/whatsapp.twilio');
 const meta = require('../channels/whatsapp.meta');
+const d360 = require('../channels/whatsapp.360dialog');
 const bookings = require('../store/bookings');
 const gcal = require('../integrations/googleCalendar');
 const { cargarTenant } = require('../tenants');
@@ -183,13 +184,13 @@ function createRouter() {
         const slug = await slugDeOrganizacion(context.db, context.entity.organization_id);
         const cal = eventId ? await calendarioDeOrganizacion(slug) : null;
         let metadata = context.entity.metadata || {};
-        if (cal) {
+        const legacyId = metadata.legacy_id;
+        if (cal || legacyId) {
             try {
                 const tenant = cargarTenant(slug);
-                const legacyId = metadata.legacy_id;
                 const reserva = legacyId ? await bookings.cancelar(await remote.hydrateTenant(tenant), legacyId, { estricto: true }) : null;
                 if (reserva) metadata = { ...metadata, ...reserva };
-                else await gcal.deleteEvent(cal, eventId);
+                else if (cal) await gcal.deleteEvent(cal, eventId);
             } catch (err) {
                 console.error('[API] Cancelar en Google Calendar falló:', err.message);
                 return res.status(502).json({ error: 'No se ha podido cancelar en Google Calendar, así que la cita sigue activa. Vuelve a intentarlo en unos segundos.' });
@@ -323,6 +324,12 @@ function createRouter() {
         let sent = false;
         if (channel === 'whatsapp_twilio') sent = await twilio.enviarMensaje(contactResult.data.phone, body);
         else if (channel === 'whatsapp_meta') sent = await meta.enviarMensaje(contactResult.data.phone, body);
+        else if (channel === 'whatsapp_360dialog') {
+            const slug = await slugDeOrganizacion(context.db, context.conversation.organization_id);
+            const tenant = cargarTenant(slug);
+            if (tenant.business?.channels?.whatsapp_360dialog?.enabled !== true) return res.status(503).json({ error: 'Channel disabled.' });
+            sent = await d360.enviarMensaje(tenant, contactResult.data.phone, body);
+        }
         else if (channel === 'web') sent = true;
         else return res.status(409).json({ error: 'No delivery channel is available for this conversation.' });
         if (!sent) return res.status(503).json({ error: `Delivery channel ${channel} is not configured.` });

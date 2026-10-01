@@ -9,6 +9,7 @@ const express = require('express');
 const cfg = require('./config');
 const llm = require('./llm');
 const whatsappMeta = require('./channels/whatsapp.meta');
+const whatsapp360 = require('./channels/whatsapp.360dialog');
 const whatsapp = require('./channels/whatsapp.twilio');
 const { responder } = require('./orchestrator');
 const { cargarTenant, listarTenantIds, dirDeTenant } = require('./tenants');
@@ -16,6 +17,7 @@ const onboarding = require('./onboarding');
 const store = require('./store');
 const api = require('./api/router');
 const { secretoIgual, identidadWeb } = require('./entrySecurity');
+const { puedeResponder } = require('./controlGuard');
 
 const app = express();
 app.use(express.urlencoded({ extended: false }));
@@ -231,6 +233,7 @@ app.post('/panel/api/agente/:id', panelAuth, (req, res) => {
 
 // Canales WhatsApp. Meta primero para que /whatsapp/meta no lo capture Twilio.
 app.use('/whatsapp/meta', whatsappMeta.router());  // Meta Cloud API: /whatsapp/meta/webhook
+app.use('/whatsapp/360dialog', whatsapp360.router());
 app.use('/whatsapp', whatsapp.router());           // Twilio (BSP):    /whatsapp/webhook
 
 // Authenticated API consumed by the independent Studio32 panel.
@@ -267,7 +270,7 @@ app.post('/chat', rateLimit, async (req, res) => {
 
         const ctx = { tenant, tenantId: tenant.id, telefono: identidad.telefono, esOwner: identidad.esOwner, channel: 'web' };
         const respuesta = await responder(ctx, mensaje);
-        res.json({ respuesta });
+        res.json({ respuesta: respuesta && await puedeResponder(ctx) ? respuesta : null });
     } catch (err) {
         console.error('Error en /chat | status:', err.status, '| code:', err.code || (err.error && err.error.code), '| message:', err.message);
         res.status(500).json({ respuesta: 'Uf, se me ha cruzado algo. Me lo repites?' });
@@ -275,6 +278,7 @@ app.post('/chat', rateLimit, async (req, res) => {
 });
 
 if (require.main === module) app.listen(cfg.PORT, () => {
+    whatsapp360.iniciar();
     console.log(`Studio32 Agent escuchando en el puerto ${cfg.PORT}`);
     console.log(`LLM: ${llm.MODEL} (${llm.PROVIDER})`);
     console.log(`Webchat: /demo · Widget: /widget-demo · Onboarding: /onboarding · Panel: /panel`);

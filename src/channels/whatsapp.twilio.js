@@ -17,6 +17,7 @@ const express = require('express');
 const { responder } = require('../orchestrator');
 const { resolverTenantPorNumero, cargarTenant } = require('../tenants');
 const { verificarTwilio } = require('../entrySecurity');
+const { puedeResponder } = require('../controlGuard');
 
 let _twilio = null;
 function lib() { if (!_twilio) _twilio = require('twilio'); return _twilio; }
@@ -58,6 +59,7 @@ function router() {
 
         if (!from || !body) return;
         let tenant;
+        let ctx;
         try {
             tenant = resolverTenantPorNumero(to);
             if (!tenant && process.env.TWILIO_SANDBOX_TENANT && to === process.env.TWILIO_WHATSAPP_NUMBER) {
@@ -69,7 +71,7 @@ function router() {
             const ownerNum = (ownerCfg.whatsapp || '').replace(/[^0-9]/g, '');
             const fromNum = (from || '').replace(/[^0-9]/g, '');
             const esOwner = !!(ownerNum && fromNum === ownerNum); // match EXACTO, nunca subcadena
-            const ctx = {
+            ctx = {
                 tenant,
                 tenantId: tenant.id,
                 telefono: from,
@@ -78,10 +80,10 @@ function router() {
                 providerMessageId: req.body.MessageSid || req.body.SmsMessageSid || null
             };
             const respuesta = await responder(ctx, body);
-            if (respuesta) await enviarMensaje(from, respuesta);
+            if (respuesta && await puedeResponder(ctx)) await enviarMensaje(from, respuesta);
         } catch (err) {
             console.error('Error en canal Twilio:', err);
-            if (tenant) await enviarMensaje(from, 'Perdona, ahora mismo no consigo responderte. Escríbeme otra vez en un momento y lo vemos.');
+            if (ctx && await puedeResponder(ctx)) await enviarMensaje(from, 'Perdona, ahora mismo no consigo responderte. Escríbeme otra vez en un momento y lo vemos.');
         }
     });
 

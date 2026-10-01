@@ -36,3 +36,5 @@ module.exports = {
         return `OK: cita del ${r.fecha} ${r.hora} (${r.servicio}) cancelada.`;
     }
 };
+
+module.exports.run = require('../bookingLock').proteger(module.exports.run);

@@ -144,6 +144,38 @@ test('Meta acepta firma del cuerpo original con espacios y UTF-8', async () => {
     assert.equal(seen[0].msg, '¡Hola, revisión!');
 });
 
+test('Meta no envía al proveedor una respuesta generada si recepción ya tomó el control', async t => {
+    const conversations = require('../src/store/conversations');
+    t.mock.method(conversations, 'controlMode', async () => 'human');
+    process.env.META_APP_SECRET = 'meta-sintetico';
+    process.env.META_ACCESS_TOKEN = 'token-envio-sintetico';
+    process.env.META_PHONE_NUMBER_ID = 'phone-test';
+    const originalFetch = global.fetch;
+    let sends = 0;
+    t.mock.method(global, 'fetch', async (url, options) => {
+        if (String(url).startsWith('https://graph.facebook.com/')) { sends++; return { ok:true }; }
+        if (String(url).startsWith(base)) return originalFetch(url, options);
+        throw new Error('Red externa bloqueada');
+    });
+    try {
+        const body = JSON.stringify(payload());
+        assert.equal((await post('/whatsapp/meta/webhook', body, { 'X-Hub-Signature-256':metaSignature(body) })).status, 200);
+        await settled();
+        assert.equal(seen.length, 1);
+        assert.equal(sends, 0);
+    } finally {
+        process.env.META_ACCESS_TOKEN = ''; process.env.META_PHONE_NUMBER_ID = '';
+    }
+});
+
+test('chat no entrega texto pendiente cuando recepción tomó el control', async t => {
+    const conversations = require('../src/store/conversations');
+    t.mock.method(conversations, 'controlMode', async () => 'human');
+    const response = await post('/chat', { tenant:'studio32', sesion:'prueba-takeover', mensaje:'Hola' });
+    assert.equal(response.status, 200);
+    assert.equal((await response.json()).respuesta, null);
+});
+
 test('Meta no verifica GET sin token configurado ni enruta números desconocidos', async () => {
     process.env.META_APP_SECRET = 'meta-sintetico';
     process.env.META_VERIFY_TOKEN = '';

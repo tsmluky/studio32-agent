@@ -45,19 +45,31 @@ Rama de trabajo: fix/preparacion-piloto-clinicas; cambios locales no desplegados
 - S1: firmas Meta/Twilio obligatorias, separación web/teléfono, autorización
   de chat de clínica, alta interna cerrada y routing exacto/único. 12 pruebas HTTP.
 
-Validación: npm test 74/74; npm run test:supabase 9/9;
+- S2: control fail-closed y guards durante modelo/herramientas/entrega;
+  handoff termina turno. API con dos sesiones y permisos simulados comprobados.
+- S3 local: mutex por tenant (un proceso), JSON atómico, corrupción falla.
+  Snapshot/restauración sintética verificados. Docs: OPERACION_LOCAL.md.
+- A3: rechazo Calendar no cambia copia; panel sin Calendar cancela legacy JSON.
+  Calendar configurado inaccesible no cae a agenda vacía.
+- O2: recordatorios opt-in por emisor, timezone y flag tras aceptación;
+  preserva escrituras concurrentes. Plantillas/outbox siguen pendientes.
+- W2: conector 360dialog por clínica, inbox persistente, ecos humanos,
+  duplicados, queued recuperable y envíos inciertos para revisión; ruta panel.
+  Desactivado, sin cuenta ni número elegible. Docs: 360DIALOG_LOCAL.md.
+
+Validación: npm test 116/116; npm run test:supabase 26/26;
 npm run check:supabase: 5 migraciones / 15 tablas.
 Panel: 10/10 y build verificados en auditoría; no cambiado en esta rama.
 
 ## Próximo trabajo y puertas de salida
 
 1. S1 local: configurar secretos/URL y comprobar proveedor antes de desplegar.
-2. S2/S3: control humano ante fallos y durante generación; concurrencia y
-   persistencia durable con recuperación. No vender escalado horizontal todavía.
-3. A3/A4: cancelación coherente y Calendar real conectado desde panel.
-4. W1/W2/W3: elegibilidad Business/coexistencia, adaptador 360dialog,
-   ecos humanos, duplicados, reintentos y notas de voz.
-5. O1/O2: alta repetible, recordatorios sin pérdida y recuperación.
+2. S2/S3: dos JWT/RLS reales, fuente transaccional y backup Supabase separado.
+   Mutex solo local: no vender escalado horizontal todavía.
+3. A3/A4: reconciliación ante caída del espejo y Calendar real desde panel.
+4. W1/W2/W3: sin cuenta 360dialog; código/pruebas locales autorizados.
+   Cerrar outbox/estados panel, retención y latencia; después notas de voz.
+5. O1/O2: alta repetible, plantillas, alertas y recuperación operativa.
 6. P1/P2: piloto limitado y medir utilidad, incidencias, soporte y costes.
 
 Ningún hito H1–H5 está cerrado. Llamadas automáticas y cobro/alta autoservicio

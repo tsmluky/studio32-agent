@@ -657,3 +657,30 @@ no asignado o duplicado. Twilio sandbox permite un tenant demo explícito para
 el número configurado; no una clínica real. Alta interna exige token y los
 identificadores no permiten traversal. 12 regresiones HTTP pasan sin proveedores.
 Requiere configurar/verificar proveedores antes de desplegar; S2 es lo siguiente.
+
+## 2026-10-01 · Control, agenda local y preparación 360dialog
+
+Control remoto ilegible/ausente detiene agente; se vuelve a consultar durante
+modelo, herramientas y entrega. handoff termina turno. No hay rollback de una
+operación que ya comenzó. API con sesiones simuladas no sustituye dos JWT/RLS.
+
+Mutex reentrante por tenant protege tools+store en UN proceso. JSON usa temporal,
+fsync y rename; corrupción no retorna fallback vacío. Supabase sigue siendo
+espejo, sin garantía entre réplicas. Snapshot privado con hash/restauración
+sintética no cubre Supabase ni Calendar.
+
+Cancelar siempre exige éxito Google antes de cambiar copia, incluso desde
+agente (el comportamiento permisivo anterior podía confirmar cancelación falsa).
+Firma opts se conserva. Calendar configurado inaccesible falla cerrado. Panel
+sin Calendar cancela JSON legacy además de DB; reconciliación queda pendiente.
+
+Recordatorios opt-in por clínica/emisor; flag solo tras aceptación y relectura
+bajo mutex. No habilitar producción sin plantillas/outbox y entrega comprobada.
+
+Usuario confirmó sin cuenta 360dialog: integración/pruebas locales autorizadas.
+Conector desactivado, Basic Auth por slug y routing número exacto. Inbox antes
+del ACK, duplicados persistentes, ecos control human y respuesta panel por org.
+queued recupera; processing/sending/entrega incierta requieren reconciliar,
+nunca repetir herramientas automáticamente. IDs de audio conservados, sin
+transcripción. Límite 5000 eventos; retención/estados/outbox siguen en W2.
+No cuentas externas, migraciones, mensajes reales ni despliegues ejecutados.

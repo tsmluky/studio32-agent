@@ -16,6 +16,7 @@ const { conversations, usage } = require('./store');
 const remote = require('./store/supabase');
 const { inspeccionarRespuesta, limpiarParaWhatsApp, MENSAJE_SEGURO_FALLBACK } = require('./safety');
 const { revisarConfirmacion } = require('./confirmacion');
+const { puedeResponder } = require('./controlGuard');
 
 async function responder(ctx, mensajeUsuario) {
     const inbound = await conversations.claimInbound(
@@ -29,16 +30,22 @@ async function responder(ctx, mensajeUsuario) {
         console.log('[Webhook duplicado ignorado]', ctx.channel || 'unknown', ctx.providerMessageId);
         return null;
     }
-    const controlMode = inbound.controlMode || await conversations.controlMode(ctx.tenantId, ctx.telefono);
-    if (controlMode !== 'agent') {
-        if (!inbound.persisted) await conversations.push(ctx.tenantId, ctx.telefono, { role: 'user', content: mensajeUsuario, provider: ctx.channel });
-        console.log('[Agente en pausa]', ctx.tenantId, ctx.telefono, controlMode);
+    let usuarioPersistido = inbound.persisted;
+    async function guardarUsuario() {
+        if (usuarioPersistido) return;
+        await conversations.push(ctx.tenantId, ctx.telefono, { role: 'user', content: mensajeUsuario, provider: ctx.channel });
+        usuarioPersistido = true;
+    }
+    async function detener() {
+        await guardarUsuario();
+        console.log('[Agente detenido por control]', ctx.tenantId);
         return null;
     }
+    if ((inbound.controlMode && inbound.controlMode !== 'agent') || !await puedeResponder(ctx)) return detener();
     try { await usage.registrar(ctx.tenantId); } catch (_) { /* uso best-effort */ }
 
     const runtimeTenant = await remote.hydrateTenant(ctx.tenant);
-    const runtimeCtx = { ...ctx, tenant: runtimeTenant };
+    const runtimeCtx = { ...ctx, tenant: runtimeTenant, puedeActuar: () => puedeResponder(ctx) };
     const system = construirSystemPrompt(runtimeTenant, { owner: !!ctx.esOwner });
     const schemas = tools.schemas({ owner: !!ctx.esOwner, tenant: runtimeTenant });
 
@@ -50,7 +57,9 @@ async function responder(ctx, mensajeUsuario) {
         ? [...previo]
         : [...previo, { role: 'user', content: mensajeUsuario }];
 
+    if (!await puedeResponder(ctx)) return detener();
     let message = await llm.chat({ system, messages: mensajes, tools: schemas });
+    if (!await puedeResponder(ctx)) return detener();
 
     const MAX_VUELTAS = 5;
     let vueltas = 0;
@@ -58,6 +67,7 @@ async function responder(ctx, mensajeUsuario) {
         vueltas++;
         mensajes.push(message); // copia de trabajo (NO se persiste)
         for (const call of message.tool_calls) {
+            if (!await puedeResponder(ctx)) return detener();
             let resultado;
             try {
                 const args = JSON.parse(call.function.arguments || '{}');
@@ -67,8 +77,12 @@ async function responder(ctx, mensajeUsuario) {
                 resultado = 'ERROR: no se pudo completar.';
             }
             mensajes.push({ role: 'tool', tool_call_id: call.id, content: resultado });
+            // La derivación acaba este turno, también en demos sin Supabase.
+            if (call.function.name === 'handoffHuman' || !await puedeResponder(ctx)) return detener();
         }
+        if (!await puedeResponder(ctx)) return detener();
         message = await llm.chat({ system, messages: mensajes, tools: schemas });
+        if (!await puedeResponder(ctx)) return detener();
     }
 
     // El modelo se quedó dando vueltas entre herramientas y se acabó el margen. Antes
@@ -96,8 +110,10 @@ async function responder(ctx, mensajeUsuario) {
     if (!texto) texto = 'Perdona, se me ha cruzado algo y no te he contestado bien. ¿Me lo repites?';
 
     // Persistir SOLO el turno limpio: mensaje del usuario + respuesta final.
-    if (!inbound.persisted) await conversations.push(ctx.tenantId, ctx.telefono, { role: 'user', content: mensajeUsuario, provider: ctx.channel });
+    await guardarUsuario();
+    if (!await puedeResponder(ctx)) return detener();
     await conversations.push(ctx.tenantId, ctx.telefono, { role: 'assistant', content: texto, provider: ctx.channel });
+    if (!await puedeResponder(ctx)) return detener();
     return texto;
 }
 

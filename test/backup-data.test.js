@@ -1,0 +1,31 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const os = require('node:os');
+const backup = require('../scripts/backup-data.cjs');
+const root = fs.mkdtempSync(path.join(os.tmpdir(), 'studio32-backup-test-'));
+test.after(() => fs.rmSync(root, { recursive:true, force:true }));
+test('backup y restauración conservan citas y configuración del volumen', () => {
+    const source = path.join(root, 'source'), output = path.join(root, 'snapshot.json'), restored = path.join(root, 'restored');
+    fs.mkdirSync(path.join(source, 'clinica'), { recursive:true });
+    fs.writeFileSync(path.join(source, 'clinica', 'bookings.json'), JSON.stringify([{ id:'r1', estado:'confirmada' }]));
+    assert.equal(backup.create(source, output).files, 1);
+    assert.equal(backup.restore(output, restored).files, 1);
+    assert.deepEqual(JSON.parse(fs.readFileSync(path.join(restored, 'clinica', 'bookings.json'))), [{ id:'r1', estado:'confirmada' }]);
+    assert.throws(() => backup.restore(output, restored), /vacío/);
+    assert.throws(() => backup.create(source, output), /EEXIST/);
+});
+test('snapshot manipulado o con traversal se rechaza antes de escribir', () => {
+    const snapshot = JSON.parse(fs.readFileSync(path.join(root, 'snapshot.json')));
+    snapshot.files[0].path = '../fuera.json';
+    const source = path.join(root, 'malicioso.json'), target = path.join(root, 'rechazado');
+    fs.writeFileSync(source, JSON.stringify(snapshot));
+    assert.throws(() => backup.restore(source, target), /no válida/);
+    assert.equal(fs.existsSync(target), false);
+    snapshot.files[0].path = 'clinica/bookings.json'; snapshot.files[0].sha256 = 'manipulado';
+    fs.writeFileSync(source, JSON.stringify(snapshot));
+    assert.throws(() => backup.restore(source, target), /manipulado/);
+    assert.equal(fs.existsSync(target), false);
+});
