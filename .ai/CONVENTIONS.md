@@ -73,14 +73,16 @@ escaneando todas las carpetas de QA:
 npm run supabase:import -- studio32 gh-dent
 ```
 
-El panel es **solo-lectura** sobre esa config.
+El panel permite editar servicios. El catálogo leído correctamente de Supabase
+manda sobre el archivo, incluso si todos los servicios están desactivados.
 
 ## Seguridad
 
-- El backend usa un cliente `service_role` dedicado. `anon` no tiene privilegios
-  de tabla. **La service-role key nunca llega al navegador**: las acciones del
+- El backend usa un cliente `service_role` dedicado. Revisar grants y RLS juntos;
+  la auditoría 2026-10-01 observó grants anon con políticas restringidas.
+  **La service-role key nunca llega al navegador**: las acciones del
   panel se reautentican en el backend.
-- RLS activo en las 14 tablas. Constraints compuestas impiden enlazar registros
+- RLS activo en las 15 tablas del contrato. Constraints compuestas impiden enlazar registros
   de organizaciones distintas.
 - Secretos por entorno, nunca en el repo. `.env` está ignorado; `.env.example`
   documenta las variables sin valores.

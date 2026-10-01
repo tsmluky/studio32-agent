@@ -47,3 +47,10 @@ test('maps database services into the runtime tenant used by the next reply', ()
     assert.equal(hydrated.faq, 'Actualizada');
     assert.equal(hydrated.business.ciudad, 'Valencia');
 });
+
+test('deactivating every service does not resurrect the file catalog', () => {
+    const tenant = { services: { servicios: [{ nombre: 'Anterior', duracion_min: 30 }] } };
+    assert.deepEqual(remote.mergeRuntimeTenant(tenant, [{ name: 'Anterior', active: false }], {}).services.servicios, []);
+    assert.deepEqual(remote.mergeRuntimeTenant(tenant, [], {}).services.servicios, []);
+    assert.deepEqual(remote.mergeRuntimeTenant(tenant, null, {}).services, tenant.services);
+});

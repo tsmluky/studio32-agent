@@ -2,16 +2,16 @@
 
 // Crea una reserva EN FIRME mediante herramienta. Valida por su cuenta (no confía
 // solo en que el modelo haya consultado antes): día laborable, dentro de horario y
-// hueco realmente libre. Así NUNCA se cuela una doble-reserva ni una cita fuera de
-// horario, pase lo que pase con el modelo. Persiste en la agenda (Calendar si está
+// hueco realmente libre. La exclusión concurrente requiere además una operación
+// atómica de persistencia (pendiente); esta comprobación sola no la garantiza.
+// Persiste en la agenda (Calendar si está
 // configurado, con respaldo JSON) y avisa al equipo.
 
 const { bookings } = require('../store');
 const { notificarReserva } = require('../notify');
 const { compararConHoy, minutosAhora } = require('../fechas');
 
-function horaAMin(h) { const [a, b] = h.split(':').map(Number); return a * 60 + (b || 0); }
-function parsear(s) { const [d, m, y] = s.split('/').map(Number); return new Date(y, m - 1, d); }
+const { horaAMin, parsearFecha: parsear, franjasDelDia, serviciosActivos } = require('../bookingRules');
 
 // Modo aforo: si el servicio se llama Comida/Cena, solo valen las franjas de su
 // turno (cena = franjas que empiezan a las 19:00 o después). Si el nombre no
@@ -65,13 +65,19 @@ module.exports = {
             return 'ERROR: falta el nombre real del cliente. Pregúntaselo antes de reservar.';
         }
 
-        const servicios = ctx.tenant.services.servicios || [];
+        const servicios = serviciosActivos(ctx.tenant);
         const svc = servicios.find(s => s.nombre.toLowerCase() === String(args.servicio).toLowerCase());
-        const servicioNombre = svc ? svc.nombre : args.servicio;
-        const duracion = svc ? svc.duracion_min : 60;
+        if (!svc) return 'ERROR: servicio desconocido o inactivo. Consulta los servicios disponibles.';
+        const servicioNombre = svc.nombre;
+        const duracion = svc.duracion_min;
 
         // 1) Validar fecha y horario del negocio.
         const b = ctx.tenant.business || {};
+        const profesionales = b.profesionales || [];
+        if (args.profesional && !profesionales.some(p => p.toLowerCase() === String(args.profesional).toLowerCase())) {
+            return 'ERROR: profesional no reconocido. Consulta los profesionales disponibles.';
+        }
+        if (args.profesional) args = { ...args, profesional: profesionales.find(p => p.toLowerCase() === String(args.profesional).toLowerCase()) };
         const horario = b.horario || {};
         const diasLab = horario.dias_laborables || [1, 2, 3, 4, 5];
         const fechaObj = parsear(args.fecha);
@@ -83,11 +89,12 @@ module.exports = {
             return 'CERRADO: ese día no abrimos o ya pasó. Ofrece otra fecha con checkAvailability.';
         }
         const ini = horaAMin(args.hora), fin = ini + duracion;
-        if (rel === 0 && ini < minutosAhora(tz)) {
+        if (!Number.isFinite(ini)) return 'ERROR: hora no válida (usa HH:MM).';
+        if (rel === 0 && ini < minutosAhora(tz) + 60) {
             return 'HORA_PASADA: esa hora ya ha pasado hoy. Ofrece otra con checkAvailability.';
         }
-        const franjas = (horario.franjas || []).map(f => ({ inicio: horaAMin(f.inicio), fin: horaAMin(f.fin) }));
-        if (franjas.length && !franjas.some(f => ini >= f.inicio && fin <= f.fin)) {
+        const franjas = franjasDelDia(horario, fechaObj);
+        if (!franjas.some(f => ini >= f.inicio && fin <= f.fin)) {
             return 'FUERA_HORARIO: esa hora está fuera del horario. Ofrece otra con checkAvailability.';
         }
 

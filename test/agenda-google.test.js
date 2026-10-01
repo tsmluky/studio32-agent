@@ -56,6 +56,14 @@ const EVENTO_AGENTE = { id: 'ev-agente', summary: 'Revisión · Marta', start: {
 const EVENTO_CLINICA = { id: 'ev-clinica', summary: 'Paciente llamó por teléfono', start: { dateTime: '2026-09-17T16:00:00+02:00' }, end: { dateTime: '2026-09-17T16:30:00+02:00' } };
 const FICHA = { id: 'row-1', status: 'confirmed', starts_at: '2026-09-17T08:00:00.000Z', ends_at: '2026-09-17T08:30:00.000Z', external_calendar_event_id: 'ev-agente', contact: { name: 'Marta' }, service: { name: 'Revisión' } };
 
+test('si Google rechaza mover la cita, no se cambia la copia ni se informa éxito', async () => {
+    escribirReservas([{ id: 'movimiento', fecha: '17/09/2026', hora: '10:00', estado: 'confirmada', calendar_event_id: 'evento', duracion_min: 30 }]);
+    gcal.updateEvent = async () => { throw new Error('Calendar no disponible'); };
+    await assert.rejects(bookings.reprogramar(tenant(), 'movimiento', '18/09/2026', '11:00'), /Calendar no disponible/);
+    assert.equal(leerReservas()[0].fecha, '17/09/2026');
+    assert.equal(leerReservas()[0].hora, '10:00');
+});
+
 test('una cita apuntada en el móvil aparece en el dashboard', () => {
     const vista = combinar([EVENTO_CLINICA], []);
     assert.equal(vista.length, 1);

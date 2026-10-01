@@ -620,3 +620,21 @@ Supabase).
 ecosistema — agente, panel y Hub juntos. Ya no hay un "proyecto de repuesto": si
 este se borra, no hay a dónde volver. Detalle completo en
 `Studio32/reportes/2026-09-22-incidente-supabase.md`.
+
+## 2026-10-01 · Piloto por hitos y confirmación verificable
+
+Reutilizar agente y panel como SaaS con alta asistida. El plan vivo pasa a
+`docs/PILOTO.md` y `docs/roadmap-piloto.json`, con dependencias y criterios de
+aceptación, sin exigir una matriz de 64 acciones. El HTML se genera con Archify
+para el flujo y `scripts/render-roadmap.cjs` para fichas, filtros y notas locales.
+Ningún hito cerrado; precio 300/150 es hipótesis pendiente de coste y piloto.
+
+Compartir reglas entre disponibilidad y escrituras: horario por día, fecha/hora
+válidas y catálogo activo. No sustituir un catálogo vacío de Supabase por el
+archivo, porque reactivaba servicios deshabilitados. Si mover en Calendar falla,
+propagar el error antes de cambiar JSON. Si la agenda no permite verificar una
+confirmación, dar respuesta sin confirmar; preservar mensajes de cancelación.
+
+No cambia el contrato de control humano ni las firmas del store. La cancelación
+no estricta ante fallo de Calendar, concurrencia y fallbacks operativos siguen
+pendientes. Preparación en rama separada, sin despliegue ni migración de producción.

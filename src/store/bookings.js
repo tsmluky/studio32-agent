@@ -293,8 +293,7 @@ async function reprogramar(tenant, id, nuevaFecha, nuevaHora) {
     if (!r) return null;
     const cfg = calCfg(tenant);
     if (cfg && r.calendar_event_id) {
-        try { await gcal.updateEvent(cfg, r.calendar_event_id, { fecha: nuevaFecha, hora: nuevaHora, duracion_min: r.duracion_min || 60, timezone: cfg.timezone || 'Europe/Madrid' }); }
-        catch (err) { console.error('Mover en Calendar falló:', err.message); }
+        await gcal.updateEvent(cfg, r.calendar_event_id, { fecha: nuevaFecha, hora: nuevaHora, duracion_min: r.duracion_min || 60, timezone: cfg.timezone || 'Europe/Madrid' });
     }
     r.fecha_anterior = r.fecha; r.hora_anterior = r.hora;
     r.fecha = nuevaFecha; r.hora = nuevaHora; r.reprogramada = new Date().toISOString();

@@ -127,7 +127,7 @@ function mergeRuntimeTenant(tenant, services, config, calendarIntegration = null
     return {
         ...tenant,
         business,
-        services: mappedServices.length ? { servicios: mappedServices } : tenant.services,
+        services: Array.isArray(services) ? { servicios: mappedServices } : tenant.services,
         faq: config?.faq ?? tenant.faq,
         policies: config?.policies ?? tenant.policies,
         tone: config?.tone ?? tenant.tone,
